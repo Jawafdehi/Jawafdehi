@@ -185,6 +185,27 @@ export const ARCHIVE_SHELVES: readonly ArchiveNode[] = [
   branch("koshi-province", { ne: "कोशी प्रदेश", en: "Koshi Province" }, 2, [
     leaf("koshi-budget", "province/koshi", { ne: "बजेट विवरण", en: "Budget lines" }),
   ]),
+  branch("home-ministry", { ne: "गृह मन्त्रालय", en: "Ministry of Home Affairs" }, 7, [
+    leaf("moha-reports-directives-releases", "moha", {
+      ne: "प्रतिवेदन, निर्देशिका र प्रेस विज्ञप्ति",
+      en: "Reports, directives and press releases",
+    }),
+  ]),
+  branch("election-commission", { ne: "निर्वाचन आयोग", en: "Election Commission" }, 3, [
+    leaf("election-commission-documents", "election_commission", {
+      ne: "निर्वाचनसम्बन्धी कागजात",
+      en: "Election documents",
+    }),
+  ]),
+  branch("nhrc", { ne: "राष्ट्रिय मानव अधिकार आयोग", en: "National Human Rights Commission" }, 5, [
+    leaf("nhrc-reports-releases", "nhrc", { ne: "प्रतिवेदन र विज्ञप्ति", en: "Reports and releases" }),
+  ]),
+  branch("psc", { ne: "लोक सेवा आयोग", en: "Public Service Commission" }, 8, [
+    leaf("psc-reports-releases", "psc", { ne: "प्रतिवेदन र प्रेस विज्ञप्ति", en: "Reports and press releases" }),
+  ]),
+  branch("trc", { ne: "सत्य निरुपण तथा मेलमिलाप आयोग", en: "Truth and Reconciliation Commission" }, 4, [
+    leaf("trc-reports-notices", "trc", { ne: "प्रतिवेदन र सूचना", en: "Reports and notices" }),
+  ]),
   // Government bodies › Regulators
   branch("nrb", { ne: "नेपाल राष्ट्र बैंक", en: "Nepal Rastra Bank" }, 3, [
     leaf("nrb-enforcement", "nrb", W.enforcement, { kind: "enforcement-action" }),
@@ -195,6 +216,15 @@ export const ARCHIVE_SHELVES: readonly ArchiveNode[] = [
   ]),
   branch("insurance-authority", { ne: "नेपाल बीमा प्राधिकरण", en: "Nepal Insurance Authority" }, 7, [
     leaf("insurance-enforcement", "nia", W.enforcement),
+  ]),
+  branch("telecom-authority", { ne: "नेपाल दूरसञ्चार प्राधिकरण", en: "Nepal Telecommunications Authority" }, 6, [
+    leaf("nta-reports-directives", "nta", { ne: "प्रतिवेदन र निर्देशिका", en: "Reports and directives" }),
+  ]),
+  branch("electricity-commission", { ne: "विद्युत नियमन आयोग", en: "Electricity Regulatory Commission" }, 2, [
+    leaf("erc-reports-decisions-directives", "erc", {
+      ne: "प्रतिवेदन, निर्णय र निर्देशिका",
+      en: "Reports, decisions and directives",
+    }),
   ]),
 
   // Laws
