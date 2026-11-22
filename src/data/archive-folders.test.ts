@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { ARCHIVE_SHELVES, childrenAt, findLeafChain, leafSeries, leavesUnder, nodeCount, nodeName, shelfLeafBySlug, unfiledSlug, validPath, withUnfiled, leafHref, archiveSeriesBySlug, DEFAULT_FOLDERS } from "@/data/archive-folders";
+import { ARCHIVE_SHELVES, childrenAt, findLeafChain, leafSeries, leavesUnder, nodeCount, nodeName, shelfLeafBySlug, unfiledSlug, validPath, withUnfiled, leafHref, archiveSeriesBySlug, DEFAULT_FOLDERS, officeName, officeSlug, seriesName } from "@/data/archive-folders";
 import { filedRow } from "@/data/archive-folders.fixtures";
 import type { DocumentSourcesResponse } from "@/lib/document-sources";
 
@@ -209,7 +209,7 @@ describe("archive folders from the API (JAW-87)", () => {
 
   it("puts the regulators in their sub-folder and drops an empty sub-folder", () => {
     const tree = withUnfiled({ ready: true, folders, sources: [filed("nrb", 160, "government", "regulators")] });
-    expect(chainOf(tree, "nrb")).toEqual(["government", "regulators", "nrb", "nrb-enforcement"]);
+    expect(chainOf(tree, "nrb")).toEqual(["government", "regulators", "nrb", "nrb-annual-reports"]);
     const none = withUnfiled({ ready: true, folders, sources: [filed("dri", 1, "government")] });
     expect(childrenAt(none, ["government"]).map((node) => node.slug)).not.toContain("regulators");
   });
@@ -239,6 +239,125 @@ describe("archive folders from the API (JAW-87)", () => {
   it("resolves a shelf's series before the catalogue has loaded", () => {
     expect(shelfLeafBySlug("dri-releases-reports")?.source).toBe("dri");
     expect(shelfLeafBySlug("nope")).toBeUndefined();
+  });
+});
+
+describe("every source under an office, with a short series name", () => {
+  const chainOf = (tree: ReturnType<typeof withUnfiled>, source: string) =>
+    findLeafChain(tree, (leaf) => leaf.source === source)?.map((node) => node.slug);
+  const withPublisher = (
+    source: string,
+    count: number,
+    name: { en: string; ne?: string },
+    publisher: { en: string; ne?: string } | null,
+    folder = "government",
+    subfolder: string | null = null,
+  ) => ({ ...row(source, count), name, publisher, folder, subfolder });
+
+  it("files each source loaded in November under its office", () => {
+    const sources = ["moha", "nhrc", "psc", "trc", "nea", "election_commission", "nta", "erc"];
+    const tree = withUnfiled({ ready: true, sources: sources.map((source) => row(source, 5)) });
+    expect(chainOf(tree, "moha")).toEqual(["government", "home-ministry", "home-ministry-documents"]);
+    expect(chainOf(tree, "nhrc")).toEqual(["government", "nhrc", "nhrc-reports-releases"]);
+    expect(chainOf(tree, "election_commission")).toEqual([
+      "government",
+      "election-commission",
+      "election-commission-documents",
+    ]);
+    expect(chainOf(tree, "nta")).toEqual(["government", "regulators", "nta", "nta-reports-directives"]);
+    expect(chainOf(tree, "erc")).toEqual(["government", "regulators", "erc", "erc-reports-decisions"]);
+    // Nothing loose: every child of Government bodies (and of Regulators) is an office.
+    const government = childrenAt(tree, ["government"]);
+    expect(government.filter((node) => node.type === "leaf")).toEqual([]);
+    expect(childrenAt(tree, ["government", "regulators"]).filter((node) => node.type === "leaf")).toEqual([]);
+  });
+
+  it("splits Nepal Rastra Bank by kind and counts each document once", () => {
+    const nrb = row("nrb", 1_524, [
+      { bucket: "enforcement-action", count: 71 },
+      { bucket: "nrb-annual-report", count: 43 },
+      { bucket: "bank-supervision-report", count: 26 },
+      { bucket: "fiu-annual-report", count: 14 },
+      { bucket: "fisd-supervision-report", count: 5 },
+    ]);
+    const catalogue = { ready: true, sources: [nrb] };
+    const tree = withUnfiled(catalogue, "en");
+    const leaves = childrenAt(tree, ["government", "regulators", "nrb"]);
+    expect(leaves.map((leaf) => [nodeName(leaf, "en"), nodeCount(leaf, catalogue)])).toEqual([
+      ["Annual reports", 43],
+      ["Bank supervision reports", 26],
+      ["Enforcement actions", 71],
+      ["Financial Information Unit (FIU-Nepal) annual reports", 14],
+      ["Financial institutions supervision reports", 5],
+      ["Other reports", 1_524 - 71 - 43 - 26 - 14 - 5],
+    ]);
+    expect(leaves.reduce((sum, leaf) => sum + (nodeCount(leaf, catalogue) ?? 0), 0)).toBe(1_524);
+  });
+
+  it("opens an office from the API publisher for a source no shelf knows, and groups by it", () => {
+    const tree = withUnfiled(
+      {
+        ready: true,
+        sources: [
+          withPublisher(
+            "mof_budget",
+            4,
+            { en: "Ministry of Education reports", ne: "शिक्षा मन्त्रालयका प्रतिवेदन" },
+            { en: "Ministry of Education, Government of Nepal", ne: "शिक्षा मन्त्रालय, नेपाल सरकार" },
+          ),
+          withPublisher(
+            "moe_circulars",
+            2,
+            { en: "Circulars", ne: "परिपत्र" },
+            { en: "Ministry of Education", ne: "शिक्षा मन्त्रालय" },
+          ),
+        ],
+      },
+      "en",
+    );
+    const office = officeSlug({ en: "Ministry of Education", ne: "" });
+    expect(office).not.toContain("/");
+    expect(chainOf(tree, "mof_budget")).toEqual(["government", office, unfiledSlug("mof_budget")]);
+    expect(chainOf(tree, "moe_circulars")).toEqual(["government", office, unfiledSlug("moe_circulars")]);
+    const branch = childrenAt(tree, ["government"]).find((node) => node.slug === office)!;
+    expect(nodeName(branch, "en")).toBe("Ministry of Education");
+    expect(nodeName(branch, "ne")).toBe("शिक्षा मन्त्रालय");
+    expect(childrenAt(tree, ["government", office]).map((leaf) => [nodeName(leaf, "en"), nodeName(leaf, "ne")])).toEqual([
+      ["Circulars", "परिपत्र"],
+      ["Reports", "प्रतिवेदन"],
+    ]);
+  });
+
+  it("puts a new source into its publisher's existing shelf, without changing the shelves", () => {
+    const before = JSON.stringify(ARCHIVE_SHELVES);
+    const catalogue = {
+      ready: true,
+      sources: [
+        row("ppmo", 108),
+        withPublisher("ppmo_debarment", 3, { en: "PPMO debarment notices" }, { en: "Public Procurement Monitoring Office" }),
+      ],
+    };
+    const tree = withUnfiled(catalogue);
+    withUnfiled(catalogue);
+    expect(chainOf(tree, "ppmo_debarment")).toEqual(["government", "ppmo", unfiledSlug("ppmo_debarment")]);
+    expect(JSON.stringify(ARCHIVE_SHELVES)).toBe(before);
+  });
+
+  it("keeps a source with no publisher as a leaf of its folder", () => {
+    const tree = withUnfiled({ ready: true, sources: [withPublisher("loose", 1, { en: "Loose papers" }, null)] });
+    expect(chainOf(tree, "loose")).toEqual(["government", unfiledSlug("loose")]);
+  });
+
+  it("names a series in full when it does not start with its office", () => {
+    expect(seriesName({ en: "Circulars", ne: "परिपत्र" }, { en: "Ministry of Education", ne: "शिक्षा मन्त्रालय" }, "x")).toEqual({
+      en: "Circulars",
+      ne: "परिपत्र",
+    });
+    expect(officeName({ en: "Truth and Reconciliation Commission, Nepal", ne: "सत्य निरुपण तथा मेलमिलाप आयोग, नेपाल" })).toEqual({
+      en: "Truth and Reconciliation Commission",
+      ne: "सत्य निरुपण तथा मेलमिलाप आयोग",
+    });
+    expect(officeName(null)).toBeNull();
   });
 });
 

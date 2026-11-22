@@ -102,7 +102,16 @@ const W = {
   enforcement: { ne: "कारबाही", en: "Enforcement actions" },
   publications: { ne: "प्रकाशन", en: "Publications" },
   judgments: { ne: "फैसला", en: "Judgments" },
+  reportsAndPressReleases: { ne: "प्रतिवेदन र प्रेस विज्ञप्ति", en: "Reports and press releases" },
 } as const;
+
+const NRB_KINDS = [
+  "enforcement-action",
+  "nrb-annual-report",
+  "bank-supervision-report",
+  "fisd-supervision-report",
+  "fiu-annual-report",
+] as const;
 
 const LAW_KINDS = [
   "law-constitution",
@@ -187,10 +196,65 @@ export const ARCHIVE_SHELVES: readonly ArchiveNode[] = [
   branch("koshi-province", { ne: "कोशी प्रदेश", en: "Koshi Province" }, 2, [
     leaf("koshi-budget", "province/koshi", { ne: "बजेट विवरण", en: "Budget lines" }),
   ]),
+  branch("home-ministry", { ne: "गृह मन्त्रालय", en: "Ministry of Home Affairs" }, 6, [
+    leaf("home-ministry-documents", "moha", {
+      ne: "प्रतिवेदन, निर्देशिका र प्रेस विज्ञप्ति",
+      en: "Reports, directives and press releases",
+    }),
+  ]),
+  branch("election-commission", { ne: "निर्वाचन आयोग", en: "Election Commission" }, 2, [
+    leaf("election-commission-documents", "election_commission", {
+      ne: "कागजात र प्रेस विज्ञप्ति",
+      en: "Documents and press releases",
+    }),
+  ]),
+  branch("nhrc", { ne: "राष्ट्रिय मानव अधिकार आयोग", en: "National Human Rights Commission" }, 4, [
+    leaf("nhrc-reports-releases", "nhrc", W.reportsAndPressReleases),
+  ]),
+  branch("psc", { ne: "लोक सेवा आयोग", en: "Public Service Commission" }, 8, [
+    leaf("psc-reports-releases", "psc", W.reportsAndPressReleases),
+  ]),
+  branch("trc", { ne: "सत्य निरुपण तथा मेलमिलाप आयोग", en: "Truth and Reconciliation Commission" }, 5, [
+    leaf("trc-reports-notices", "trc", { ne: "प्रतिवेदन र सूचना", en: "Reports and notices" }),
+  ]),
+  branch("nea", { ne: "नेपाल विद्युत प्राधिकरण", en: "Nepal Electricity Authority" }, 7, [
+    leaf("nea-reports-publications", "nea", { ne: "प्रतिवेदन र प्रकाशन", en: "Reports and publications" }),
+  ]),
   // Government bodies › Regulators
+  // nrb is split by kind (`jawafdehi:datasetBucket`, set when it was sourced);
+  // a document with no kind lands in "Other reports".
   branch("nrb", { ne: "नेपाल राष्ट्र बैंक", en: "Nepal Rastra Bank" }, 3, [
     leaf("nrb-enforcement", "nrb", W.enforcement, { kind: "enforcement-action" }),
-    leaf("nrb-reports", "nrb", W.reports, { kindExclude: ["enforcement-action"] }),
+    leaf("nrb-annual-reports", "nrb", W.annualReports, { kind: "nrb-annual-report" }),
+    leaf("nrb-bank-supervision-reports", "nrb", { ne: "बैंक सुपरिवेक्षण प्रतिवेदन", en: "Bank supervision reports" }, {
+      kind: "bank-supervision-report",
+    }),
+    leaf(
+      "nrb-financial-institution-supervision-reports",
+      "nrb",
+      { ne: "वित्तीय संस्था सुपरिवेक्षण प्रतिवेदन", en: "Financial institutions supervision reports" },
+      { kind: "fisd-supervision-report" },
+    ),
+    leaf(
+      "fiu-annual-reports",
+      "nrb",
+      {
+        ne: "वित्तीय जानकारी इकाईका वार्षिक प्रतिवेदन (FIU-Nepal)",
+        en: "Financial Information Unit (FIU-Nepal) annual reports",
+      },
+      { kind: "fiu-annual-report" },
+    ),
+    // Kept as "nrb-reports" so links from before the split still open.
+    leaf("nrb-reports", "nrb", { ne: "अन्य प्रतिवेदन", en: "Other reports" }, { kindExclude: NRB_KINDS }),
+  ]),
+  branch("nta", { ne: "नेपाल दूरसञ्चार प्राधिकरण", en: "Nepal Telecommunications Authority" }, 2, [
+    leaf("nta-reports-directives", "nta", { ne: "प्रतिवेदन र निर्देशिका", en: "Reports and directives" }),
+  ]),
+  branch("erc", { ne: "विद्युत नियमन आयोग", en: "Electricity Regulatory Commission" }, 6, [
+    leaf("erc-reports-decisions", "erc", {
+      ne: "प्रतिवेदन, निर्णय र निर्देशिका",
+      en: "Reports, decisions and directives",
+    }),
   ]),
   branch("sebon", { ne: "नेपाल धितोपत्र बोर्ड", en: "Securities Board of Nepal (SEBON)" }, 5, [
     leaf("sebon-enforcement", "sebon", W.enforcement),
@@ -358,12 +422,76 @@ function place(
   node: ArchiveNode,
   where: Placement,
 ): void {
+  containerFor(tree, subfolders, where).children.push(node);
+}
+
+/** The folder (or its sub-folder) a placement names; an unknown folder means Others. */
+function containerFor(
+  tree: ArchiveBranch[],
+  subfolders: ReadonlyMap<ArchiveBranch, readonly ArchiveBranch[]>,
+  where: Placement,
+): ArchiveBranch {
   const folder =
     tree.find((entry) => entry.slug === where.folder) ?? tree.find((entry) => entry.slug === UNFILED_FOLDER)!;
   const sub = where.subfolder
     ? subfolders.get(folder)?.find((entry) => entry.slug === where.subfolder)
     : undefined;
-  (sub ?? folder).children.push(node);
+  return sub ?? folder;
+}
+
+/** A copy of a shelf whose branches can take extra leaves without touching `ARCHIVE_SHELVES`. */
+function copyNode(node: ArchiveNode): ArchiveNode {
+  return node.type === "branch" ? { ...node, children: node.children.map(copyNode) } : node;
+}
+
+// Country tails some publishers carry ("…, Nepal", "…, नेपाल सरकार"): the
+// archive is all Nepal's, so an office is named without them.
+const OFFICE_TAIL_EN = /,\s*(Government of Nepal|Nepal)\s*$/i;
+const OFFICE_TAIL_NE = /,\s*(नेपाल सरकार|नेपाल)\s*$/;
+
+/**
+ * The office a source not on any shelf is grouped under: its API publisher,
+ * in both languages. Null when the API names no publisher.
+ */
+export function officeName(publisher: BilingualLabel | null | undefined): Bilingual | null {
+  const en = (publisher?.en ?? "").trim().replace(OFFICE_TAIL_EN, "");
+  const ne = (publisher?.ne ?? "").trim().replace(OFFICE_TAIL_NE, "");
+  return en || ne ? { ne, en } : null;
+}
+
+/**
+ * A source's name inside its office, without the office repeated in front
+ * ("Ministry of Home Affairs reports" → "Reports"; "गृह मन्त्रालयका प्रतिवेदन"
+ * → "प्रतिवेदन"). A name that doesn't start with the office stays whole.
+ */
+export function seriesName(name: BilingualLabel | null | undefined, office: Bilingual, source: string): Bilingual {
+  const en = name?.en ?? "";
+  const ne = name?.ne ?? "";
+  let shortEn = en;
+  if (office.en && en.toLowerCase().startsWith(`${office.en.toLowerCase()} `)) {
+    const rest = en.slice(office.en.length + 1).trim();
+    if (rest) shortEn = rest.charAt(0).toUpperCase() + rest.slice(1);
+  }
+  let shortNe = ne;
+  if (office.ne && ne.startsWith(office.ne)) {
+    const rest = /^(?:का|को|की)?\s+(.+)$/.exec(ne.slice(office.ne.length));
+    if (rest) shortNe = rest[1].trim();
+  }
+  return { ne: shortNe, en: shortEn || source };
+}
+
+function sameOffice(a: Bilingual, b: Bilingual): boolean {
+  return (
+    (Boolean(a.en) && a.en.toLowerCase() === b.en.toLowerCase()) || (Boolean(a.ne) && a.ne === b.ne)
+  );
+}
+
+const OFFICE_PREFIX = "office-";
+
+/** A path-safe slug for an office opened from the API publisher. */
+export function officeSlug(office: Bilingual): string {
+  const base = (office.en || office.ne).trim().toLowerCase().replace(/\s+/g, "-");
+  return OFFICE_PREFIX + base.replace(/[^a-z0-9_-]/g, (ch) => `~${ch.codePointAt(0)!.toString(16)}`);
 }
 
 /**
@@ -383,23 +511,33 @@ export function withUnfiled(
   const rows = new Map((catalogue?.sources ?? []).map((row) => [row.source, row] as const));
   for (const shelf of ARCHIVE_SHELVES) {
     const where = shelfPlacement(shelf, rows);
-    if (where) place(tree, subfolders, shelf, where);
+    if (where) place(tree, subfolders, copyNode(shelf), where);
   }
   const known = new Set(ARCHIVE_SHELVES.flatMap(leavesOf).map((entry) => entry.source));
   for (const row of listedSources(catalogue)) {
     if (known.has(row.source)) continue;
-    place(
-      tree,
-      subfolders,
-      {
-        type: "leaf",
-        slug: unfiledSlug(row.source),
-        source: row.source,
-        name: { ne: row.name?.ne ?? "", en: row.name?.en ?? row.source },
-        apiName: row.name,
-      },
-      { folder: row.folder || UNFILED_FOLDER, subfolder: row.subfolder },
+    const where = { folder: row.folder || UNFILED_FOLDER, subfolder: row.subfolder };
+    const office = officeName(row.publisher);
+    const entry: ArchiveLeaf = {
+      type: "leaf",
+      slug: unfiledSlug(row.source),
+      source: row.source,
+      name: office ? seriesName(row.name, office, row.source) : { ne: row.name?.ne ?? "", en: row.name?.en ?? row.source },
+      apiName: row.name,
+    };
+    if (!office) {
+      place(tree, subfolders, entry, where);
+      continue;
+    }
+    // A source the shelves don't know still gets the office level: it joins
+    // its publisher's office in that folder (a shelf's, or one an earlier
+    // source opened), or opens one named after the publisher.
+    const container = containerFor(tree, subfolders, where);
+    const existing = container.children.find(
+      (child): child is ArchiveBranch => child.type === "branch" && sameOffice(child.name, office),
     );
+    if (existing) existing.children.push(entry);
+    else container.children.push(branch(officeSlug(office), office, container.tint, [entry]));
   }
   // The top level keeps the API's fixed order (damo: Judiciary, Government
   // bodies, Laws, News, International, Others); everything below it is sorted.
