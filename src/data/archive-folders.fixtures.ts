@@ -1,7 +1,8 @@
 /**
  * Test fixture: where the API files each source (`folder` / `subfolder` on
  * /api/document-sources/), as migration 0015 of JawafdehiAPI set it in
- * production on 18 Nov 2026 (JAW-87). Tests build catalogue rows with
+ * production on 18 Nov 2026 (JAW-87), plus the sources the registry has filed
+ * since (checked on the live API, 21 Nov 2026). Tests build catalogue rows with
  * `filedRow` so the archive tree places shelves the way production does.
  */
 
@@ -27,10 +28,18 @@ export const PRODUCTION_FOLDERS: Record<string, readonly [string, string?]> = {
   dri: ["government"],
   dmli: ["government"],
   nepal_police: ["government"],
+  moha: ["government"],
+  nhrc: ["government"],
+  psc: ["government"],
+  trc: ["government"],
+  nea: ["government"],
+  election_commission: ["government"],
   "province/koshi": ["government"],
   nrb: ["government", "regulators"],
   sebon: ["government", "regulators"],
   nia: ["government", "regulators"],
+  nta: ["government", "regulators"],
+  erc: ["government", "regulators"],
   parliament_pac: ["parliament"],
   legal_corpus: ["laws"],
   legal_template: ["laws"],
