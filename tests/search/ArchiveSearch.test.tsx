@@ -923,13 +923,13 @@ describe("ArchiveSearch", () => {
   // Browsing with no query text is a curated shelf, not a ranking: OpenSearch
   // gives every document an identical score, so `relevance` would collapse to the
   // `iri` tiebreaker and order the archive alphabetically by slug.
-  it("sorts by editorial weight while browsing without a query", async () => {
+  it("browses newest first without a query (the home page keeps editorial weight)", async () => {
     searchArchiveMock.mockResolvedValue(baseResponse);
     renderSearch("/search?type=case");
 
     await waitFor(() =>
       expect(searchArchiveMock).toHaveBeenCalledWith(
-        expect.objectContaining({ sort: "featured", type: "case" }),
+        expect.objectContaining({ sort: "newest", type: "case" }),
       ),
     );
   });

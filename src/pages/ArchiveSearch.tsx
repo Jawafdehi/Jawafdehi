@@ -889,14 +889,15 @@ function readParams(
     // An explicit ?sort wins. Otherwise the default depends on whether there is
     // query text: with none, EVERY document scores identically (a constant 2.0),
     // so `relevance` degenerates to the `iri` tiebreaker and browse order comes
-    // out alphabetical by slug — which is why `bara-hulak-…` used to lead. Browse
-    // with no query is a curated shelf, so it sorts by editorial weight; a typed
-    // query has real scores, so it sorts by relevance.
+    // out alphabetical by slug — which is why `bara-hulak-…` used to lead.
+    // Browsing with no query shows the most recent first; the editorial weight
+    // ("featured") is the home page's order, still one pick away in Sort. A
+    // typed query has real scores, so it sorts by relevance.
     sort: requestedSort && validSorts.has(requestedSort)
       ? requestedSort
       : q
         ? "relevance"
-        : "featured",
+        : "newest",
     page: Number.isFinite(page) && page > 0 ? page : 1,
     page_size: archiveSearchPageSize,
   };
