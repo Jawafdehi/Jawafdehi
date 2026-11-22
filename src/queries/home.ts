@@ -18,8 +18,9 @@ export const FEATURED_CASE_COUNT = FEATURED_CASE_GRID_COUNT;
  * flashes its skeleton on load despite SSR having already fetched the data. One
  * exported factory makes that class of bug unrepresentable.
  *
- * `sort: "newest"` orders by case date, newest first. The editorial `weight` is
- * deliberately not used: every case gets equal standing on the homepage.
+ * `sort: "featured"` orders by the editorial `weight` on Case, then newest by
+ * case date: the home page is the curated shelf. The archive search is where
+ * cases browse newest first (see readParams in pages/ArchiveSearch.tsx).
  */
 export function featuredCasesQuery() {
   return {
@@ -27,7 +28,7 @@ export function featuredCasesQuery() {
     queryFn: (): Promise<ArchiveSearchResponse> =>
       searchArchive({
         type: "case",
-        sort: "newest",
+        sort: "featured",
         page_size: FEATURED_CASE_COUNT,
       }),
   };

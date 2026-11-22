@@ -2915,38 +2915,42 @@
       "title": "What's inside",
       "stats": [
         {
-          "value": "2,836",
+          "value": "2,847",
           "label": "published corruption and accountability cases"
         },
         {
-          "value": "Rs 2.34 Kharab",
+          "value": "Rs 2.72 Kharab",
           "label": "alleged in those cases"
         },
         {
-          "value": "23 Lakh",
-          "label": "court case records from 97 courts"
+          "value": "23,13,760",
+          "label": "court case records from {{courts}} courts"
         },
         {
-          "value": "~1 Lakh",
+          "value": "99,674",
           "label": "Attorney General charge-sheet records"
         },
         {
-          "value": "2.05 Lakh",
+          "value": "2,05,826",
           "label": "procurement notices (Bolpatra)"
         },
         {
-          "value": "43,000",
-          "label": "court orders, plus 10,500 Supreme Court precedents"
+          "value": "43,336",
+          "label": "court orders, plus {{precedents}} Supreme Court precedents"
         },
         {
-          "value": "3,500",
+          "value": "3,577",
           "label": "CIAA press releases"
         },
         {
-          "value": "~220",
-          "label": "Auditor General reports: federal, provincial, SOE"
+          "value": "621",
+          "label": "Auditor General reports and publications"
         }
-      ]
+      ],
+      "fallback": {
+        "courts": "97",
+        "precedents": "10,554"
+      }
     },
     "questions": {
       "title": "Questions you can try asking",

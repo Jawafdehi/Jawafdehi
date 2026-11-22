@@ -13,15 +13,17 @@ describe("featuredCasesQuery", () => {
     searchArchiveMock.mockResolvedValue({ results: [] });
   });
 
-  it("asks the search API for the newest order", async () => {
+  it("asks the search API for the editorial-weight order", async () => {
     // `sort` is a server-side ChoiceField, so this string is a contract with the
-    // API's ALL_SORTS, not a local preference: "newest" silently reverts the
-    // curation, and a typo is a 400 that leaves the section on its skeleton.
+    // API's ALL_SORTS, not a local preference: the home page is the curated
+    // shelf ("featured" = weight, then newest), while the archive search is
+    // where cases browse newest first. A typo is a 400 that leaves the section
+    // on its skeleton.
     await featuredCasesQuery().queryFn();
 
     expect(searchArchiveMock).toHaveBeenCalledWith({
       type: "case",
-      sort: "newest",
+      sort: "featured",
       page_size: FEATURED_CASE_COUNT,
     });
   });

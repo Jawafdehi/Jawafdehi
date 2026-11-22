@@ -120,10 +120,17 @@ const OurTeam = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      {/* The team's own share card (public/assets/og/team.jpg, 1200×630): the
+          wordmark, "Built by Nepali volunteers, for Nepal" and the team's
+          photos, in the site card's style. Re-render it when the team changes. */}
       <Seo
         title="Our Team — Jawafdehi"
         description="Meet the Nepali volunteers building Jawafdehi — Nepal's permanent corruption case archive."
         canonicalUrl={`${SITE_URL}/team/`}
+        imageUrl={`${SITE_URL}/assets/og/team.jpg`}
+        imageAlt="Built by Nepali volunteers, for Nepal: the people behind Jawafdehi"
+        imageWidth={1200}
+        imageHeight={630}
       />
 
       <main id="main-content" className="flex-1">
