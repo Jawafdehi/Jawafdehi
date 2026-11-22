@@ -1,4 +1,6 @@
-import { Helmet } from "react-helmet-async";
+import { Seo } from "@/components/Seo";
+import { SITE_URL } from "@/utils/seo";
+import { pageCard } from "@/utils/page-cards";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { RefreshCw } from "@/components/icons";
@@ -29,17 +31,15 @@ const DataQuality = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <Helmet>
-        <title>{t("dataQuality.title", "Data Quality & Coverage")} · Jawafdehi</title>
-        <meta
-          name="description"
-          content={t(
-            "dataQuality.intro",
-            "What our public datasets track today, and how complete the records are.",
-          )}
-        />
-        <link rel="canonical" href="https://jawafdehi.org/data-quality" />
-      </Helmet>
+      <Seo
+        title={`${t("dataQuality.title", "Data Quality & Coverage")} · Jawafdehi`}
+        description={t(
+          "dataQuality.intro",
+          "What our public datasets track today, and how complete the records are.",
+        )}
+        canonicalUrl={`${SITE_URL}/data-quality`}
+        {...pageCard("data-quality")}
+      />
 
       <main id="main-content" className="flex-1">
         <LightHero

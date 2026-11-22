@@ -2,6 +2,7 @@ import { CommitmentList } from "@/components/commitment/commitment";
 import { CommitmentHero } from "@/components/commitment/hero";
 import { CommitmentMission } from "@/components/commitment/mission";
 import { Seo } from "@/components/Seo";
+import { pageCard } from "@/utils/page-cards";
 import { SITE_URL } from "@/utils/seo";
 
 const Commitment = () => {
@@ -11,6 +12,7 @@ const Commitment = () => {
         title="Our Commitment — Jawafdehi"
         description="Jawafdehi's commitments to the Nepali public: permanent records, factual accuracy, open source technology, and free access forever."
         canonicalUrl={`${SITE_URL}/commitment/`}
+        {...pageCard("commitment")}
       />
 
       <main id="main-content" className="flex-1">

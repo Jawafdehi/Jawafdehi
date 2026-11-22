@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { ShaderBackdrop } from "@/components/brand-shaders/shader-backdrop";
 import { CaseTagBadge } from "@/components/CaseBadge";
 import { Seo } from "@/components/Seo";
+import { pageCard } from "@/utils/page-cards";
 import { chipVariants } from "@/components/ui/chip";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -152,6 +153,7 @@ const Updates = () => {
         title={`Updates | ${SITE_NAME}`}
         description="Latest news, announcements, and updates from the Jawafdehi team on Nepal's corruption accountability platform."
         canonicalUrl={`${SITE_URL}/updates/`}
+        {...pageCard("updates")}
       />
 
       <main id="main-content" className="flex-1">

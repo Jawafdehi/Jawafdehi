@@ -4,6 +4,7 @@ import { FaDiscord } from "react-icons/fa";
 
 import { FeedbackForm } from "@/components/FeedbackForm";
 import { Seo } from "@/components/Seo";
+import { pageCard } from "@/utils/page-cards";
 import { ShaderBackdrop } from "@/components/brand-shaders/shader-backdrop";
 import { LightHero } from "@/components/ui/light-hero";
 import { JAWAFDEHI_SOCIALS } from "@/config/constants";
@@ -29,6 +30,7 @@ export default function Feedback() {
         title={`Submit Feedback | ${SITE_NAME}`}
         description="Share your feedback, suggestions, or corrections with the Jawafdehi team to help improve Nepal's corruption accountability platform."
         canonicalUrl={`${SITE_URL}/feedback/`}
+        {...pageCard("feedback")}
       />
 
       {/* The archive's dither field behind the whole page, not just its

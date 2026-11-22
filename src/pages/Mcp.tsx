@@ -12,6 +12,7 @@ import { ConnectPanel } from "@/components/mcp/connect-panel";
 import { McpAccess, McpDemo, McpInside, McpOverview, McpPilot, McpQuestions, McpSkill } from "@/components/mcp/mcp-sections";
 import { WhatsNewSection } from "@/components/whats-new/whats-new-section";
 import { Seo } from "@/components/Seo";
+import { pageCard } from "@/utils/page-cards";
 import { Reveal } from "@/components/ui/reveal";
 import { SITE_NAME, SITE_URL } from "@/utils/seo";
 
@@ -24,6 +25,7 @@ const Mcp = () => {
         title={`${t("mcp.meta.title")} | ${SITE_NAME}`}
         description={t("mcp.meta.description")}
         canonicalUrl={`${SITE_URL}/mcp/`}
+        {...pageCard("mcp")}
         language={i18n.language}
       />
 

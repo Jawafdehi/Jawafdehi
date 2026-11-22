@@ -4,6 +4,7 @@ import { PauseCircle, Play, Youtube } from "@/components/icons";
 
 import { LightHero } from "@/components/ui/light-hero";
 import { Seo } from "@/components/Seo";
+import { pageCard } from "@/utils/page-cards";
 import { JAWAFDEHI_WEEKLY_SERIES } from "@/config/constants";
 import { SITE_URL } from "@/utils/seo";
 
@@ -43,6 +44,7 @@ const WeeklyMeetings = () => {
         title="Weekly Corruption Series — Jawafdehi"
         description="Jawafdehi's weekly corruption series breaking down Nepal's corruption cases. The live series is currently on pause; past presentations remain available on YouTube."
         canonicalUrl={`${SITE_URL}/saptahik/`}
+        {...pageCard("saptahik")}
       />
 
       <main id="main-content" className="flex-1">

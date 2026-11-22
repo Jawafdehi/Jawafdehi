@@ -16,6 +16,7 @@ import { DotDither } from "@/components/ui/dot-dither";
 import { MistCarousel } from "@/components/ui/mist-carousel";
 import { CopyBlock, CopyButton, CopyPill } from "@/components/copy-snippet";
 import { Seo } from "@/components/Seo";
+import { pageCard } from "@/utils/page-cards";
 import { Panel } from "@/components/ui/panel";
 import { Reveal } from "@/components/ui/reveal";
 import { WhatsNewSection } from "@/components/whats-new/whats-new-section";
@@ -229,6 +230,7 @@ const Likhit = () => {
         title={`${t("likhit.meta.title")} | ${SITE_NAME}`}
         description={t("likhit.meta.description")}
         canonicalUrl={`${SITE_URL}/likhit/`}
+        {...pageCard("likhit")}
         language={i18n.language}
       />
 

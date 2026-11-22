@@ -11,6 +11,9 @@ import { CourtCaseRelatedCases } from "@/components/CourtCaseRelatedCases";
 import { CaseSectionJumpNav, type CaseJumpSection } from "@/components/case-detail/case-section-jump-nav";
 import { getCourtCaseFull } from "@/services/datalake-api";
 import { courtCaseIri as buildCourtCaseIri } from "@/queries/related-cases";
+import { pageCard } from "@/utils/page-cards";
+
+const courtCard = pageCard("court-records");
 
 // The /courtcase/* splat tail is the courtcase IRI path component
 // `<court>/<case_number>` (e.g. `special/081-CR-0079`); we rebuild the canonical
@@ -148,6 +151,13 @@ export default function CourtCaseProfile() {
           name="description"
           content={`Court case ${caseNumber} in the Jawafdehi governance archive.`}
         />
+        {/* No per-case picture: the court-records share card, not the generic one. */}
+        <meta property="og:image" content={courtCard.imageUrl} />
+        <meta property="og:image:alt" content={courtCard.imageAlt} />
+        <meta property="og:image:width" content={String(courtCard.imageWidth)} />
+        <meta property="og:image:height" content={String(courtCard.imageHeight)} />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:image" content={courtCard.imageUrl} />
         {jsonLd ? <script type="application/ld+json">{jsonLd}</script> : null}
       </Helmet>
 

@@ -7,6 +7,7 @@ import { SiLinktree } from "react-icons/si";
 
 import { CaseReportForm } from "@/components/CaseReportForm";
 import { Seo } from "@/components/Seo";
+import { pageCard } from "@/utils/page-cards";
 import { LightHero } from "@/components/ui/light-hero";
 import { JAWAFDEHI_SOCIALS, JAWAFDEHI_WHATSAPP_NUMBER } from "@/config/constants";
 import { SITE_URL } from "@/utils/seo";
@@ -54,7 +55,7 @@ export default function ReportCase() {
 
   return (
     <div className="bg-background">
-      <Seo title={title} description={description} canonicalUrl={PAGE_URL} />
+      <Seo title={title} description={description} canonicalUrl={PAGE_URL} {...pageCard("report")} />
 
       <LightHero
         id="report-title"

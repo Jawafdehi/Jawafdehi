@@ -4,6 +4,7 @@ import { ArrowRight, ArrowUpRight } from "@/components/icons";
 import { Link } from "react-router-dom";
 
 import { Seo } from "@/components/Seo";
+import { pageCard } from "@/utils/page-cards";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { PageHero } from "@/components/ui/page-hero";
 import { CHAT_URL } from "@/lib/external-links";
@@ -181,6 +182,7 @@ const OurProducts = () => {
         title="Our products — Jawafdehi"
         description="Jawafdehi's products: the AI Research Chat and the Jawafdehi MCP for research and reporting, and the Jawafdehi API and likhit for developers."
         canonicalUrl={`${SITE_URL}/products/`}
+        {...pageCard("products")}
       />
 
       <main id="main-content" className="flex-1">

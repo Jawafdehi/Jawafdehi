@@ -28,7 +28,7 @@ export const SITE_NAME_NEPALI = "जवाफदेही इनिशिएट�
 // every field on this site can hold. Do not paraphrase it: the branding audit
 // found five paraphrases live simultaneously, two of them in this repo.
 export const SITE_DESCRIPTION =
-  "Nepal's Permanent Corruption Case Archive. We arrange corruption-related evidence and facts into a structured format of who, what, and when.";
+  "Nepal's digital archive of public accountability. Corruption cases, court records and public documents, structured into who, what, and when.";
 export const SOCIAL_IMAGE_URL = `${SITE_URL}/assets/social-preview.png`;
 
 // The composed author share card: an author's photograph, their name in both

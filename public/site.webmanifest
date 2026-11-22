@@ -1,7 +1,7 @@
 {
-  "name": "Jawafdehi — Nepal's Corruption Case Archive",
+  "name": "Jawafdehi — Nepal's Digital Archive of Public Accountability",
   "short_name": "Jawafdehi",
-  "description": "Nepal's Permanent Corruption Case Archive. We arrange corruption-related evidence and facts into a structured format of who, what, and when.",
+  "description": "Nepal's digital archive of public accountability. Corruption cases, court records and public documents, structured into who, what, and when.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

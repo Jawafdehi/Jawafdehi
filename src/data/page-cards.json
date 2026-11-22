@@ -1,0 +1,318 @@
+{
+  "//": "Each page's share card. scripts/render-social-card.mjs draws these into public/ (re-run it after editing a card here); src/utils/page-cards.ts hands the same entry to <Seo>, so the alt text always matches the picture. 'title' is [lead, highlight, tail]; the highlight is set in red.",
+  "cards": [
+    {
+      "slug": "home",
+      "file": "assets/social-preview.png",
+      "theme": "dark",
+      "path": "",
+      "title": [
+        "Nepal’s digital archive of ",
+        "public accountability",
+        ""
+      ],
+      "sub": "Cases, court records and the documents behind them.",
+      "motif": {
+        "kind": "lines"
+      }
+    },
+    {
+      "slug": "search",
+      "path": "search",
+      "title": [
+        "Search every ",
+        "case, person and court record",
+        ""
+      ],
+      "sub": "One search across Nepal’s accountability records.",
+      "motif": {
+        "kind": "search"
+      }
+    },
+    {
+      "slug": "materials",
+      "path": "materials",
+      "title": [
+        "Nepal’s public records, ",
+        "in one open archive",
+        ""
+      ],
+      "sub": "Audit reports, charge sheets, court orders and more.",
+      "motif": {
+        "kind": "covers"
+      },
+      "layout": "top"
+    },
+    {
+      "slug": "court-records",
+      "path": "search?type=courtcase",
+      "title": [
+        "Court records from ",
+        "every court in Nepal",
+        ""
+      ],
+      "sub": "Cases, hearings and orders, linked to the people in them.",
+      "motif": {
+        "kind": "none"
+      }
+    },
+    {
+      "slug": "mcp",
+      "path": "mcp",
+      "title": [
+        "Nepal’s accountability record, ",
+        "inside your AI",
+        ""
+      ],
+      "sub": "Connect Claude, ChatGPT and more over MCP.",
+      "motif": {
+        "kind": "chat"
+      },
+      "layout": "top"
+    },
+    {
+      "slug": "products",
+      "path": "products",
+      "title": [
+        "",
+        "Our products",
+        ""
+      ],
+      "sub": "Research chat, the MCP server, the API and likhit.",
+      "motif": {
+        "kind": "tiles",
+        "icons": [
+          "ChatCircle",
+          "PlugsConnected",
+          "BracketsCurly",
+          "FileText"
+        ]
+      },
+      "layout": "top"
+    },
+    {
+      "slug": "likhit",
+      "path": "likhit",
+      "title": [
+        "Nepali documents, converted ",
+        "faithfully",
+        ""
+      ],
+      "sub": "PDFs, scans and old .doc files in, clean Markdown out.",
+      "motif": {
+        "kind": "none"
+      }
+    },
+    {
+      "slug": "about",
+      "path": "about",
+      "title": [
+        "Transparency, ",
+        "accountability",
+        " and justice in Nepal"
+      ],
+      "sub": "A civic tech initiative built by Nepali volunteers.",
+      "motif": {
+        "kind": "none"
+      }
+    },
+    {
+      "slug": "commitment",
+      "path": "commitment",
+      "title": [
+        "Nepal deserves a ",
+        "permanent memory",
+        " of accountability"
+      ],
+      "sub": "Our commitments to the Nepali public.",
+      "motif": {
+        "kind": "none"
+      }
+    },
+    {
+      "slug": "our-process",
+      "path": "our-process",
+      "title": [
+        "How a case goes from discovery to the ",
+        "public archive",
+        ""
+      ],
+      "sub": "Discover, research, compile, publish.",
+      "motif": {
+        "kind": "none"
+      },
+      "wide": true
+    },
+    {
+      "slug": "data-quality",
+      "path": "data-quality",
+      "title": [
+        "Data quality ",
+        "and coverage",
+        ""
+      ],
+      "sub": "What our datasets track, and how complete they are.",
+      "motif": {
+        "kind": "none"
+      }
+    },
+    {
+      "slug": "team",
+      "path": "team",
+      "title": [
+        "Built by ",
+        "Nepali volunteers",
+        ", for Nepal"
+      ],
+      "sub": "The people behind Jawafdehi.",
+      "motif": {
+        "kind": "team"
+      },
+      "layout": "top"
+    },
+    {
+      "slug": "volunteer",
+      "path": "volunteer",
+      "title": [
+        "Help build Nepal’s ",
+        "accountability record",
+        ""
+      ],
+      "sub": "Researchers, engineers, journalists and translators.",
+      "motif": {
+        "kind": "none"
+      }
+    },
+    {
+      "slug": "donate",
+      "path": "donate",
+      "title": [
+        "Keep the public record ",
+        "permanent and free",
+        ""
+      ],
+      "sub": "Your gift pays for servers, archiving and verification.",
+      "motif": {
+        "kind": "none"
+      }
+    },
+    {
+      "slug": "faq",
+      "path": "faq",
+      "title": [
+        "Questions, ",
+        "answered plainly",
+        ""
+      ],
+      "sub": "For readers, reporters, donors and volunteers.",
+      "motif": {
+        "kind": "glyph",
+        "glyph": "?"
+      }
+    },
+    {
+      "slug": "press-kit",
+      "path": "press-kit",
+      "title": [
+        "Press ",
+        "kit",
+        ""
+      ],
+      "sub": "Logos, descriptors and photos, cleared for publication.",
+      "motif": {
+        "kind": "none"
+      }
+    },
+    {
+      "slug": "report",
+      "path": "report",
+      "title": [
+        "Report an ",
+        "allegation",
+        ""
+      ],
+      "sub": "Every submission is reviewed before publication.",
+      "motif": {
+        "kind": "none"
+      }
+    },
+    {
+      "slug": "feedback",
+      "path": "feedback",
+      "title": [
+        "Share your ",
+        "feedback",
+        ""
+      ],
+      "sub": "Suggestions and corrections help us get it right.",
+      "motif": {
+        "kind": "none"
+      }
+    },
+    {
+      "slug": "blog",
+      "path": "blog",
+      "title": [
+        "Stories from ",
+        "the archive",
+        ""
+      ],
+      "sub": "Explainers and notes from the Jawafdehi team.",
+      "motif": {
+        "kind": "none"
+      }
+    },
+    {
+      "slug": "updates",
+      "path": "updates",
+      "title": [
+        "News and ",
+        "updates",
+        ""
+      ],
+      "sub": "Announcements and what’s new on Jawafdehi.",
+      "motif": {
+        "kind": "none"
+      }
+    },
+    {
+      "slug": "saptahik",
+      "path": "saptahik",
+      "title": [
+        "Weekly ",
+        "corruption series",
+        ""
+      ],
+      "sub": "Past presentations, on YouTube.",
+      "motif": {
+        "kind": "none"
+      }
+    },
+    {
+      "slug": "privacy",
+      "path": "privacy",
+      "title": [
+        "Privacy ",
+        "policy",
+        ""
+      ],
+      "sub": "What we collect, why, and the choices you have.",
+      "motif": {
+        "kind": "none"
+      }
+    },
+    {
+      "slug": "terms",
+      "path": "terms",
+      "title": [
+        "Terms of ",
+        "service",
+        ""
+      ],
+      "sub": "The rules for using Jawafdehi.",
+      "motif": {
+        "kind": "none"
+      }
+    }
+  ]
+}

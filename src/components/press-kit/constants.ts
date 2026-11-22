@@ -101,11 +101,11 @@ export const PRESS_KIT_TYPEFACES = [
 ] as const;
 
 export const PRESS_KIT_DESCRIPTORS = {
-  nepali: "नेपालको स्थायी भ्रष्टाचार अभिलेख — को, के र कहिले।",
-  long: "Nepal's Permanent Corruption Case Archive. We arrange corruption-related evidence and facts into a structured format of who, what, and when.",
+  nepali: "नेपालको सार्वजनिक जवाफदेहिताको डिजिटल अभिलेख — को, के र कहिले।",
+  long: "Nepal's digital archive of public accountability. Corruption cases, court records and public documents, structured into who, what, and when.",
   medium:
-    "Nepal's Permanent Corruption Case Archive. Corruption evidence, structured into who, what, and when.",
-  short: "Nepal's Permanent Corruption Case Archive — who, what, and when.",
+    "Nepal's digital archive of public accountability. Public records, structured into who, what, and when.",
+  short: "Nepal's digital archive of public accountability — who, what, and when.",
 } as const;
 
 /**

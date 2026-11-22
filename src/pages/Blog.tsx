@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 
 import { ShaderBackdrop } from "@/components/brand-shaders/shader-backdrop";
 import { Seo } from "@/components/Seo";
+import { pageCard } from "@/utils/page-cards";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { FEED_GRID, FeedSkeleton, StoryTile } from "@/pages/Updates";
@@ -28,6 +29,7 @@ const Blog = () => {
         title={`Blog | ${SITE_NAME}`}
         description="Stories, explainers, and behind-the-scenes notes from the Jawafdehi team on Nepal's corruption accountability work."
         canonicalUrl={`${SITE_URL}/blog/`}
+        {...pageCard("blog")}
       />
 
       <main id="main-content" className="flex-1">
