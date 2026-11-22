@@ -18,7 +18,9 @@ export interface TeamMember {
   // rather than rendering a blank card in Nepali.
   displayName: { en: string; ne?: string };
   thumb?: string;
-  description: string;
+  // A plain string is shown in both languages; give `{ en, ne }` when a
+  // Nepali version exists (Nepali falls back to `en`, like displayName).
+  description: string | { en: string; ne?: string };
   tags?: string[];
   contacts: Contact[];
 }
@@ -143,7 +145,12 @@ export const advisors: TeamMember[] = [
   {
     displayName: { en: "Purna Adhikari", ne: "पूर्ण अधिकारी" },
     thumb: "/assets/teammembers/purna.webp",
-    description: "",
+    // His own words (Nepali, from his advisor welcome card, 2026-11-19), shortened;
+    // English is our translation. Added at the chairman's request.
+    description: {
+      en: "Researcher; advocate of digitalisation, transparency, accountability and responsive governance",
+      ne: "अनुसन्धानकर्ता; डिजिटलाइजेसन, पारदर्शिता, जवाफदेहिता र उत्तरदायी शासनका पक्षधर",
+    },
     tags: ["General Member", "Advisor"],
     contacts: [],
   },

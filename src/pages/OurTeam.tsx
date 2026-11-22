@@ -41,6 +41,11 @@ const OurTeam = () => {
   const { t, i18n } = useTranslation();
   const lang = (i18n.language?.startsWith("ne") ? "ne" : "en") as "en" | "ne";
 
+  const descriptionOf = (member: TeamMember) =>
+    typeof member.description === "string"
+      ? member.description
+      : (member.description[lang] ?? member.description.en);
+
   const renderMember = (member: TeamMember) => (
     <TeamCard key={member.displayName.en}>
       {/* Photo */}
@@ -75,9 +80,9 @@ const OurTeam = () => {
       )}
 
       {/* Description */}
-      {member.description && (
+      {descriptionOf(member) && (
         <p className="mt-3 flex-1 text-base leading-7 text-muted-foreground">
-          {member.description}
+          {descriptionOf(member)}
         </p>
       )}
 
