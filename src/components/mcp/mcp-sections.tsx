@@ -17,6 +17,7 @@ import { CopyPill } from "@/components/copy-snippet";
 import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { getStatistics } from "@/services/jds-api";
+import { documentSourcesQuery, type DocumentSourcesResponse } from "@/lib/document-sources";
 import { formatBigo, formatCount } from "@/utils/number";
 
 function SectionHead({ title }: Readonly<{ title: string }>) {
@@ -51,18 +52,52 @@ export function McpOverview() {
 
 type Stat = { value: string; label: string };
 
+// Where each figure in "What's inside" comes from, in the authored order
+// (mcp.inside.stats). Every one is live: the case count and amount from
+// /api/statistics (the home page's source), the court-record total from its
+// NGM block, the document counts from /api/document-sources (the /materials
+// archive's). The authored values are exact fallbacks while those load.
+type InsideSources = {
+  stats?: Awaited<ReturnType<typeof getStatistics>>;
+  sources?: DocumentSourcesResponse;
+};
+const sourceCount = (data: InsideSources, key: string) =>
+  data.sources?.ready ? data.sources.sources.find((row) => row.source === key)?.count : undefined;
+const INSIDE_FIGURES: ReadonlyArray<{ kind: "count" | "bigo"; live: (data: InsideSources) => number | null | undefined }> = [
+  { kind: "count", live: (d) => d.stats?.published_cases },
+  { kind: "bigo", live: (d) => d.stats?.total_bigo },
+  { kind: "count", live: (d) => d.stats?.ngm?.court_cases_total },
+  { kind: "count", live: (d) => sourceCount(d, "ag") },
+  { kind: "count", live: (d) => sourceCount(d, "bolpatra") },
+  { kind: "count", live: (d) => sourceCount(d, "court_order") },
+  { kind: "count", live: (d) => sourceCount(d, "ciaa_press_release") },
+  { kind: "count", live: (d) => sourceCount(d, "official_report") },
+];
+
 export function McpInside() {
   const { t, i18n } = useTranslation();
-  const authored = t("mcp.inside.stats", { returnObjects: true }) as Stat[];
-  // The first two figures (cases, money alleged) are live, from the same
-  // /api/statistics query as the home page, so the two pages never disagree.
-  // The typed values are the fallback while it loads or if it fails.
-  const { data: live } = useQuery({ queryKey: ["statistics"], queryFn: getStatistics, staleTime: 5 * 60 * 1000 });
+  const { data: stats } = useQuery({ queryKey: ["statistics"], queryFn: getStatistics, staleTime: 5 * 60 * 1000 });
+  const { data: sources } = useQuery({ ...documentSourcesQuery(), staleTime: 5 * 60 * 1000 });
+  const language = i18n.language;
+  const data: InsideSources = { stats, sources };
+  // Numbers inside two labels ("from 97 courts", "plus 10,554 precedents"),
+  // live like the figures, with the authored fallbacks below.
+  const courts = stats?.ngm?.courts_total;
+  const precedents = sourceCount(data, "nkp");
+  const authored = t("mcp.inside.stats", {
+    returnObjects: true,
+    courts: courts != null ? formatCount(courts, undefined, language) : t("mcp.inside.fallback.courts"),
+    precedents: precedents != null ? formatCount(precedents, undefined, language) : t("mcp.inside.fallback.precedents"),
+  }) as Stat[];
   if (!Array.isArray(authored)) return null;
-  const stats = authored.map((stat, index) => {
-    if (index === 0 && live?.published_cases != null) return { ...stat, value: formatCount(live.published_cases, undefined, i18n.language) };
-    if (index === 1 && live?.total_bigo != null) return { ...stat, value: formatBigo(live.total_bigo, i18n.language) };
-    return stat;
+  const figures = authored.map((stat, index) => {
+    const figure = INSIDE_FIGURES[index];
+    const value = figure?.live(data);
+    if (value == null) return stat;
+    return {
+      ...stat,
+      value: figure.kind === "bigo" ? formatBigo(value, language) : formatCount(value, undefined, language),
+    };
   });
   // One grid, one size: the money alleged (the second figure) is the only
   // one set apart, by colour alone.
@@ -72,7 +107,7 @@ export function McpInside() {
         <SectionHead title={t("mcp.inside.title")} />
 
         <ul className="mt-10 grid grid-cols-2 gap-x-8 gap-y-10 lg:grid-cols-4">
-          {stats.map((stat, index) => (
+          {figures.map((stat, index) => (
             <li key={stat.label}>
               <Reveal delayMs={(index % 4) * 60}>
                 <p className={cn("font-home-display text-2xl tabular-nums md:text-3xl", index === 1 ? "text-accent" : "text-primary")}>
