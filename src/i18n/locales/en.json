@@ -727,7 +727,11 @@
   },
   "team": {
     "hero": {
-      "title": "Our Team"
+      "title": "Our Team",
+      "builtBy": "Built by",
+      "nepaliVolunteers": "Nepali volunteers",
+      "forNepal": "for Nepal",
+      "description": "Jawafdehi is the work of Nepali citizens across technology, research, journalism and public policy: volunteers, consultants, advisors and the board. People who believe accountability matters."
     },
     "sections": {
       "advisors": "Advisors",
@@ -742,7 +746,9 @@
       "Advisor": "Advisor",
       "Founding Member": "Founding Member",
       "General Member": "General Member",
-      "Board Member": "Board Member"
+      "Board Member": "Board Member",
+      "President": "President",
+      "Treasurer": "Treasurer"
     }
   },
   "pagination": {
@@ -893,7 +899,8 @@
       "explainLabel": "What does AI-generated mean?"
     },
     "failedToLoadLine": "Something went wrong on our side. Please try again in a moment.",
-    "notFoundLine": "It may have been moved or the link may be mistyped. Search the archive for it."
+    "notFoundLine": "It may have been moved or the link may be mistyped. Search the archive for it.",
+    "contactLine": "Seen a document we don't have, or something we got wrong? Tell us — every case is corrected in the open."
   },
   "documentSource": {
     "fallbackTitle": "Source {{id}}",
@@ -1231,7 +1238,8 @@
         "name": "GitHub issues",
         "line": "Report a bug in the open"
       }
-    }
+    },
+    "removeAttachment": "Remove attachment"
   },
   "notFound": {
     "title": "404",
@@ -1263,7 +1271,8 @@
     },
     "copied": "Copied",
     "copyFailed": "Copying is unavailable in this browser — select the text and copy it by hand.",
-    "copy": "Copy"
+    "copy": "Copy",
+    "unknown": "Unknown"
   },
   "themeToggle": {
     "toggleTheme": "Toggle theme",
@@ -1443,7 +1452,8 @@
     "error": "We couldn't load updates right now. Please try again later.",
     "empty": "No updates have been published yet.",
     "errorTitle": "Updates didn't load",
-    "emptyTitle": "Nothing here yet"
+    "emptyTitle": "Nothing here yet",
+    "relatedCases": "Related cases"
   },
   "share": {
     "share": "Share",
@@ -2236,7 +2246,11 @@
       "subtitle": "Staff write posts in the Newsroom and submit them; an admin approves each one before it appears on /blog.",
       "new": "Write a post",
       "review": "Awaiting approval",
-      "loadError": "Could not load blog posts."
+      "loadError": "Could not load blog posts.",
+      "title": "Blog",
+      "empty": "No blog posts are published yet.",
+      "view": "View",
+      "edit": "Edit"
     }
   },
   "cookieConsent": {
@@ -3114,5 +3128,10 @@
     "notFoundLine": "This material could not be found in the Jawafdehi governance archive.",
     "errorTitle": "This document didn't load",
     "errorLine": "Something went wrong on our side. Please try again in a moment."
+  },
+  "embedCase": {
+    "unavailable": "Case information unavailable.",
+    "viewOnJawafdehi": "View on Jawafdehi",
+    "provider": "via Jawafdehi"
   }
 }
