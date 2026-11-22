@@ -70,6 +70,7 @@ import {
 import { trackEvent } from "@/utils/analytics";
 import { sendSearchClick } from "@/utils/searchClick";
 import { Seo } from "@/components/Seo";
+import { pageCard } from "@/utils/page-cards";
 import { SITE_NAME, SITE_URL } from "@/utils/seo";
 
 // "bigo" and "date" are refinements for pill/clear purposes only — each is one
@@ -488,6 +489,7 @@ export default function ArchiveSearch() {
         title={`${pageHeading} | ${SITE_NAME}`}
         description={pageDescription}
         canonicalUrl={canonicalUrl}
+        {...pageCard(selectedRecordType === "courtcase" ? "court-records" : "search")}
         language={i18n.language}
         robots={isFilteredResultSet ? "noindex, follow" : null}
       />

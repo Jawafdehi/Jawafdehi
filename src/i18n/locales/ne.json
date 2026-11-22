@@ -62,7 +62,7 @@
     "hero": {
       "eyebrow": "Open to everyone",
       "title": "Jawafdehi Open House",
-      "description": "A small, informal online session with the team behind Nepal's permanent corruption case archive. Come with questions, with ideas, or just to listen.",
+      "description": "A small, informal online session with the team behind Nepal's digital archive of public accountability. Come with questions, with ideas, or just to listen.",
       "join": "Join on Zoom",
       "register": "Register"
     },
@@ -549,7 +549,7 @@
     "impact": {
       "eyebrow": "तपाईंको रकम कहाँ जान्छ",
       "title": "प्रत्येक रुपैयाँले सार्वजनिक अभिलेख चलाउँछ",
-      "description": "जवाफदेहीले कुनै नाफा लिँदैन। आर्थिक सहयोगले स्थायी र खुला रूपमा पहुँचयोग्य भ्रष्टाचार अभिलेख अनलाइन राख्ने प्रत्यक्ष खर्च बेहोर्छ।",
+      "description": "जवाफदेहीले कुनै नाफा लिँदैन। आर्थिक सहयोगले नेपालको सार्वजनिक जवाफदेहिताको डिजिटल अभिलेखलाई स्थायी, खुला र अनलाइन राख्ने प्रत्यक्ष खर्च बेहोर्छ।",
       "items": [
         {
           "title": "होस्टिङ र पूर्वाधार",
@@ -2520,7 +2520,7 @@
       },
       "donate": {
         "title": "सहयोग गर्नुहोस्",
-        "description": "तपाईंको साथले नेपालको भ्रष्टाचार मुद्दा अभिलेखलाई निःशुल्क, खुला र स्थायी राख्छ। अहिले नै आर्थिक सहयोग गर्नुहोस्।",
+        "description": "तपाईंको साथले नेपालको सार्वजनिक जवाफदेहिताको डिजिटल अभिलेखलाई निःशुल्क, खुला र स्थायी राख्छ। अहिले नै आर्थिक सहयोग गर्नुहोस्।",
         "cta": "आर्थिक सहयोग गर्नुहोस्"
       }
     }
@@ -2727,7 +2727,7 @@
   "author": {
     "notFound": "यो लेखक प्रोफाइल उपलब्ध छैन।",
     "aboutHeading": "परिचय",
-    "metaDescription": "{{name}} द्वारा तयार पारिएका भ्रष्टाचारका मुद्दाहरू — जवाफदेही, नेपालको स्थायी भ्रष्टाचार मुद्दा अभिलेख।",
+    "metaDescription": "{{name}} द्वारा तयार पारिएका भ्रष्टाचारका मुद्दाहरू — जवाफदेही, नेपालको सार्वजनिक जवाफदेहिताको डिजिटल अभिलेख।",
     "emailLabel": "{{name}} लाई इमेल गर्नुहोस्",
     "casesHeading_one": "{{count}} मुद्दा",
     "casesHeading_other": "{{count}} मुद्दाहरू",

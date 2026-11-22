@@ -3,6 +3,7 @@ import { ReportCaseCta } from "@/components/home/report-case-cta";
 import { OurProcessHero } from "@/components/ourprocess/hero";
 import { ProcessTimeline } from "@/components/ourprocess/timeline";
 import { Seo } from "@/components/Seo";
+import { pageCard } from "@/utils/page-cards";
 import { SITE_URL } from "@/utils/seo";
 
 const OurProcess = () => (
@@ -11,6 +12,7 @@ const OurProcess = () => (
       title="Our Process — Jawafdehi"
       description="How Jawafdehi discovers, researches, compiles, and publishes CIAA corruption cases — from raw government documents to a permanent public archive."
       canonicalUrl={`${SITE_URL}/our-process/`}
+      {...pageCard("our-process")}
     />
 
     <main id="main-content" className="flex-1">

@@ -3,6 +3,7 @@ import { DonationFaq } from "@/components/donate/faq";
 import { DonateHero } from "@/components/donate/hero";
 import { DonationJourney } from "@/components/donate/journey";
 import { Seo } from "@/components/Seo";
+import { pageCard } from "@/utils/page-cards";
 import { SITE_URL } from "@/utils/seo";
 
 const Donate = () => {
@@ -10,8 +11,9 @@ const Donate = () => {
     <div className="min-h-screen flex flex-col bg-background">
       <Seo
         title="Donate — Jawafdehi"
-        description="Support Jawafdehi with a donation. Your gift funds hosting, document archiving, and verification that keep Nepal's corruption archive permanent and free for everyone."
+        description="Support Jawafdehi with a donation. Your gift funds hosting, document archiving, and verification that keep Nepal's digital archive of public accountability permanent and free for everyone."
         canonicalUrl={`${SITE_URL}/donate/`}
+        {...pageCard("donate")}
       />
 
       <section className="flex-1">

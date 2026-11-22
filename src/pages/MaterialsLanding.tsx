@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 import Seo from "@/components/Seo";
+import { pageCard } from "@/utils/page-cards";
 import { ShaderBackdrop } from "@/components/brand-shaders/shader-backdrop";
 import { lazyChart } from "@/components/charts/lazy";
 import { ArrowLink } from "@/components/ui/arrow-link";
@@ -113,6 +114,7 @@ export default function MaterialsLanding() {
         title={title}
         description={description}
         canonicalUrl={`${SITE_URL}/materials/`}
+        {...pageCard("materials")}
         language={language}
       >
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>

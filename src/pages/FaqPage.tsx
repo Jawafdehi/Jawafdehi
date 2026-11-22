@@ -16,6 +16,7 @@ import { LightHero } from "@/components/ui/light-hero";
 import { faqMarkdownComponents } from "@/components/faq-markdown";
 import { isFaqPageSection } from "@/lib/faq-page-content";
 import { Seo } from "@/components/Seo";
+import { pageCard } from "@/utils/page-cards";
 import { SiteOnly } from "@/components/SiteOnly";
 import { SITE_URL } from "@/utils/seo";
 
@@ -51,6 +52,7 @@ export default function FaqPage() {
         description={t("faqPage.meta.description")}
         socialDescription={t("faqPage.meta.socialDescription")}
         canonicalUrl={`${SITE_URL}/faq/`}
+        {...pageCard("faq")}
         language={i18n.language}
       />
 

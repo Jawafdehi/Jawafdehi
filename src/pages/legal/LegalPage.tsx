@@ -2,6 +2,7 @@ import { Suspense, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Seo } from "@/components/Seo";
+import { pageCard } from "@/utils/page-cards";
 import { LegalPage as LegalShell } from "@/components/legal-page";
 import { legalBody } from "@/pages/legal/bodies";
 import { SITE_URL } from "@/utils/seo";
@@ -55,6 +56,7 @@ export default function LegalPage({
         title={text.title}
         description={text.description}
         canonicalUrl={`${SITE_URL}${path}`}
+        {...pageCard(name === "Privacy" ? "privacy" : "terms")}
       />
 
       <LegalShell

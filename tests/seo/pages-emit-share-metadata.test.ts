@@ -98,7 +98,6 @@ function reachesSeo(file: string, depth = 0): boolean {
 // work; each entry says what it needs, because "add <Seo>" is not the whole job
 // for a record page that has to describe the record.
 const AWAITING_SEO: Record<string, string> = {
-  DataQuality: 'public page, needs a card and a description of its own',
   MaterialProfile: 'per-record metadata — the document title and source',
   CourtCaseProfile: 'per-record metadata — the case number, court and parties',
   PaymentSuccess: 'transactional; pre-rendered, so it needs noindex not a card',

@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Cta } from "@/components/home/cta";
 import { Seo } from "@/components/Seo";
+import { pageCard } from "@/utils/page-cards";
 import { ShaderBackdrop } from "@/components/brand-shaders/shader-backdrop";
 import { ArrowLink } from "@/components/ui/arrow-link";
 import { LightHero } from "@/components/ui/light-hero";
@@ -51,8 +52,9 @@ const Volunteer = () => {
     <div className="min-h-screen flex flex-col bg-background">
       <Seo
         title="Volunteer with Us — Jawafdehi"
-        description="Join Jawafdehi as a volunteer. Help build Nepal's permanent corruption case archive — as a researcher, engineer, journalist, or translator."
+        description="Join Jawafdehi as a volunteer. Help build Nepal's digital archive of public accountability — as a researcher, engineer, journalist, or translator."
         canonicalUrl={`${SITE_URL}/volunteer/`}
+        {...pageCard("volunteer")}
       />
 
       <main id="main-content" className="flex-1">

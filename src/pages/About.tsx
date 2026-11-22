@@ -3,6 +3,7 @@ import { CoreValues } from "@/components/about/core-values";
 import { AboutHero } from "@/components/about/hero";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { Seo } from "@/components/Seo";
+import { pageCard } from "@/utils/page-cards";
 import { SITE_NAME, SITE_URL } from "@/utils/seo";
 
 const About = () => {
@@ -12,8 +13,9 @@ const About = () => {
     <div className="min-h-screen flex flex-col bg-background">
       <Seo
         title={`About | ${SITE_NAME}`}
-        description="Meet the team behind Jawafdehi — Nepal's Permanent Corruption Case Archive — and the principles behind how we document and verify corruption cases."
+        description="Meet the team behind Jawafdehi — Nepal's digital archive of public accountability — and the principles behind how we document and verify corruption cases."
         canonicalUrl={`${SITE_URL}/about/`}
+        {...pageCard("about")}
       />
 
       <div className="flex-1">

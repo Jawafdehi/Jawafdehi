@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 
 import { Seo } from "@/components/Seo";
+import { pageCard } from "@/utils/page-cards";
 import { PressKitBrand } from "@/components/press-kit/brand";
 import { PressKitDownloads } from "@/components/press-kit/downloads";
 import { PressKitHero } from "@/components/press-kit/hero";
@@ -18,6 +19,7 @@ const PressKit = () => {
         title={`${t("pressKit.meta.title")} | ${SITE_NAME}`}
         description={t("pressKit.meta.description")}
         canonicalUrl={`${SITE_URL}/press-kit/`}
+        {...pageCard("press-kit")}
         language={i18n.language}
       />
 

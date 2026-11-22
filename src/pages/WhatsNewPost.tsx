@@ -9,6 +9,7 @@ import { useTranslation } from "react-i18next";
 import { Link, useParams } from "react-router-dom";
 
 import { Seo } from "@/components/Seo";
+import { pageCard } from "@/utils/page-cards";
 import { PageBreadcrumb } from "@/components/ui/page-breadcrumb";
 import { ProductTile } from "@/components/updates/feed-tiles";
 import { WHATS_NEW, entryById, whatsNewListPath, whatsNewPostPath } from "@/data/whats-new";
@@ -34,6 +35,7 @@ export default function WhatsNewPost() {
         title={`${entry.title[lang]} | ${SITE_NAME}`}
         description={entry.body[lang]}
         canonicalUrl={`${SITE_URL}${whatsNewPostPath(entry.id)}`}
+        {...pageCard("updates")}
         type="article"
         publishedTime={entry.date}
         language={i18n.language}

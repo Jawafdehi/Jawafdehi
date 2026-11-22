@@ -1,6 +1,6 @@
-# Jawafdehi — Nepal's Corruption Case Archive
+# Jawafdehi — Nepal's Digital Archive of Public Accountability
 
-> Nepal's permanent public archive of CIAA corruption cases. Every case documented, simplified, and permanently accessible. Free forever.
+> Nepal's digital archive of public accountability: CIAA corruption cases, court records and public documents. Every case documented, simplified, and permanently accessible. Free forever.
 
 Jawafdehi (jawafdehi.org) is a civic technology platform built by Nepali volunteers. It documents corruption cases filed by Nepal's Commission for the Investigation of Abuse of Authority (CIAA), along with court orders, legal filings, and verified facts. All data is in the public domain and free to use.
 

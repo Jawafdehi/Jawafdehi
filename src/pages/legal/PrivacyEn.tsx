@@ -168,7 +168,7 @@ export function PrivacyEn() {
         <li>Operate, maintain, and improve the Platform</li>
         <li>Monitor security and prevent abuse</li>
         <li>Protect the people in our archive, stop misuse, and improve our search, using the records described in Section 2.9</li>
-        <li>Publish and maintain the public corruption case archive and our research</li>
+        <li>Publish and maintain the public accountability archive and our research</li>
         <li>Understand site usage: cookieless, aggregate counts on all sites, and Google Analytics on jawafdehi.org where you have consented</li>
       </ul>
       <p>

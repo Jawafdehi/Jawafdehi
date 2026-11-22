@@ -66,7 +66,7 @@ const Index = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Seo
-        title={`${SITE_NAME} — Nepal's Digital Accountability Archive`}
+        title={`${SITE_NAME} — Nepal's Digital Archive of Public Accountability`}
         description={SITE_DESCRIPTION}
         canonicalUrl={`${SITE_URL}/`}
       >

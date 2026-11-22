@@ -62,7 +62,7 @@
     "hero": {
       "eyebrow": "Open to everyone",
       "title": "Jawafdehi Open House",
-      "description": "A small, informal online session with the team behind Nepal's permanent corruption case archive. Come with questions, with ideas, or just to listen.",
+      "description": "A small, informal online session with the team behind Nepal's digital archive of public accountability. Come with questions, with ideas, or just to listen.",
       "join": "Join on Zoom",
       "register": "Register"
     },
@@ -549,7 +549,7 @@
     "impact": {
       "eyebrow": "Where your money goes",
       "title": "Every rupee funds the public record",
-      "description": "Jawafdehi takes no profit. Donations cover the direct costs of keeping a permanent, openly accessible corruption archive online.",
+      "description": "Jawafdehi takes no profit. Donations cover the direct costs of keeping Nepal's digital archive of public accountability permanent, open and online.",
       "items": [
         {
           "title": "Hosting & infrastructure",
@@ -2520,7 +2520,7 @@
       },
       "donate": {
         "title": "Donate",
-        "description": "Your support keeps Nepal's corruption case archive free, open, and permanent. Take action and donate now.",
+        "description": "Your support keeps Nepal's digital archive of public accountability free, open, and permanent. Take action and donate now.",
         "cta": "Donate now"
       }
     }
@@ -2727,7 +2727,7 @@
   "author": {
     "notFound": "This author profile is not available.",
     "aboutHeading": "About",
-    "metaDescription": "Corruption cases documented by {{name}} on Jawafdehi, Nepal's permanent corruption case archive.",
+    "metaDescription": "Corruption cases documented by {{name}} on Jawafdehi, Nepal's digital archive of public accountability.",
     "emailLabel": "Email {{name}}",
     "casesHeading_one": "{{count}} case",
     "casesHeading_other": "{{count}} cases",
