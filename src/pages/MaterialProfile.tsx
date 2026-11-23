@@ -268,7 +268,9 @@ export default function MaterialProfile() {
     <div className={fullTextStr || contentSummary ? "pt-8" : undefined}>
       <div>
         {descText ? (
-          <p className="mb-8 max-w-3xl text-lg leading-8 text-primary/85">
+          // break-words: descriptions end in "Original page: https://…", one
+          // unbreakable token that pushed phones 30px wider than the screen.
+          <p className="mb-8 max-w-3xl break-words text-lg leading-8 text-primary/85">
             {descText}
           </p>
         ) : null}
