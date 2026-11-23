@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Hippocratic-3.0
 import { describe, expect, it } from "vitest";
 
-import { bodyTextLength, checkHead, sample, sitemapLocs } from "./crawler-head-check";
+import { bodyTextLength, checkHead, pageVerdict, sample, sitemapLocs, tagAttributes } from "./crawler-head-check";
 
 const BODY = `<main><h1>नमुना सहकारी प्रकरण</h1><p>${"विवरण ".repeat(600)}</p></main>`;
 
@@ -46,6 +46,22 @@ describe("checkHead", () => {
     expect(bodyTextLength(page(GOOD_HEAD, `<p>short</p>${json}`))).toBeLessThan(10);
   });
 
+  it.each([
+    ["attributes in the other order", '<link href="https://jawafdehi.org/case/n/" rel="canonical"><meta content="वि" name="description">'],
+    ["single quotes", "<link rel='canonical' href='https://jawafdehi.org/case/n/'><meta name='description' content='वि'>"],
+    ["unquoted values", "<link rel=canonical href=https://jawafdehi.org/case/n/><meta name=description content=वि>"],
+    ["a multi-token rel and upper case", '<LINK REL="alternate Canonical" HREF="https://jawafdehi.org/case/n/"><META NAME="Description" CONTENT="वि">'],
+  ])("accepts valid markup a crawler accepts: %s", (_, head) => {
+    // A false outage on a healthy page would teach everyone to ignore this check.
+    const verdict = checkHead(page(`<title>नमुना</title>${head}`));
+    expect(verdict.problems).toEqual([]);
+  });
+
+  it("still rejects a description that is only whitespace", () => {
+    const head = GOOD_HEAD.replace('content="नमुना विवरण।"', 'content="   "');
+    expect(checkHead(page(head)).problems).toContain("empty or missing meta description");
+  });
+
   it("rejects a canonical that is not an absolute URL", () => {
     const relative = GOOD_HEAD.replace("https://jawafdehi.org/case/namuna/", "/case/namuna/");
     expect(checkHead(page(relative)).problems).toContain("no rel=canonical");
@@ -76,5 +92,33 @@ describe("sample", () => {
 
   it("never asks for more than there is", () => {
     expect(sample([1, 2, 3], 8, 1).sort()).toEqual([1, 2, 3]);
+  });
+});
+
+
+describe("tagAttributes", () => {
+  it("reads every tag of a kind, attributes in any order and quoting", () => {
+    expect(tagAttributes(`<link rel="a" href='b'><link href=c rel=d>`, "link")).toEqual([
+      { rel: "a", href: "b" },
+      { href: "c", rel: "d" },
+    ]);
+  });
+});
+
+describe("pageVerdict", () => {
+  it("does not follow a redirect — a sitemap must list the final URL", () => {
+    // Following it would let the page that answered (a homepage, a fallback)
+    // pass for the record that did not.
+    const v = pageVerdict(301, "", "https://jawafdehi.org/", 1800);
+    expect(v.ok).toBe(false);
+    expect(v.problems[0]).toContain("redirect to https://jawafdehi.org/");
+  });
+
+  it("reports any other non-200 as itself", () => {
+    expect(pageVerdict(410, "", null, 1800).problems).toEqual(["HTTP 410"]);
+  });
+
+  it("judges a 200 by its head", () => {
+    expect(pageVerdict(200, page(GOOD_HEAD), null, 1800).ok).toBe(true);
   });
 });

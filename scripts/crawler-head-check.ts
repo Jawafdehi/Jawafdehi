@@ -35,6 +35,23 @@ export function bodyTextLength(html: string): number {
 }
 
 /**
+ * Every `<tag ...>` of one kind, with its attributes parsed: any order, double,
+ * single or no quotes, names lower-cased. A crawler accepts all of these, so a
+ * check that only accepted one spelling would raise a false outage the day a
+ * serializer changed its quoting.
+ */
+export function tagAttributes(html: string, tag: string): Record<string, string>[] {
+  const tags = html.match(new RegExp(`<${tag}\\b[^>]*>`, "gi")) ?? [];
+  return tags.map((t) => {
+    const attrs: Record<string, string> = {};
+    for (const m of t.matchAll(/([a-zA-Z_:][-a-zA-Z0-9_:.]*)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+))/g)) {
+      attrs[m[1].toLowerCase()] = m[2] ?? m[3] ?? m[4] ?? "";
+    }
+    return attrs;
+  });
+}
+
+/**
  * The verdict on one page's HTML. Every check is something the 2026-11-20
  * outage failed: it shipped an empty <title>, no meta description, no canonical
  * and CaseDetail's `aria-busy` skeleton, with a body of chrome only.
@@ -45,12 +62,16 @@ export function checkHead(html: string, minBodyChars = 2500): HeadVerdict {
   const title = (/<title[^>]*>([\s\S]*?)<\/title>/i.exec(html)?.[1] ?? "").trim();
   if (!title) problems.push("empty or missing <title>");
 
-  if (!/<link\b[^>]*rel="canonical"[^>]*href="https?:\/\/[^"]+"/i.test(html)) {
-    problems.push("no rel=canonical");
-  }
-  if (!/<meta\b[^>]*name="description"[^>]*content="[^"]+"/i.test(html)) {
-    problems.push("empty or missing meta description");
-  }
+  const canonical = tagAttributes(html, "link").some(
+    (a) =>
+      (a.rel ?? "").toLowerCase().split(/\s+/).includes("canonical") &&
+      /^https?:\/\/\S+$/i.test(a.href ?? ""),
+  );
+  if (!canonical) problems.push("no rel=canonical");
+  const description = tagAttributes(html, "meta").some(
+    (a) => (a.name ?? "").toLowerCase() === "description" && (a.content ?? "").trim() !== "",
+  );
+  if (!description) problems.push("empty or missing meta description");
   if (/aria-busy="true"/i.test(html)) {
     problems.push('loading skeleton (aria-busy="true") in the served HTML');
   }
@@ -60,6 +81,28 @@ export function checkHead(html: string, minBodyChars = 2500): HeadVerdict {
   }
 
   return { ok: problems.length === 0, problems, title };
+}
+
+/**
+ * The verdict on one fetched sitemap URL. A sitemap must list FINAL URLs, so a
+ * redirect is itself a finding — and following it would let whatever page
+ * answered (a homepage, a fallback) pass for the record that did not.
+ */
+export function pageVerdict(
+  status: number,
+  html: string,
+  location: string | null,
+  minBodyChars: number,
+): HeadVerdict {
+  if (status === 200) return checkHead(html, minBodyChars);
+  if (status >= 300 && status < 400) {
+    return {
+      ok: false,
+      problems: [`HTTP ${status} redirect to ${location ?? "?"} — a sitemap must list the final URL`],
+      title: "",
+    };
+  }
+  return { ok: false, problems: [`HTTP ${status}`], title: "" };
 }
 
 /** Every <loc> in a sitemap document. */
@@ -108,20 +151,28 @@ const SECTIONS = [
   { name: "courtcase", minBodyChars: 1800 },
 ] as const;
 
-async function fetchText(url: string, attempts = 3): Promise<{ status: number; text: string }> {
-  let last: { status: number; text: string } = { status: 0, text: "" };
+interface Fetched {
+  status: number;
+  text: string;
+  location: string | null;
+}
+
+async function fetchText(url: string, attempts = 3): Promise<Fetched> {
+  let last: Fetched = { status: 0, text: "", location: null };
   for (let i = 0; i < attempts; i++) {
     try {
       const res = await fetch(url, {
         headers: { "User-Agent": GOOGLEBOT },
         signal: AbortSignal.timeout(45_000),
+        // Not followed: see pageVerdict.
+        redirect: "manual",
       });
-      last = { status: res.status, text: await res.text() };
+      last = { status: res.status, text: await res.text(), location: res.headers.get("location") };
       // A sitemap child can 503 on a cold API cache and answer on retry; a
       // crawler retries too. Only a persistent failure is a finding.
       if (res.status < 500) return last;
     } catch (err) {
-      last = { status: 0, text: String(err) };
+      last = { status: 0, text: String(err), location: null };
     }
     await new Promise((r) => setTimeout(r, 5_000 * (i + 1)));
   }
@@ -131,6 +182,12 @@ async function fetchText(url: string, attempts = 3): Promise<{ status: number; t
 async function main(): Promise<number> {
   const base = (process.argv[2] || "https://jawafdehi.org").replace(/\/+$/, "");
   const perType = Number(process.argv[3] || 8);
+  // "0", "-1" or "eight" would sample no pages and report success having
+  // checked nothing. A check that cannot fail is worse than none.
+  if (!Number.isSafeInteger(perType) || perType < 1) {
+    console.error(`samples-per-type must be a positive integer, got ${JSON.stringify(process.argv[3])}`);
+    return 2;
+  }
   const today = new Date().toISOString().slice(0, 10);
   const seed = Number(today.replace(/-/g, ""));
   console.log(`Crawler-head check: ${base}, ${perType} per type, seed ${seed} (${today})\n`);
@@ -147,10 +204,7 @@ async function main(): Promise<number> {
     console.log(`sitemap-${section}.xml: ${locs.length} URLs`);
     for (const url of sample(locs, perType, seed)) {
       const page = await fetchText(url);
-      const verdict =
-        page.status === 200
-          ? checkHead(page.text, minBodyChars)
-          : { ok: false, problems: [`HTTP ${page.status}`], title: "" };
+      const verdict = pageVerdict(page.status, page.text, page.location, minBodyChars);
       if (!verdict.ok) failures++;
       console.log(
         `  ${verdict.ok ? "✓" : "✗"} ${url}${verdict.ok ? "" : `\n      ${verdict.problems.join("; ")}`}`,
