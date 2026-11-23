@@ -14,6 +14,8 @@ import { ViewJsonButton } from "@/components/ViewJsonButton";
 import { ShareButton } from "@/components/ShareButton";
 import { EntityAvatar } from "@/components/EntityAvatar";
 import { EntityRelatedCases } from "@/components/EntityRelatedCases";
+import { entityRelatedCasesQuery } from "@/queries/related-cases";
+import { entityJsonLd, entityMeta } from "@/utils/entity-meta";
 import NotFound from "./NotFound";
 
 import { EmptyState } from "@/components/ui/empty-state";
@@ -333,27 +335,71 @@ export default function EntityRecordProfile() {
     created ? `In the registry since ${created.slice(0, 4)}` : null,
   ].filter(Boolean);
 
+  // The cases citing this entity. The same query EntityRelatedCases runs, so
+  // both read one cache entry — prefetched at the edge, so the snippet and the
+  // structured data are in the server-rendered head, not added after hydration.
+  const recordIri = data?.["@id"] ?? "";
+  const { data: related } = useQuery({
+    ...entityRelatedCasesQuery(recordIri),
+    enabled: recordIri.length > 0,
+    retry: false,
+    staleTime: 5 * 60 * 1000,
+  });
+  const canonicalUrl = `${SITE_URL}/entity/${tail}/`;
+  const kindLabel = t(`entityDetail.${kind}`);
+  const meta = entityMeta({
+    names: name,
+    fallbackName: displayName,
+    kindLabel,
+    language: currentLang,
+    entityIri: recordIri,
+    cases: related?.results ?? [],
+    caseCount: related?.count ?? 0,
+    recordDescription: descText,
+    t,
+  });
+  // Escaped as material-meta.ts does: a name is data we do not control, and a
+  // `</script>` in it must not be able to end the element.
+  const structuredData = data
+    ? JSON.stringify(
+        entityJsonLd({
+          recordIri,
+          canonicalUrl,
+          rawType: data["@type"],
+          names: name,
+          alternateNames: aliases,
+          description: descText,
+          imageUrl: previewImageUrl(imageUrl),
+          identifiers: data.identifier,
+          cases: related?.results ?? [],
+        }),
+      ).replace(/</g, "\\u003c")
+    : null;
+
   if (!isRecord) return <NotFound />;
 
   return (
     <main id="main-content" className="min-h-screen bg-background pb-20 pt-8 md:pt-12">
       <Seo
-        title={`${displayName} | Jawafdehi Entity Registry`}
-        description={
-          descText || `${displayName} — ${typeLabel} in the Jawafdehi public entity registry.`
-        }
+        // Both scripts, and a description built from the cases that cite this
+        // entity — see entityMeta for what it says and, as importantly, what it
+        // refuses to say.
+        title={meta.title}
+        description={meta.description}
         // Trailing slash: these pages are pre-rendered to <tail>/index.html, the
         // edge 307s the slashless form, and scripts/sitemap.ts advertises the
         // slashed one. A canonical naming a redirect is the trap that has already
         // bitten /case/* and /entity/* once each — keep all three in step.
-        canonicalUrl={`${SITE_URL}/entity/${tail}/`}
+        canonicalUrl={canonicalUrl}
         // null for anything that is not a real image URL, which falls the tag
         // back to the site social card (and its known dimensions) rather than
         // advertising an og:image a scraper cannot fetch.
         imageUrl={previewImageUrl(imageUrl) ?? undefined}
         type="profile"
         language={currentLang}
-      />
+      >
+        {structuredData ? <script type="application/ld+json">{structuredData}</script> : null}
+      </Seo>
 
       <div className="layout-container">
         <PageBreadcrumb
