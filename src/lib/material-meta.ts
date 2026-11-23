@@ -74,10 +74,10 @@ export interface MaterialMetaSource {
  * which documents are gated. The edge renderer authenticates as `sa-prerender`,
  * whose "single role maps to a Django group with no permissions, so it sees
  * exactly what an anonymous reader sees" (`worker/api-token.ts`). So the field
- * was never going to arrive, the guard could never open, and all 372,995
- * document pages served `noindex` — while the API's sitemap generator listed
- * every one of them as public. Measured 2026-11-23: 18 of 18 sampled pages
- * across `ag`, `bolpatra` and `nkp`.
+ * was never going to arrive, the guard could never open, and every document
+ * page served `noindex` — while the API's sitemap generator listed every one
+ * of them as public. Measured 2026-11-23, when the sitemap held 372,995 of them:
+ * 18 of 18 sampled pages across `ag`, `bolpatra` and `nkp`.
  *
  * ## Why indexability is its own field, not a view of visibility
  *
@@ -96,11 +96,24 @@ export interface MaterialMetaSource {
  * rape charge sheet is a separate act, and not one a `LISTED` flag should be
  * able to authorise by itself.
  *
- * So the API computes `jawafdehi:indexable` as a public boolean — LISTED **and**
- * the document's class cleared for indexing — and leaks nothing the `robots` tag
- * does not already say. Which classes are cleared is a board decision
- * (`docs/2026-11-23-seo-plan/PLAN.md` §2.1, §8 Q1); until one is made, the API
- * clears none and every document stays exactly as it is today.
+ * ## The contract with the API
+ *
+ * `jawafdehi:indexable` is a public boolean that ONLY the API may emit. It is
+ * meant to be computed as LISTED **and** the document's class cleared for
+ * indexing, and it leaks nothing the `robots` tag does not already say.
+ *
+ * Two halves, and they are not equally done:
+ *
+ * - **Ownership** — enforced. The API reserves the key on write and strips any
+ *   stored value from every read, detail and list, anon and staff
+ *   (`materials/patch_validation.py`, `SERVER_OWNED_READ_KEYS`). That matters
+ *   because this function trusts the value outright: if a stored document could
+ *   carry `"jawafdehi:indexable": true` through to a read — and ingest, moves and
+ *   backfills all write storage without passing the API's HTTP write checks —
+ *   one bad row would make its page indexable.
+ * - **Computation** — not yet built. Until it is, no read carries the key and
+ *   every document page stays `noindex`. Which document classes get cleared is
+ *   an editorial decision for the organisation, not a code default.
  *
  * Open Graph is unaffected either way, so share cards keep working throughout.
  */

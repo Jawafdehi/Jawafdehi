@@ -137,6 +137,10 @@ function decodedUrl(url: string): string {
 // every material in the archive, so as a Details row it renders the constant
 // "Is Accessible For Free — true" and tells a reader nothing. It stays in the
 // JSON-LD below (and in the API payload) where crawlers actually read it.
+// jawafdehi:indexable is a control field for the page head (materialRobots), not
+// a fact about the document. As a row it would render a constant "Indexable —
+// false" on nearly every page, read as an odd editorial verdict, and sit beside
+// documents whose withholding from search is deliberate.
 const HANDLED_KEYS = new Set([
   "@id",
   "@type",
@@ -153,6 +157,7 @@ const HANDLED_KEYS = new Set([
   "isAccessibleForFree",
   "jawafdehi:visibility",
   "jawafdehi:visibilityPolicy",
+  "jawafdehi:indexable",
 ]);
 
 // ─── page ───────────────────────────────────────────────────────────────────

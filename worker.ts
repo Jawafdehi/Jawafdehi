@@ -804,9 +804,10 @@ async function handleMaterialMetaFallback(
     type: 'article',
     publishedTime:
       typeof material.datePublished === 'string' ? material.datePublished : null,
-    // UNLISTED materials resolve by direct IRI but must not be indexed — the
-    // same gate handleCaseMetaFallback applies to non-PUBLISHED cases. Fails
-    // closed; see materialRobots.
+    // noindex unless the API has cleared this document for search — which is
+    // NOT the same as it being public (LISTED). A public document can still be
+    // one the archive chooses not to push into Google. Fails closed; see
+    // materialRobots for why this no longer reads jawafdehi:visibility.
     robots: materialRobots(material),
   });
 

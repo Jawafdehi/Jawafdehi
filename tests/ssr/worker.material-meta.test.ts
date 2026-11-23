@@ -297,12 +297,12 @@ describe('the API decides indexing, and the edge obeys it', () => {
     // field only for authed caseworker reads, and the edge authenticates as
     // `sa-prerender`, a principal with no permissions that "sees exactly what an
     // anonymous reader sees". So the field never arrived, the guard never
-    // opened, and all 372,995 documents served noindex while the API sitemap
+    // opened, and every document page served noindex while the API sitemap
     // advertised them as public.
     //
-    // Keeping this noindex is also correct on its own terms: ~21,746 of those
-    // documents carry court-ordered identity protection for a complainant
-    // alongside a named defendant. Reachable-by-the-public and
+    // Keeping this noindex is also correct on its own terms: on 2026-11-23 a
+    // fuzzy search found ~21,746 documents carrying court-ordered identity
+    // protection for a complainant alongside a named defendant. Reachable-by-the-public and
     // fit-to-rank-in-Google are different questions, and only the API answers
     // the second (see materialRobots).
     stubMaterialApi({ ...A_MATERIAL, 'jawafdehi:visibility': 'LISTED' });

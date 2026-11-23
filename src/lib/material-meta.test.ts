@@ -148,7 +148,7 @@ describe("materialRobots fails closed", () => {
     null,
   ])("noindexes %o", (data) => {
     // The empty object is the case that matters: it is what the API returns
-    // today, for every one of the 372,995 documents.
+    // for every document until the API starts computing the field.
     expect(materialRobots(data)).toBe("noindex, nofollow");
   });
 

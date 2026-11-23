@@ -123,6 +123,21 @@ describe("MaterialProfile — overflow-safe rendering", () => {
     expect(screen.queryByText(/Is Accessible For Free/i)).toBeNull();
   });
 
+  it.each([true, false])(
+    "keeps the jawafdehi:indexable control field (%s) out of the Summary details",
+    async (indexable) => {
+      // It steers the page's robots tag; it is not a fact about the document. As
+      // a row it would print "Indexable — false" on nearly every page.
+      getMaterial.mockResolvedValue(
+        material({ "jawafdehi:indexable": indexable, "jawafdehi:recordId": "116707" }),
+      );
+      renderPage();
+
+      await screen.findByText("116707"); // details grid has rendered
+      expect(screen.queryByText(/Indexable/i)).toBeNull();
+    },
+  );
+
   it("leaves a non-URL detail field as plain text", async () => {
     getMaterial.mockResolvedValue(material({ "jawafdehi:recordId": "116707" }));
     renderPage();
