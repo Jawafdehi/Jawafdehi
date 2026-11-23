@@ -49,4 +49,28 @@ describe('/document-preview', () => {
     expect(res.headers.get('Content-Type')).toBe('application/pdf');
     expect(res.headers.get('X-Robots-Tag')).toBe('noindex, nofollow, noarchive');
   });
+
+  // The site decides what to preview from the same host set the proxy uses
+  // (src/utils/document-preview-url.ts), so pin the proxy's side of it.
+  it.each([
+    'https://s3.jawafdehi.org/case_uploads/report.pdf',
+    ORIGINAL,
+  ])('proxies a file on our own bucket (%s)', async (target) => {
+    const res = await worker.fetch(
+      new Request(`https://jawafdehi.org/document-preview?url=${encodeURIComponent(target)}`),
+      makeEnv(),
+    );
+    expect(res.status).toBe(200);
+  });
+
+  it.each([
+    'https://giwmscdnone.gov.np/media/pdf_upload/report.pdf',
+    'http://s3.jawafdehi.org/case_uploads/report.pdf',
+  ])('refuses any other host (%s)', async (target) => {
+    const res = await worker.fetch(
+      new Request(`https://jawafdehi.org/document-preview?url=${encodeURIComponent(target)}`),
+      makeEnv(),
+    );
+    expect(res.status).toBe(403);
+  });
 });

@@ -40,7 +40,7 @@ const renderBlocks = (blocks: StreamBlock[]) =>
 
 describe("StreamField document blocks", () => {
   it("offers a preview for a PDF rather than downloading on click", () => {
-    renderBlocks([documentBlock("report.pdf", "https://portal.jawafdehi.org/documents/1/report.pdf")]);
+    renderBlocks([documentBlock("report.pdf", "https://s3.jawafdehi.org/documents/1/report.pdf")]);
 
     const trigger = screen.getByRole("button", { name: /Vacancy announcement/ });
     expect(trigger.tagName).toBe("BUTTON");
@@ -50,7 +50,7 @@ describe("StreamField document blocks", () => {
   });
 
   it("opens the shared preview dialog when the card is activated", async () => {
-    renderBlocks([documentBlock("report.pdf", "https://portal.jawafdehi.org/documents/1/report.pdf")]);
+    renderBlocks([documentBlock("report.pdf", "https://s3.jawafdehi.org/documents/1/report.pdf")]);
 
     // Closed until asked for — the dialog isn't mounted on render.
     expect(screen.queryByRole("dialog")).toBeNull();
@@ -61,7 +61,7 @@ describe("StreamField document blocks", () => {
   });
 
   it("treats markdown transcripts as previewable too", () => {
-    renderBlocks([documentBlock("transcript.md", "https://portal.jawafdehi.org/documents/2/transcript.md")]);
+    renderBlocks([documentBlock("transcript.md", "https://s3.jawafdehi.org/documents/2/transcript.md")]);
 
     expect(screen.getByRole("button", { name: /Vacancy announcement/ })).toBeTruthy();
   });
@@ -77,8 +77,19 @@ describe("StreamField document blocks", () => {
     expect(screen.queryByRole("button", { name: /Vacancy announcement/ })).toBeNull();
   });
 
+  it("links a PDF the viewer can't load (not on our buckets) straight to the file", () => {
+    // The /document-preview proxy refuses every other host, so a preview of
+    // this file could only show the viewer's error message.
+    const url = "https://giwmscdnone.gov.np/media/pdf_upload/report.pdf";
+    renderBlocks([documentBlock("report.pdf", url)]);
+
+    const link = screen.getByRole("link", { name: /Vacancy announcement/ });
+    expect(link.getAttribute("href")).toBe(url);
+    expect(screen.queryByRole("button", { name: /Vacancy announcement/ })).toBeNull();
+  });
+
   it("falls back to the URL when the filename carries no extension", () => {
-    renderBlocks([documentBlock("", "https://portal.jawafdehi.org/documents/4/paper.pdf?v=2")]);
+    renderBlocks([documentBlock("", "https://s3.jawafdehi.org/documents/4/paper.pdf?v=2")]);
 
     // Query strings must not defeat the extension check.
     expect(screen.getByRole("button", { name: /Vacancy announcement/ })).toBeTruthy();

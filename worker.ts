@@ -4,6 +4,7 @@ import { LEGACY_ENTITY_MAP } from './src/utils/legacyEntityMap';
 import { isNoindexPath, matchRoute, normalizePath } from './src/data/route-patterns';
 import { RESEARCH_URL } from './src/lib/external-links';
 import { courtRefCandidates } from './src/utils/courtCaseRef';
+import { DOCUMENT_PREVIEW_ALLOWED_HOSTS } from './src/utils/document-preview-url';
 import {
   encodeMaterialTail,
   isMaterialTail,
@@ -113,11 +114,6 @@ const AUTHOR_CARD_TTL_SECONDS = 86400; // also the document cards' TTL
 
 // X-Robots-Tag for every response that serves an original source document.
 const ORIGINAL_DOCUMENT_ROBOTS = 'noindex, nofollow, noarchive';
-
-const DOCUMENT_PREVIEW_ALLOWED_HOSTS = new Set([
-  'ngm-store.jawafdehi.org',
-  's3.jawafdehi.org',
-]);
 
 const MAX_LATEST_VIDEOS = 6;
 
