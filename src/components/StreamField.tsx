@@ -16,6 +16,7 @@ import type {
   StreamImageValue,
 } from "@/types/cms";
 import { casePath } from "@/lib/case-links";
+import { canPreviewDocument } from "@/utils/document-preview-url";
 
 // CMS rich-text/oEmbed HTML is authored by staff, but we sanitize as
 // defense-in-depth before injecting it. isomorphic-dompurify works under SSR.
@@ -38,10 +39,13 @@ const DOCUMENT_CARD_CLASS =
 // Only PDFs and markdown/text have a viewer — the shared <DocumentPreviewDialog>
 // renders exactly those two. Anything else (docx, xlsx, images…) has nothing to
 // preview, so it keeps the direct download rather than opening a dialog that
-// can only apologise. Mirrors `previewTypeOf` on MaterialProfile.
+// can only apologise. Mirrors `previewTypeOf` on MaterialProfile, including
+// its host rule: a file the viewer can't load (canPreviewDocument) keeps the
+// direct link too.
 const previewTypeOf = (
   value: StreamDocumentValue,
 ): PreviewDocument["type"] | undefined => {
+  if (!canPreviewDocument(value.url || "")) return undefined;
   const source = (value.filename || value.url || "").split("?")[0].toLowerCase();
   const extension = source.includes(".") ? source.split(".").pop() : "";
   if (extension === "pdf") return "pdf";

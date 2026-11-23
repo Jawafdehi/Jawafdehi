@@ -46,6 +46,21 @@ describe("DocumentSourceCard never shows staff-only originals", () => {
     expect(html).toContain(PUBLISHER_PDF);
   });
 
+  it("links a publisher-hosted PDF directly instead of opening a viewer that can't load it", () => {
+    const html = renderCard([{ link: PUBLISHER_PDF, role: "RAW" }] as SourceLink[]);
+    const doc = new DOMParser().parseFromString(html, "text/html");
+
+    expect(doc.querySelector(`a[href="${PUBLISHER_PDF}"]`)).not.toBeNull();
+    expect(doc.querySelector('button[aria-label^="documentPreview.previewAria"]')).toBeNull();
+  });
+
+  it("keeps the in-site preview for a PDF on our own bucket", () => {
+    const html = renderCard([{ link: OUR_PDF, role: "RAW" }] as SourceLink[]);
+    const doc = new DOMParser().parseFromString(html, "text/html");
+
+    expect(doc.querySelector('button[aria-label^="documentPreview.previewAria"]')).not.toBeNull();
+  });
+
   it("keeps our original when there is no redacted copy to show instead", () => {
     const html = renderCard([{ link: ORIGINAL_MD, role: "MARKDOWN" }] as SourceLink[]);
     expect(html).toContain(ORIGINAL_MD);

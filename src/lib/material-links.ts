@@ -1,5 +1,6 @@
 import type { PreviewDocument } from "@/components/DocumentPreviewDialog";
 import type { Material } from "@/services/datalake-api";
+import { canPreviewDocument } from "@/utils/document-preview-url";
 
 interface MediaLink {
   contentUrl?: string;
@@ -132,16 +133,20 @@ export function getMaterialSourceLinks(data: Material | undefined): MaterialSour
       entry.role ||
       ""
     ).toUpperCase();
-    const previewType = previewTypeOf(entry, href, role);
+    const fileType = previewTypeOf(entry, href, role);
+    // A file on the publisher's own server can't be loaded by the in-site
+    // viewer (the proxy only fetches from our buckets), so it is linked to
+    // directly rather than opening a viewer that can only show an error.
+    const previewType = fileType && canPreviewDocument(href) ? fileType : undefined;
     const extension = extensionOf(href);
     const isExternal =
       role === "SOURCE_PAGE" ||
       role === "PERMALINK" ||
       (entry.encodingFormat || "").toLowerCase().includes("html");
     const label =
-      previewType === "pdf"
+      fileType === "pdf"
         ? "PDF"
-        : previewType === "markdown"
+        : fileType === "markdown"
           ? "Text"
           : extension && extension.length <= 6
             ? `.${extension.toUpperCase()}`

@@ -14,6 +14,7 @@ import type {
   SourceLinkRole,
 } from "@/types/jds";
 import { ORIGINAL_DOCUMENT_REL } from "@/lib/original-document";
+import { canPreviewDocument } from "@/utils/document-preview-url";
 
 interface DocumentSourceCardProps {
   /**
@@ -137,6 +138,10 @@ type SourceAction = {
 };
 
 const getPreviewType = (link: SourceLink): PreviewDocument["type"] | undefined => {
+  // The viewer can only load files from our own buckets; anything on a
+  // publisher's server is linked to directly (see canPreviewDocument).
+  if (!canPreviewDocument(link.link)) return undefined;
+
   const extension = getFileExtension(link.link);
 
   if (extension === "pdf") return "pdf";

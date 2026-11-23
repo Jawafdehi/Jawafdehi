@@ -36,6 +36,37 @@ describe("getMaterialSourceLinks", () => {
   });
 });
 
+describe("getMaterialSourceLinks only previews files the viewer can load", () => {
+  // ppmo/13253 (PPMO annual report 2082): its only PDF is on the publisher's
+  // CDN, which the /document-preview proxy refuses, so the viewer could only
+  // fail. It must be a direct link to the original instead.
+  const PUBLISHER_PDF =
+    "https://giwmscdnone.gov.np/media/pdf_upload/%E0%A4%B5%E0%A4%BE%E0%A4%B0%E0%A5%8D%E0%A4%B7%E0%A4%BF%E0%A4%95_aokavxp.pdf";
+
+  it("links a publisher-hosted PDF directly, still labelled PDF", () => {
+    const material = {
+      "@id": "https://jawafdehi.org/material/ppmo/13253",
+      associatedMedia: [{ contentUrl: PUBLISHER_PDF, encodingFormat: "application/pdf" }],
+    } as Material;
+
+    expect(getMaterialSourceLinks(material)).toEqual([
+      expect.objectContaining({ href: PUBLISHER_PDF, label: "PDF", previewType: undefined }),
+    ]);
+  });
+
+  it("still previews a PDF on our own bucket", () => {
+    const ours = "https://s3.jawafdehi.org/case_uploads/ppmo-report.pdf";
+    const material = {
+      "@id": "https://jawafdehi.org/material/ppmo/1",
+      associatedMedia: [{ contentUrl: ours, encodingFormat: "application/pdf" }],
+    } as Material;
+
+    expect(getMaterialSourceLinks(material)).toEqual([
+      expect.objectContaining({ href: ours, label: "PDF", previewType: "pdf" }),
+    ]);
+  });
+});
+
 describe("getMaterialSourceLinks withholds staff-only originals", () => {
   const ours = (key: string) => `https://s3.jawafdehi.org/case_uploads/${key}`;
   const material = (media: Record<string, string>[]) =>
