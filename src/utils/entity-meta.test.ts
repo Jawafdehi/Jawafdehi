@@ -16,7 +16,9 @@ const LABELS: Record<string, string> = {
 };
 const t = ((key: string) => LABELS[key] ?? key) as unknown as TFunction;
 
-const IRI = "https://jawafdehi.org/entity/person/hari-bahadur-thapa";
+// Fictional people and bodies throughout, per the repo's fixture rule: never
+// attach an accusation or a verdict to a real name, even in a test.
+const IRI = "https://jawafdehi.org/entity/person/namuna-byakti";
 const OTHER = "https://jawafdehi.org/entity/person/someone-else";
 
 function aCase(
@@ -34,18 +36,18 @@ function aCase(
     created_at: "2026-06-10T00:00:00Z",
     dates: { stages: [] },
     entities: [
-      { nes_id: IRI, display_name: "हरि बहादुर थापा", type: bind.type, outcome: bind.outcome ?? null },
+      { nes_id: IRI, display_name: "नमुना व्यक्ति", type: bind.type, outcome: bind.outcome ?? null },
       { nes_id: OTHER, display_name: "अर्को व्यक्ति", type: "accused", outcome: "convicted" },
     ],
   } as unknown as Case;
 }
 
-const NAMES = { en: "Hari Bahadur Thapa", ne: "हरि बहादुर थापा" };
+const NAMES = { en: "Namuna Byakti", ne: "नमुना व्यक्ति" };
 
 function meta(cases: Case[], extra: Partial<Parameters<typeof entityMeta>[0]> = {}) {
   return entityMeta({
     names: NAMES,
-    fallbackName: "Hari Bahadur Thapa",
+    fallbackName: "Namuna Byakti",
     kindLabel: "व्यक्ति",
     language: "ne",
     entityIri: IRI,
@@ -59,8 +61,8 @@ function meta(cases: Case[], extra: Partial<Parameters<typeof entityMeta>[0]> = 
 
 describe("bilingualName", () => {
   it("puts the page's language first and carries both scripts", () => {
-    expect(bilingualName(NAMES, "ne", "x")).toBe("हरि बहादुर थापा · Hari Bahadur Thapa");
-    expect(bilingualName(NAMES, "en", "x")).toBe("Hari Bahadur Thapa · हरि बहादुर थापा");
+    expect(bilingualName(NAMES, "ne", "x")).toBe("नमुना व्यक्ति · Namuna Byakti");
+    expect(bilingualName(NAMES, "en", "x")).toBe("Namuna Byakti · नमुना व्यक्ति");
   });
 
   it("does not repeat a name the record holds once, and falls back when it holds none", () => {
@@ -72,7 +74,7 @@ describe("bilingualName", () => {
 
 describe("entityMeta", () => {
   it("titles the page in both scripts", () => {
-    expect(meta([]).title).toBe("हरि बहादुर थापा · Hari Bahadur Thapa | Jawafdehi");
+    expect(meta([]).title).toBe("नमुना व्यक्ति · Namuna Byakti | Jawafdehi");
   });
 
   it("names an accused role and a decided verdict, the verdict before the case title", () => {
@@ -122,8 +124,8 @@ describe("entityMeta", () => {
       [aCase("a", "क".repeat(200), { type: "accused", outcome: "acquitted" })],
       {
         names: {
-          en: "Tripureshwar Conductor Udhyog/Rabin Nirman Sewa/Kunwar Construction JV",
-          ne: "त्रिपुरेश्वर कण्डक्टर उद्योग/रविन निर्माण सेवा/कुँवर कन्स्ट्रक्सन जे.भी",
+          en: "Namuna Nirman Sewa/Namuna Construction Company/Namuna Engineering Joint Venture",
+          ne: "नमुना निर्माण सेवा/नमुना कन्स्ट्रक्सन कम्पनी/नमुना इन्जिनियरिङ संयुक्त उपक्रम",
         },
       },
     );
@@ -164,8 +166,8 @@ describe("entityJsonLd", () => {
       "@type": "Person",
       "@id": IRI,
       url: `${IRI}/`,
-      name: "हरि बहादुर थापा",
-      alternateName: ["Hari Bahadur Thapa"],
+      name: "नमुना व्यक्ति",
+      alternateName: ["Namuna Byakti"],
     });
   });
 
@@ -184,12 +186,12 @@ describe("entityJsonLd", () => {
     const ld = entityJsonLd({
       ...base,
       identifiers: [
-        { "@type": "PropertyValue", propertyID: "wikidata", value: "Q14474324" },
+        { "@type": "PropertyValue", propertyID: "wikidata", value: "Q999999999" },
         { "@type": "PropertyValue", propertyID: "cbs-local-unit-code", value: "11106" },
         { "@type": "PropertyValue", propertyID: "wikidata", value: "not-a-qid" },
       ],
     });
-    expect(ld.sameAs).toEqual(["https://www.wikidata.org/wiki/Q14474324"]);
+    expect(ld.sameAs).toEqual(["https://www.wikidata.org/wiki/Q999999999"]);
     expect(entityJsonLd(base)).not.toHaveProperty("sameAs");
   });
 

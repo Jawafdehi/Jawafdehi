@@ -46,10 +46,10 @@ export interface EntityMetaInput {
  * cases that cite it.
  *
  * Every one of 15,473 person pages used to say "<Name> — Person in the
- * Jawafdehi public entity registry." That tells a searcher nothing — Shekhar
- * Golchha's said it while his page listed three cases and ₹31 arba of alleged
- * damage — and identical text across thousands of pages reads as duplicate
- * content on exactly the pages that need to look distinct.
+ * Jawafdehi public entity registry." That tells a searcher nothing — pages said
+ * it while listing several cases and arbas of alleged damage beneath it — and
+ * identical text across thousands of pages reads as duplicate content on
+ * exactly the pages that need to look distinct.
  *
  * What it says, and what it deliberately does not:
  *

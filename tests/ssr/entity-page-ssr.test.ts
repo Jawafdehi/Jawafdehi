@@ -34,33 +34,35 @@ vi.mock("@/services/jds-api", () => ({
   getCasesCitingCourtCase: vi.fn(),
 }));
 
-// A real record's shape (the registry entry reconciled to Wikidata), with the
-// fields this page reads.
-const IRI = "https://jawafdehi.org/entity/person/rabi-lamichhane-q14474324";
+// A real record's SHAPE — a registry entry reconciled to Wikidata — with the
+// fields this page reads, but a fictional person, case and Wikidata id, per the
+// repo's fixture rule: test code must not carry a real person's accused status,
+// even one we publish.
+const IRI = "https://jawafdehi.org/entity/person/namuna-netaa-q999999999";
 const RECORD = {
   "@id": IRI,
   "@type": "Person",
   "@context": "https://schema.org",
-  name: { en: "Rabi Lamichhane", ne: "रवि लामिछाने" },
-  alternateName: ["Ravi Lamichhane"],
-  identifier: [{ "@type": "PropertyValue", propertyID: "wikidata", value: "Q14474324" }],
+  name: { en: "Namuna Netaa", ne: "नमुना नेता" },
+  alternateName: ["Namuna Neta"],
+  identifier: [{ "@type": "PropertyValue", propertyID: "wikidata", value: "Q999999999" }],
   dateCreated: "2026-06-28T20:29:31Z",
 };
 const CASE = {
   id: 1,
-  slug: "rabi-lamichhane-cooperative-fr-11ccd7",
-  title: "Rabi Lamichhane Cooperative Fraud",
+  slug: "namuna-cooperative-fraud-099",
+  title: "Namuna Cooperative Fraud",
   case_type: "CORRUPTION",
   state: "PUBLISHED",
   proceedings_started_on: "2023-12-25",
   created_at: "2026-01-03T00:00:00Z",
   dates: { stages: [] },
-  entities: [{ nes_id: IRI, display_name: "Rabi Lamichhane", type: "accused", outcome: "charged" }],
+  entities: [{ nes_id: IRI, display_name: "Namuna Netaa", type: "accused", outcome: "charged" }],
 } as unknown as Case;
 
 const { render } = await import("../../src/entry-server");
 const renderEntity = () =>
-  render("/entity/person/rabi-lamichhane-q14474324/", undefined, { edge: true });
+  render("/entity/person/namuna-netaa-q999999999/", undefined, { edge: true });
 
 function ldBlocks(html: string): Record<string, unknown>[] {
   return [...html.matchAll(/<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/g)].map(
@@ -79,13 +81,13 @@ describe("SSR of an entity page", () => {
 
   it("titles the page in both scripts", async () => {
     const title = (await renderEntity()).helmetContext.helmet?.title?.toString() ?? "";
-    expect(title).toContain("रवि लामिछाने · Rabi Lamichhane | Jawafdehi");
+    expect(title).toContain("नमुना नेता · Namuna Netaa | Jawafdehi");
   });
 
   it("describes what the archive holds on them, not the registry boilerplate", async () => {
     const meta = (await renderEntity()).helmetContext.helmet?.meta?.toString() ?? "";
     const description = /name="description" content="([^"]*)"/.exec(meta)?.[1] ?? "";
-    expect(description).toContain("Rabi Lamichhane Cooperative Fraud");
+    expect(description).toContain("Namuna Cooperative Fraud");
     expect(description).not.toContain("public entity registry");
     // An undecided case: the role, and no invented verdict.
     expect(description).not.toMatch(/विचाराधीन|pending/i);
@@ -96,17 +98,17 @@ describe("SSR of an entity page", () => {
     const person = ldBlocks(helmet?.script?.toString() ?? "").find((b) => b["@type"] === "Person");
     expect(person).toMatchObject({
       "@id": IRI,
-      url: "https://jawafdehi.org/entity/person/rabi-lamichhane-q14474324/",
-      name: "रवि लामिछाने",
-      sameAs: ["https://www.wikidata.org/wiki/Q14474324"],
+      url: "https://jawafdehi.org/entity/person/namuna-netaa-q999999999/",
+      name: "नमुना नेता",
+      sameAs: ["https://www.wikidata.org/wiki/Q999999999"],
       subjectOf: [
         {
           "@type": "CreativeWork",
-          name: "Rabi Lamichhane Cooperative Fraud",
-          url: "https://jawafdehi.org/case/rabi-lamichhane-cooperative-fr-11ccd7/",
+          name: "Namuna Cooperative Fraud",
+          url: "https://jawafdehi.org/case/namuna-cooperative-fraud-099/",
         },
       ],
     });
-    expect(person!.alternateName).toEqual(expect.arrayContaining(["Rabi Lamichhane", "Ravi Lamichhane"]));
+    expect(person!.alternateName).toEqual(expect.arrayContaining(["Namuna Netaa", "Namuna Neta"]));
   });
 });
