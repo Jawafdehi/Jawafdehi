@@ -46,9 +46,10 @@ vi.mock("@/services/jds-api", () => ({
 }));
 
 // Mixed case on purpose: a court reference is typed both ways, and the page
-// must name ONE canonical form for both.
-const PATH = "/courtcase/special/071-CR-0232";
-const CANONICAL = "https://jawafdehi.org/courtcase/special/071-cr-0232";
+// must name ONE canonical form for both. Fictional (099-*), per the repo's rule
+// against attaching an invented outcome or defendant to a real register entry.
+const PATH = "/courtcase/special/099-CR-9002";
+const CANONICAL = "https://jawafdehi.org/courtcase/special/099-cr-9002";
 
 const { render } = await import("../../src/entry-server");
 
@@ -61,14 +62,14 @@ describe("SSR of a court-case page", () => {
       if (/^\/api\/courtcases\/[^/]+\/[^/]+\/$/.test(url)) {
         return {
           data: {
-            case_number: "071-CR-0232",
+            case_number: "099-CR-9002",
             court_identifier: "special",
             case_type: "रकम हिनामिना",
             case_status: "फैसला >> सफाई",
             registration_date_bs: "2071-10-22",
             registration_date_ad: "2015-02-05",
             plaintiff: "नेपाल सरकार",
-            defendant: "राम बहादुर थापा समेत २",
+            defendant: "नमुना प्रतिवादी समेत २",
             orders: [],
             court_chain: [],
           },
@@ -91,12 +92,12 @@ describe("SSR of a court-case page", () => {
     expect(description).toContain("सफाई");
     expect(description).not.toContain("in the Jawafdehi governance archive");
     // And it keeps party names out of the snippet.
-    expect(description).not.toContain("राम बहादुर थापा");
+    expect(description).not.toContain("नमुना प्रतिवादी");
   });
 
   it("carries a title built from the record", async () => {
     const title = (await renderCourtCase()).helmetContext.helmet?.title?.toString() ?? "";
-    expect(title).toMatch(/>[^<]*071-CR-0232[^<]*रकम हिनामिना[^<]*</);
+    expect(title).toMatch(/>[^<]*099-CR-9002[^<]*रकम हिनामिना[^<]*</);
   });
 
   it("ships its breadcrumb as BreadcrumbList structured data", async () => {
@@ -108,6 +109,6 @@ describe("SSR of a court-case page", () => {
     expect(crumbs).toBeDefined();
     const items = crumbs!.itemListElement as Record<string, unknown>[];
     expect(items[0]).toMatchObject({ position: 1, item: "https://jawafdehi.org/" });
-    expect(items.at(-1)).toMatchObject({ name: "071-CR-0232" });
+    expect(items.at(-1)).toMatchObject({ name: "099-CR-9002" });
   });
 });
