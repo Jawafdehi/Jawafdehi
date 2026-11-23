@@ -39,6 +39,9 @@ describe("crawlableListing", () => {
     ["no type at all", ""],
     ["an unknown type", "?type=bogus"],
     ["a repeated type", "?type=case&type=entity"],
+    // The edge would take one value and the browser's readParams another, so
+    // the server-rendered page and its hydration would disagree.
+    ["a repeated page", "?type=case&page=2&page=3"],
   ])("is NOT a listing for %s", (_, search) => {
     expect(crawlableListing("/search/", search)).toBeNull();
   });

@@ -59,7 +59,7 @@ export function crawlableListing(pathname: string, search: string): Listing | nu
   const params = new URLSearchParams(search);
 
   let type: ListingType | null = null;
-  let page = 1;
+  let page: number | null = null;
   for (const [key, value] of params) {
     if (IGNORED_PARAMS.test(key)) continue;
     if (key === 'type') {
@@ -67,14 +67,19 @@ export function crawlableListing(pathname: string, search: string): Listing | nu
       if (type !== null || !(LISTING_TYPES as readonly string[]).includes(value)) return null;
       type = value as ListingType;
     } else if (key === 'page') {
-      if (!/^[1-9]\d{0,4}$/.test(value)) return null;
+      // Repeated, it is ambiguous — and readParams takes the FIRST value while a
+      // loop takes the last, so the edge would render one page and the browser
+      // hydrate another. Ambiguity is not a listing.
+      if (page !== null || !/^[1-9]\d{0,4}$/.test(value)) return null;
       page = Number(value);
     } else {
       return null; // q, a filter, a sort, a series: not an unfiltered listing
     }
   }
-  if (type === null || page > LISTING_MAX_PAGE) return null;
-  return { type, page };
+  if (type === null) return null;
+  const resolved = page ?? 1;
+  if (resolved > LISTING_MAX_PAGE) return null;
+  return { type, page: resolved };
 }
 
 /**
