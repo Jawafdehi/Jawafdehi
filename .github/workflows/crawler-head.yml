@@ -1,0 +1,56 @@
+name: Crawler head check
+
+# What does a search engine actually get from production? Samples case, entity
+# and court-case pages from our own sitemaps, fetches them AS GOOGLEBOT through
+# Cloudflare, and FAILS if any would be indexed blank: no <title>, no canonical,
+# no description, a loading skeleton, or a body of chrome only.
+#
+# Why this exists: from 2026-11-20 to 11-23 every one of 2,847 case pages served
+# crawlers an empty <title> and a skeleton, while every unit test, build and
+# browser check was green. Nothing looked at what a crawler is served, and it
+# took three days to notice. This is that look, on a schedule.
+#
+# Unlike the Tier B nightly instruments, this one fails the run on purpose: a
+# blank head is an outage, not a trend to chart.
+on:
+  schedule:
+    # Every six hours, at :40 — a merge takes ~30 min to reach production, so
+    # this lands after a deploy rather than racing it.
+    - cron: "40 */6 * * *"
+  workflow_dispatch:
+    inputs:
+      base:
+        description: "Origin to check"
+        required: false
+        default: "https://jawafdehi.org"
+      per_type:
+        description: "Pages sampled per record type"
+        required: false
+        default: "8"
+
+concurrency:
+  group: crawler-head
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Pages are indexable as served to Googlebot
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: latest
+
+      # No install step: the checker imports nothing but the platform's fetch.
+      - name: Sample production as Googlebot
+        run: bun run scripts/crawler-head-check.ts "${BASE}" "${PER_TYPE}"
+        env:
+          BASE: ${{ inputs.base || 'https://jawafdehi.org' }}
+          PER_TYPE: ${{ inputs.per_type || '8' }}
