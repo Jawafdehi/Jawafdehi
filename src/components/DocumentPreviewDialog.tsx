@@ -219,7 +219,11 @@ export function DocumentPreviewViewer({
   }, [isMarkdown, pageCount, renderedPageWidth]);
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-code-surface text-white">
+    // min-w-0: the dialog panel is a CSS grid, and a grid item's default
+    // min-width is its content's width. Without it the header row (title, open,
+    // download) set the panel's width — 691px on a 390px phone — so the title
+    // never truncated and the download button sat off-screen.
+    <div className="flex h-full min-h-0 min-w-0 flex-col bg-code-surface text-white">
       <div className="flex h-14 shrink-0 items-center gap-3 border-b border-white/10 bg-black px-3">
         {onClose && (
           <Button
