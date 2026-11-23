@@ -77,6 +77,17 @@ describe("courtCaseMeta", () => {
     expect(b).toContain("Kathmandu जिल्ला अदालत");
   });
 
+  it("keeps the outcome when a long charge fills the snippet", () => {
+    // A court's case-type text can be very long. The acquittal must survive the
+    // cut; the charge is what gets shortened.
+    const { description } = courtCaseMeta(
+      { ...BASE, case_type: "भ्रष्टाचार ".repeat(60), case_status: "फैसला >> सफाई" },
+      "special",
+    );
+    expect(description.length).toBeLessThanOrEqual(160);
+    expect(description.startsWith("सफाई")).toBe(true);
+  });
+
   it("stays inside the snippet budget", () => {
     const long = courtCaseMeta({ ...BASE, case_type: "क".repeat(300) }, "special");
     expect(long.description.length).toBeLessThanOrEqual(160);

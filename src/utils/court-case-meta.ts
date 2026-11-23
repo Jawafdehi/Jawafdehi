@@ -71,12 +71,16 @@ export function courtCaseMeta(
     .join(" · ");
 
   const registered = courtCase.registration_date_bs?.trim();
+  // The outcome LEADS. Everything after it is variable-length (a court's own
+  // charge text can run to hundreds of characters), and truncation cuts from
+  // the end — so with the outcome last, a long charge could keep the
+  // accusation in the snippet and cut the acquittal off. First, it cannot be.
   const lead = [
+    outcomeText(courtCase),
     charge,
     courtName,
     caseNumber ? `मुद्दा नं. ${caseNumber}` : null,
     registered ? `दर्ता ${registered}` : null,
-    outcomeText(courtCase),
   ]
     .filter(Boolean)
     .join(" · ");
