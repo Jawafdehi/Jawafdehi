@@ -99,7 +99,6 @@ function reachesSeo(file: string, depth = 0): boolean {
 // for a record page that has to describe the record.
 const AWAITING_SEO: Record<string, string> = {
   MaterialProfile: 'per-record metadata — the document title and source',
-  CourtCaseProfile: 'per-record metadata — the case number, court and parties',
   PaymentSuccess: 'transactional; pre-rendered, so it needs noindex not a card',
   PaymentCancelled: 'transactional; pre-rendered, so it needs noindex not a card',
   NewsletterConfirmed: 'transactional, should be noindex',

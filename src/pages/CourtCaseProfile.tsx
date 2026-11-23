@@ -1,17 +1,20 @@
 import { PageBreadcrumb } from "@/components/ui/page-breadcrumb";
 import { type MouseEvent, useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Helmet } from "react-helmet-async";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 
+import { Seo } from "@/components/Seo";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CourtCaseProfileView } from "@/components/courtcase/CourtCaseProfileView";
 import { CourtCaseRelatedCases } from "@/components/CourtCaseRelatedCases";
 import { CaseSectionJumpNav, type CaseJumpSection } from "@/components/case-detail/case-section-jump-nav";
 import { getCourtCaseFull } from "@/services/datalake-api";
 import { courtCaseIri as buildCourtCaseIri } from "@/queries/related-cases";
+import { courtCaseMeta } from "@/utils/court-case-meta";
+import { jsonLdString } from "@/utils/json-ld";
 import { pageCard } from "@/utils/page-cards";
+import { SITE_NAME } from "@/utils/seo";
 
 const courtCard = pageCard("court-records");
 
@@ -126,11 +129,18 @@ export default function CourtCaseProfile() {
     navigate(`#${sectionId}`, { replace: true });
   };
 
+  // Title and description from the record — charge, court, date, OUTCOME —
+  // instead of one sentence shared by 19,217 pages. See courtCaseMeta for why
+  // the outcome is in the snippet and party names are not.
+  const meta = data && parsed ? courtCaseMeta(data, parsed.court) : null;
+
   // schema.org JSON-LD for crawlers (parity with the retired R2 landing pages). A
   // court case is a document/record, so CreativeWork (matches MaterialProfile) —
-  // NOT Legislation, which is schema.org's type for statutes/acts.
+  // NOT Legislation, which is schema.org's type for statutes/acts. Serialised by
+  // jsonLdString: a court's own case-type text must not be able to close the
+  // <script> element.
   const jsonLd = data
-    ? JSON.stringify({
+    ? jsonLdString({
         "@context": "https://schema.org",
         "@type": "CreativeWork",
         name: title,
@@ -138,28 +148,35 @@ export default function CourtCaseProfile() {
         identifier: caseNumber,
         inLanguage: "ne",
         isAccessibleForFree: true,
+        ...(meta ? { description: meta.description } : {}),
         ...(data.registration_date_ad ? { dateCreated: data.registration_date_ad } : {}),
-        publisher: { "@type": "Organization", name: "Jawafdehi" },
+        publisher: { "@type": "Organization", name: SITE_NAME },
       })
     : null;
 
   return (
     <main id="main-content" className="min-h-screen bg-background py-8 md:py-12">
-      <Helmet>
-        <title>{title} | Jawafdehi court records</title>
-        <meta
-          name="description"
-          content={`Court case ${caseNumber} in the Jawafdehi governance archive.`}
-        />
-        {/* No per-case picture: the court-records share card, not the generic one. */}
-        <meta property="og:image" content={courtCard.imageUrl} />
-        <meta property="og:image:alt" content={courtCard.imageAlt} />
-        <meta property="og:image:width" content={String(courtCard.imageWidth)} />
-        <meta property="og:image:height" content={String(courtCard.imageHeight)} />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:image" content={courtCard.imageUrl} />
-        {jsonLd ? <script type="application/ld+json">{jsonLd}</script> : null}
-      </Helmet>
+      {parsed ? (
+        // Through <Seo>, like every other record page. This page wrote its own
+        // Helmet tags and, unlike cases, entities and materials, never emitted a
+        // rel=canonical — so `/courtcase/Special/071-CR-0232` and its lowercase
+        // form were two indexable URLs for one record. The canonical is the
+        // lowercase IRI the API sitemap advertises (buildCourtCaseIri).
+        <Seo
+          title={meta?.title ?? `${title} | Jawafdehi`}
+          description={
+            meta?.description ?? `Court case ${caseNumber} in the Jawafdehi governance archive.`
+          }
+          canonicalUrl={courtCaseIri}
+          // No per-case picture: the court-records share card, not the generic one.
+          imageUrl={courtCard.imageUrl}
+          imageAlt={courtCard.imageAlt}
+          imageWidth={courtCard.imageWidth}
+          imageHeight={courtCard.imageHeight}
+        >
+          {jsonLd ? <script type="application/ld+json">{jsonLd}</script> : null}
+        </Seo>
+      ) : null}
 
       <div className="layout-container">
         <PageBreadcrumb className="mb-8 md:mb-10"
