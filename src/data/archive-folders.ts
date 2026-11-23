@@ -103,7 +103,82 @@ const W = {
   publications: { ne: "प्रकाशन", en: "Publications" },
   judgments: { ne: "फैसला", en: "Judgments" },
   reportsAndPressReleases: { ne: "प्रतिवेदन र प्रेस विज्ञप्ति", en: "Reports and press releases" },
+  attendance: { ne: "उपस्थिति विवरण", en: "Attendance records" },
+  other: { ne: "अन्य", en: "Other" },
 } as const;
+
+/**
+ * The standard sub-folders of every Parliament committee (a source whose key
+ * is `parliament_<committee>` or `parliament_na_<committee>`), so a newly
+ * loaded committee is split by kind with no edit here. Each `kind` is the
+ * `jawafdehi:datasetBucket` the sourcing agent sets on the document; the same
+ * values serve every committee, because a leaf is always scoped to its own
+ * source as well. The last entry is the complement: a document with no kind,
+ * or one not listed here, lands in "Other". The `key` is part of the leaf's
+ * slug (`<source>--<key>`), so changing one breaks links.
+ *
+ * KEEP IN SYNC with the API's committee series labels (JawafdehiAPI
+ * `materials/sources.py`, COMMITTEE_SERIES_LABELS) and the sourcing agent's
+ * kind list (bhandari-workspace/batches/KINDS.md).
+ */
+export const COMMITTEE_TEMPLATE: readonly { key: string; name: Bilingual; kind?: string }[] = [
+  { key: "annual-reports", name: W.annualReports, kind: "committee-annual-report" },
+  {
+    key: "meeting-decisions",
+    name: { ne: "बैठकका निर्णय र निर्देशन", en: "Meeting decisions and directives" },
+    kind: "committee-meeting-decisions",
+  },
+  {
+    key: "inquiry-reports",
+    name: { ne: "उपसमिति, छानबिन तथा अध्ययन प्रतिवेदन", en: "Sub-committee, inquiry and study reports" },
+    kind: "committee-inquiry-report",
+  },
+  { key: "bill-reports", name: { ne: "विधेयकसम्बन्धी प्रतिवेदन", en: "Reports on bills" }, kind: "committee-bill-report" },
+  { key: "press-releases", name: W.pressReleases, kind: "committee-press-release" },
+  { key: "attendance", name: W.attendance, kind: "committee-attendance" },
+  { key: "other", name: W.other },
+];
+
+/** Every named committee kind: what the "Other" sub-folder leaves out. */
+export const COMMITTEE_KINDS: readonly string[] = COMMITTEE_TEMPLATE.flatMap((entry) => (entry.kind ? [entry.kind] : []));
+
+/** The name the complement takes when a committee has nothing else to split off. */
+const COMMITTEE_ALL: Bilingual = { ne: "सबै कागजात", en: "All documents" };
+
+/**
+ * A committee source: `parliament_` plus a lowercase snake-case name. The
+ * narrow alphabet is what keeps `<source>--<key>` a path-safe, reversible slug.
+ */
+const COMMITTEE_SOURCE = /^parliament_[a-z0-9_]+$/;
+const COMMITTEE_SLUG = /^(parliament_[a-z0-9_]+)--([a-z-]+)$/;
+
+export function isCommitteeSource(source: string): boolean {
+  return COMMITTEE_SOURCE.test(source);
+}
+
+/** One sub-folder of a committee, from the template. */
+function committeeLeaf(source: string, entry: (typeof COMMITTEE_TEMPLATE)[number]): ArchiveLeaf {
+  return {
+    type: "leaf",
+    slug: `${source}--${entry.key}`,
+    source,
+    name: entry.name,
+    ...(entry.kind ? { kind: entry.kind } : { kindExclude: COMMITTEE_KINDS }),
+  };
+}
+
+/** A committee sub-folder by its slug (`parliament_finance--annual-reports`), catalogue or not. */
+export function committeeLeafBySlug(slug: string): ArchiveLeaf | undefined {
+  const match = COMMITTEE_SLUG.exec(slug);
+  if (!match) return undefined;
+  // A committee with its own shelf (the PAC) keeps its own leaves only.
+  if (ARCHIVE_SHELVES.flatMap(leavesOf).some((entry) => entry.source === match[1])) return undefined;
+  const entry = COMMITTEE_TEMPLATE.find((candidate) => candidate.key === match[2]);
+  return entry ? committeeLeaf(match[1], entry) : undefined;
+}
+
+const HOUSE_OFFICE_SLUG = "house-of-representatives";
+const HOUSE_OFFICE: Bilingual = { ne: "प्रतिनिधि सभा", en: "House of Representatives" };
 
 const NRB_KINDS = [
   "enforcement-action",
@@ -267,20 +342,24 @@ export const ARCHIVE_SHELVES: readonly ArchiveNode[] = [
   // House of Representatives Public Accounts Committee, all three House terms
   // (2074, 2079, 2082) in one shelf. Kinds are `jawafdehi:datasetBucket`, set
   // when the documents were sourced; a document with no kind lands in "Other".
-  branch("public-accounts-committee", { ne: "सार्वजनिक लेखा समिति", en: "Public Accounts Committee" }, 4, [
-    leaf("pac-annual-reports", "parliament_pac", W.annualReports, { kind: "pac-annual-report" }),
-    leaf("pac-meeting-decisions", "parliament_pac", { ne: "बैठकका निर्णय", en: "Meeting decisions" }, {
-      kind: "pac-meeting-decisions",
-    }),
-    leaf("pac-subcommittee-reports", "parliament_pac", { ne: "उपसमितिका प्रतिवेदन", en: "Sub-committee reports" }, {
-      kind: "pac-subcommittee-report",
-    }),
-    leaf("pac-attendance", "parliament_pac", { ne: "उपस्थिति विवरण", en: "Attendance records" }, {
-      kind: "pac-attendance",
-    }),
-    leaf("pac-other", "parliament_pac", { ne: "अन्य", en: "Other" }, {
-      kindExclude: PAC_KINDS,
-    }),
+  // It sits under the House office, where every other House committee is
+  // filed from its API publisher (with the committee template, below).
+  branch(HOUSE_OFFICE_SLUG, HOUSE_OFFICE, 4, [
+    branch("public-accounts-committee", { ne: "सार्वजनिक लेखा समिति", en: "Public Accounts Committee" }, 4, [
+      leaf("pac-annual-reports", "parliament_pac", W.annualReports, { kind: "pac-annual-report" }),
+      leaf("pac-meeting-decisions", "parliament_pac", { ne: "बैठकका निर्णय", en: "Meeting decisions" }, {
+        kind: "pac-meeting-decisions",
+      }),
+      leaf("pac-subcommittee-reports", "parliament_pac", { ne: "उपसमितिका प्रतिवेदन", en: "Sub-committee reports" }, {
+        kind: "pac-subcommittee-report",
+      }),
+      leaf("pac-attendance", "parliament_pac", W.attendance, {
+        kind: "pac-attendance",
+      }),
+      leaf("pac-other", "parliament_pac", W.other, {
+        kindExclude: PAC_KINDS,
+      }),
+    ]),
   ]),
 
   // Laws
@@ -445,9 +524,10 @@ function copyNode(node: ArchiveNode): ArchiveNode {
 }
 
 // Country tails some publishers carry ("…, Nepal", "…, नेपाल सरकार"): the
-// archive is all Nepal's, so an office is named without them.
-const OFFICE_TAIL_EN = /,\s*(Government of Nepal|Nepal)\s*$/i;
-const OFFICE_TAIL_NE = /,\s*(नेपाल सरकार|नेपाल)\s*$/;
+// archive is all Nepal's, so an office is named without them. The same goes
+// for ", Federal Parliament" on a House: it is already in the Parliament folder.
+const OFFICE_TAIL_EN = /,\s*(Government of Nepal|Nepal|Federal Parliament(?: of Nepal)?)\s*$/i;
+const OFFICE_TAIL_NE = /,\s*(नेपाल सरकार|नेपाल|संघीय संसद)\s*$/;
 
 /**
  * The office a source not on any shelf is grouped under: its API publisher,
@@ -488,6 +568,29 @@ function sameOffice(a: Bilingual, b: Bilingual): boolean {
 
 const OFFICE_PREFIX = "office-";
 
+/**
+ * A committee the shelves don't name, split into the standard sub-folders
+ * (`COMMITTEE_TEMPLATE`). Once the counts are in, a sub-folder with nothing in
+ * it is left out (a dozen committees would otherwise show rows of zeros), and
+ * when nothing but the complement is left it is called "All documents", since
+ * there is nothing for it to be "Other" than. Before then every sub-folder is
+ * drawn. The branch keeps the slug the committee had as a single leaf, so a
+ * link to it still opens it.
+ */
+function committeeBranch(
+  row: DocumentSourceEntry,
+  name: Bilingual,
+  catalogue: DocumentSourcesResponse | undefined | null,
+  tint: number,
+): ArchiveBranch {
+  const all = COMMITTEE_TEMPLATE.map((entry) => committeeLeaf(row.source, entry));
+  const counted = all.filter((entry) => (seriesCount(leafSeries(entry), catalogue) ?? 1) > 0);
+  const kept = counted.length ? counted : all.filter((entry) => entry.kindExclude);
+  const children =
+    kept.length === 1 && kept[0].kindExclude && catalogue?.ready ? [{ ...kept[0], name: COMMITTEE_ALL }] : kept;
+  return branch(unfiledSlug(row.source), name, tint, children);
+}
+
 /** A path-safe slug for an office opened from the API publisher. */
 export function officeSlug(office: Bilingual): string {
   const base = (office.en || office.ne).trim().toLowerCase().replace(/\s+/g, "-");
@@ -518,13 +621,10 @@ export function withUnfiled(
     if (known.has(row.source)) continue;
     const where = { folder: row.folder || UNFILED_FOLDER, subfolder: row.subfolder };
     const office = officeName(row.publisher);
-    const entry: ArchiveLeaf = {
-      type: "leaf",
-      slug: unfiledSlug(row.source),
-      source: row.source,
-      name: office ? seriesName(row.name, office, row.source) : { ne: row.name?.ne ?? "", en: row.name?.en ?? row.source },
-      apiName: row.name,
-    };
+    const name = office ? seriesName(row.name, office, row.source) : { ne: row.name?.ne ?? "", en: row.name?.en ?? row.source };
+    const entry: ArchiveNode = isCommitteeSource(row.source)
+      ? committeeBranch(row, name, catalogue, FOLDER_TINT[where.folder] ?? FOLDER_TINT[UNFILED_FOLDER])
+      : { type: "leaf", slug: unfiledSlug(row.source), source: row.source, name, apiName: row.name };
     if (!office) {
       place(tree, subfolders, entry, where);
       continue;
@@ -573,9 +673,9 @@ export function sortTree<T extends ArchiveNode>(nodes: readonly T[], language: s
     );
 }
 
-/** A shelf leaf by slug, wherever (or whether) the catalogue files it. */
+/** A shelf leaf by slug, wherever (or whether) the catalogue files it; committee sub-folders included. */
 export function shelfLeafBySlug(slug: string): ArchiveLeaf | undefined {
-  return ARCHIVE_SHELVES.flatMap(leavesOf).find((entry) => entry.slug === slug);
+  return ARCHIVE_SHELVES.flatMap(leavesOf).find((entry) => entry.slug === slug) ?? committeeLeafBySlug(slug);
 }
 
 /** The leaf as a browsable series, for /materials/?series=<slug>. */
@@ -657,9 +757,15 @@ export function leafHref(entry: ArchiveLeaf): string {
 /**
  * Any shelf leaf as a series, by slug: the curated registry first, then the
  * folder tree's own leaves (Acts, NRB enforcement…), named with their folder
- * ("Laws · Acts") so a filter chip reads on its own.
+ * ("Laws · Acts") so a filter chip reads on its own. A committee sub-folder
+ * resolves without the catalogue too (its scope is all in the slug); given
+ * the catalogue it is named with its committee ("Finance Committee · Annual
+ * reports"), and without it by the sub-folder alone.
  */
-export function archiveSeriesBySlug(slug: string): MaterialSeries | undefined {
+export function archiveSeriesBySlug(
+  slug: string,
+  catalogue?: DocumentSourcesResponse | null,
+): MaterialSeries | undefined {
   const curatedSeries = seriesBySlug(slug);
   if (curatedSeries) return curatedSeries;
   for (const shelf of ARCHIVE_SHELVES) {
@@ -672,7 +778,18 @@ export function archiveSeriesBySlug(slug: string): MaterialSeries | undefined {
       : entry.name;
     return { ...leafSeries(entry), name, typeLabel: name };
   }
-  return undefined;
+  const committee = committeeLeafBySlug(slug);
+  if (!committee) return undefined;
+  const row = catalogue?.sources.find((entry) => entry.source === committee.source);
+  if (!row || !(row.name?.en || row.name?.ne)) return leafSeries(committee);
+  const office = officeName(row.publisher);
+  const parent = office ? seriesName(row.name, office, row.source) : { ne: row.name?.ne ?? "", en: row.name?.en ?? "" };
+  const drawn = committeeBranch(row, parent, catalogue, 1).children.find((entry) => entry.slug === slug) ?? committee;
+  const name = {
+    ne: [parent.ne || parent.en, drawn.name.ne].join(" · "),
+    en: [parent.en || parent.ne, drawn.name.en].join(" · "),
+  };
+  return { ...leafSeries(committee), name, typeLabel: name };
 }
 
 function findTrail(node: ArchiveNode, slug: string): ArchiveNode[] | null {

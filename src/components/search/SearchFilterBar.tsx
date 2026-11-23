@@ -12,7 +12,7 @@ import { useTranslation } from "react-i18next";
 
 import { DateRangeFilter } from "@/components/search/DateRangeFilter";
 import { SeriesFilter } from "@/components/search/SeriesFilter";
-import { archiveSeriesBySlug } from "@/data/archive-folders";
+import { useArchiveSeries } from "@/hooks/useArchiveSeries";
 import { pickLocalized } from "@/lib/materials-landing";
 import {
   filterGroupsFor,
@@ -60,11 +60,6 @@ type SearchFilterBarProps = {
   className?: string;
 };
 
-/** The series' name in the reader's language, for its chip. */
-function seriesLabel(slug: string | undefined, language: string): string | undefined {
-  const series = slug ? archiveSeriesBySlug(slug) : undefined;
-  return series ? pickLocalized(series.name, language) : undefined;
-}
 
 const CHIP =
   "inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full text-[15px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
@@ -158,6 +153,7 @@ export function SearchFilterBar({
   className,
 }: Readonly<SearchFilterBarProps>) {
   const { t, i18n } = useTranslation();
+  const activeSeries = useArchiveSeries(series);
   const clear = (what: string) =>
     t("archiveSearch.clearFilter", "Clear {{filter}}", { filter: what });
 
@@ -234,7 +230,7 @@ export function SearchFilterBar({
           folders open with, so it is the filter most often already in force. */}
       {showsDate(selectedType) && onSeriesChange ? (
         <FilterChip
-          activeLabel={seriesLabel(series, i18n.language)}
+          activeLabel={activeSeries ? pickLocalized(activeSeries.name, i18n.language) : undefined}
           clearLabel={clear(seriesTitle)}
           label={seriesTitle}
           onClear={() => onSeriesChange(undefined)}

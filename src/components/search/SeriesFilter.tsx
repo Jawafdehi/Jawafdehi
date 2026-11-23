@@ -1,8 +1,8 @@
 import { useTranslation } from "react-i18next";
 
 import { OptionList, RadioRow } from "@/components/search/filter-controls";
-import { archiveSeriesBySlug } from "@/data/archive-folders";
 import { MATERIAL_SERIES } from "@/data/material-series";
+import { useArchiveSeries } from "@/hooks/useArchiveSeries";
 import { pickLocalized } from "@/lib/materials-landing";
 
 /**
@@ -19,7 +19,8 @@ export function SeriesFilter({
   // A folder opened from /materials can be a shelf leaf the curated list does
   // not carry (Laws · Acts); it leads the list, checked, so the filter in
   // force is always one the reader can see and clear.
-  const offList = value && !MATERIAL_SERIES.some((series) => series.slug === value) ? archiveSeriesBySlug(value) : undefined;
+  const inForce = useArchiveSeries(value);
+  const offList = value && !MATERIAL_SERIES.some((series) => series.slug === value) ? inForce : undefined;
   const options = offList ? [offList, ...MATERIAL_SERIES] : MATERIAL_SERIES;
   return (
     <fieldset className="min-w-0 space-y-2">
