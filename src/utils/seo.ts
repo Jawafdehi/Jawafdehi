@@ -153,6 +153,54 @@ export function caseMetaDescription(caseData: CaseDescriptionSource): string {
   return `A verified corruption and misconduct case documented by ${SITE_NAME}.`;
 }
 
+/** The fields a case's <title> is built from. */
+export interface CaseTitleSource {
+  title?: string | null;
+  /** Court-case @id IRIs, or the legacy "<court>:<number>" form (tolerated on read). */
+  court_cases?: readonly string[] | null;
+}
+
+const DEVANAGARI_DIGITS = "०१२३४५६७८९";
+
+/** "०७१-CR-०१३९" → "071-CR-0139", upper-cased, so two spellings of one reference compare equal. */
+function normalizeCaseRef(value: string): string {
+  return value
+    .replace(/[०-९]/g, (d) => String(DEVANAGARI_DIGITS.indexOf(d)))
+    .toUpperCase();
+}
+
+/** "https://jawafdehi.org/courtcase/kathmandudc/080-c4-2408" or "special:081-CR-0060" → "080-C4-2408". */
+function courtCaseReference(ref: string): string | null {
+  const trimmed = ref.trim().replace(/\/+$/, "");
+  if (!trimmed) return null;
+  const tail = trimmed.includes("/") ? trimmed.slice(trimmed.lastIndexOf("/") + 1) : trimmed;
+  const number = tail.includes(":") ? tail.slice(tail.lastIndexOf(":") + 1) : tail;
+  return number ? normalizeCaseRef(number) : null;
+}
+
+/**
+ * The <title> of a case page: its title, plus the lead court-case number when
+ * the title does not already carry it.
+ *
+ * Shared by `CaseDetail.tsx` and `worker.ts` for the same reason as
+ * `caseMetaDescription`: two renderers produce this head, and a title that
+ * depends on which one served the page is two titles.
+ *
+ * The court number is the one query nobody else answers. Someone holding a
+ * charge sheet or a cause list searches "080-C4-2408", and no news article is
+ * titled with it. Most of our titles end in the number already —
+ * "… भ्रष्टाचार मुद्दा (075-CR-0282)" — and those are left alone; the ones that
+ * do not ("Rabi Lamichhane Cooperative Fraud") gain it. The comparison folds
+ * Devanagari digits and case, so a title written "०७१-CR-०१३९" is recognised as
+ * already carrying 071-CR-0139 and is not given it twice.
+ */
+export function caseMetaTitle(caseData: CaseTitleSource): string {
+  const title = (caseData.title ?? "").trim() || "Jawafdehi Case";
+  const lead = (caseData.court_cases ?? []).map(courtCaseReference).find(Boolean) ?? null;
+  if (!lead || normalizeCaseRef(title).includes(lead)) return `${title} | Jawafdehi`;
+  return `${title} (${lead}) | Jawafdehi`;
+}
+
 // The social card's intrinsic size. Emitted as og:image:width/height so scrapers
 // can lay out the card before they have fetched the bytes. Only ever attached to
 // an image we actually know the dimensions of — see buildHeadTags.
