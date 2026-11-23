@@ -132,20 +132,42 @@ describe("isMaterialTail gates what reaches a URL", () => {
 });
 
 describe("materialRobots fails closed", () => {
-  it("indexes only an explicitly LISTED material", () => {
-    expect(materialRobots({ "jawafdehi:visibility": "LISTED" })).toBeNull();
+  it("indexes a material the API has cleared for indexing", () => {
+    expect(materialRobots({ "jawafdehi:indexable": true })).toBeNull();
   });
 
   it.each([
-    { "jawafdehi:visibility": "UNLISTED" },
-    { "jawafdehi:visibility": "PRIVATE" },
-    { "jawafdehi:visibility": null },
+    { "jawafdehi:indexable": false },
+    { "jawafdehi:indexable": null },
+    // Truthy but not `true`. The API sends a JSON boolean; anything else is a
+    // contract change we have not agreed to, and guessing its intent is how a
+    // guard fails open.
+    { "jawafdehi:indexable": "true" },
+    { "jawafdehi:indexable": 1 },
     {},
     null,
   ])("noindexes %o", (data) => {
-    // The empty object is the case that matters: it is what every API build
-    // before the companion change returns.
+    // The empty object is the case that matters: it is what the API returns
+    // today, for every one of the 372,995 documents.
     expect(materialRobots(data)).toBe("noindex, nofollow");
+  });
+
+  it("ignores the staff-only visibility field entirely", () => {
+    // The regression this replaces. `jawafdehi:visibility` is attached only for
+    // authed caseworker reads, so keying indexability on it meant the guard
+    // could never open for the edge renderer — which is the only head a crawler
+    // ever sees. A LISTED material is NOT thereby indexable: that is an
+    // editorial decision the API makes per document class.
+    expect(materialRobots({ "jawafdehi:visibility": "LISTED" })).toBe(
+      "noindex, nofollow",
+    );
+    // And a staff payload carrying both must follow `indexable`, not visibility.
+    expect(
+      materialRobots({
+        "jawafdehi:visibility": "UNLISTED",
+        "jawafdehi:indexable": true,
+      }),
+    ).toBeNull();
   });
 });
 

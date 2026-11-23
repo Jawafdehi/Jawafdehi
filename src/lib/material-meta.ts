@@ -41,35 +41,73 @@ export interface MaterialMetaSource {
   description?: MaterialTextValue;
   datePublished?: unknown;
   identifier?: unknown;
-  /** `LISTED` | `UNLISTED` — see `materialRobots`. Absent on older API builds. */
+  /**
+   * `LISTED` | `UNLISTED` — the material's public-reachability state.
+   *
+   * ⚠️ Staff-only, and NOT what decides indexability. `materials/views.py`
+   * (`_with_admin_visibility`) attaches this for authed caseworker/readonly
+   * reads so the editor can drive the policy control; "public reads never see
+   * these fields", deliberately, because the policy itself says which documents
+   * are gated. Kept on this interface because a staff reader's payload really
+   * does carry it — never read it to decide what a crawler may index.
+   */
   "jawafdehi:visibility"?: unknown;
+  /** `true` when search engines may index this document — see `materialRobots`. */
+  "jawafdehi:indexable"?: unknown;
 }
 
 /**
  * The `robots` value for a material, or `null` to leave it indexable.
  *
- * `GET /api/materials/<iri>/` resolves LISTED **and** UNLISTED to anonymous
- * callers, by design — `materials/models.py` defines UNLISTED as "reachable by
- * direct IRI, but NOT searchable / NOT in sitemaps", the YouTube-unlisted
- * semantics an IN_REVIEW case's documents inherit. Serving those a full indexable
- * head would publish in-review editorial work to search engines.
+ * ⚠️ FAILS CLOSED, deliberately: anything that is not explicitly indexable —
+ * including the field being absent — is `noindex, nofollow`. Failing open would
+ * publish in-review editorial work, and worse (see below); only one direction of
+ * this mistake is reversible.
  *
- * `handleCaseMetaFallback` has gated this since it was written (`state ===
- * 'PUBLISHED' ? null : 'noindex, nofollow'`); materials simply had no fallback to
- * gate, and adding one without this would have been a regression rather than a
- * gap.
+ * ## Why this no longer keys on `jawafdehi:visibility`
  *
- * ⚠️ FAILS CLOSED, deliberately. Anything that is not explicitly `LISTED` —
- * including the field being absent, which is what every API build before the
- * companion change returns — is treated as not indexable. The cost of failing
- * closed is that material pages are noindex until that change deploys; the cost of
- * failing open is publishing in-review documents, and only one of those is
- * reversible. Open Graph is unaffected either way, so share cards work throughout.
+ * It used to read `visibility === "LISTED"`, and said so in a note promising the
+ * pages were "noindex until that change deploys". That change could never
+ * deploy. `jawafdehi:visibility` is attached by `_with_admin_visibility` in
+ * `materials/views.py` **only for authed caseworker/readonly reads** — "public
+ * reads never see these fields", because the visibility policy itself tells you
+ * which documents are gated. The edge renderer authenticates as `sa-prerender`,
+ * whose "single role maps to a Django group with no permissions, so it sees
+ * exactly what an anonymous reader sees" (`worker/api-token.ts`). So the field
+ * was never going to arrive, the guard could never open, and all 372,995
+ * document pages served `noindex` — while the API's sitemap generator listed
+ * every one of them as public. Measured 2026-11-23: 18 of 18 sampled pages
+ * across `ag`, `bolpatra` and `nkp`.
+ *
+ * ## Why indexability is its own field, not a view of visibility
+ *
+ * They answer different questions. `visibility` is "may the public reach this
+ * document", and for this archive the answer is usually yes — that is the point
+ * of publishing it. Indexability is "should we push this into Google", which is
+ * an editorial judgement the archive has to make document-class by document-class.
+ *
+ * It is not a hypothetical distinction. Measured against the search API on
+ * 2026-11-23 (fuzzy matching, so upper bounds): ~21,746 documents mention
+ * `परिवर्तित नाम` — the court-ordered identity protection used for complainants
+ * in sexual-offence and trafficking cases — and ~5,079 mention `जबरजस्ती करणी`.
+ * Their titles carry the protected complainant and the **named defendant**
+ * together. Those documents are legitimately public records and are legitimately
+ * in our archive; optimising them so that searching a person's name returns a
+ * rape charge sheet is a separate act, and not one a `LISTED` flag should be
+ * able to authorise by itself.
+ *
+ * So the API computes `jawafdehi:indexable` as a public boolean — LISTED **and**
+ * the document's class cleared for indexing — and leaks nothing the `robots` tag
+ * does not already say. Which classes are cleared is a board decision
+ * (`docs/2026-11-23-seo-plan/PLAN.md` §2.1, §8 Q1); until one is made, the API
+ * clears none and every document stays exactly as it is today.
+ *
+ * Open Graph is unaffected either way, so share cards keep working throughout.
  */
 export function materialRobots(
   data: MaterialMetaSource | null | undefined,
 ): string | null {
-  return data?.["jawafdehi:visibility"] === "LISTED" ? null : "noindex, nofollow";
+  return data?.["jawafdehi:indexable"] === true ? null : "noindex, nofollow";
 }
 
 /** English preferred, Nepali as the fallback — both sides kept for the caller. */
