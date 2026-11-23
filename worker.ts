@@ -50,7 +50,8 @@ import {
   routeTail,
   verifyPurgeSignature,
 } from './worker/edge-cache';
-import { renderEdgePage } from './worker/edge-render';
+import { renderEdgeListing, renderEdgePage } from './worker/edge-render';
+import { crawlableListing, listingPath } from './src/lib/crawlable-listing';
 import {
   API_ORIGIN,
   SITEMAP_BROWSER_CACHE_CONTROL,
@@ -1010,6 +1011,34 @@ function edgeMarker(status: number, marker: string, reason?: string): Response {
   return new Response(null, { status, headers });
 }
 
+// Render a crawlable search listing for EdgePages. A 200 is cached like a record
+// page (an hour, then stale-while-revalidate), which is also how a newly
+// published case reaches the listing: there is no single record to purge on.
+// Anything else is a marker the gateway reads as "serve the pre-rendered shell".
+async function handleListingRender(url: URL, env: Env, ctx?: WorkerContext): Promise<Response> {
+  const outcome = await renderEdgeListing(edgeBundle, `${url.pathname}${url.search}`, {
+    apiTimeoutMs: positiveInt(env.EDGE_SSR_API_TIMEOUT_MS, DEFAULT_EDGE_API_TIMEOUT_MS),
+    deadlineMs: positiveInt(env.EDGE_SSR_DEADLINE_MS, DEFAULT_EDGE_DEADLINE_MS),
+    token: edgeApiTokenNoWait(env, ctx?.waitUntil ? (p) => ctx.waitUntil?.(p) : undefined),
+  });
+  if (outcome.kind === 'ok') {
+    return new Response(outcome.html, {
+      status: 200,
+      headers: {
+        'Content-Type': 'text/html; charset=utf-8',
+        'Cache-Control': CACHE_CONTROL_BROWSER,
+        'Cloudflare-CDN-Cache-Control': EDGE_CDN_CACHE_CONTROL,
+        // One tag for every listing page, so they can be purged together.
+        'Cache-Tag': 'listing',
+        'X-Edge-SSR': 'render',
+      },
+    });
+  }
+  const reason = 'reason' in outcome ? outcome.reason : outcome.kind;
+  console.warn('[edge-ssr] listing not rendered', url.pathname + url.search, reason);
+  return edgeMarker(outcome.kind === 'timeout' ? 504 : 503, outcome.kind === 'timeout' ? 'timeout' : 'error', reason);
+}
+
 // The cached side. Everything this returns with a 200 or a 301 is stored by
 // Workers Cache under the request's path (the host is NOT part of the key:
 // jawafdehi.org and jawafdehi.org.np share one copy, which is why nothing here
@@ -1022,6 +1051,11 @@ async function handleEdgePageRequest(request: Request, env: Env, ctx?: WorkerCon
   }
   const sitemapPath = sitemapUpstreamPath(url.pathname, url.search);
   if (sitemapPath) return handleSitemap(sitemapPath);
+
+  // A crawlable search listing. The inner request already carries the
+  // normalised listingPath, so the cache keys one copy per (type, page).
+  const listing = crawlableListing(url.pathname, url.search);
+  if (listing) return handleListingRender(url, env, ctx);
 
   const matched = matchRoute(url.pathname);
   const kind = edgeKindForRoute(matched?.path);
@@ -1489,6 +1523,36 @@ export default {
         status: res.status === 404 ? 404 : 503,
         headers: { 'Cache-Control': 'no-store', 'Retry-After': '300', 'Content-Type': 'text/plain' },
       });
+    }
+
+    // Crawlable search listings, rendered at the edge AHEAD of the assets
+    // binding. /search/ is pre-rendered, so without this the binding answers
+    // every /search URL — ?type=case&page=3 included — with the same static
+    // page: no results, no record links, nothing for a crawler to walk. Only
+    // the unfiltered listing of one record type qualifies
+    // (lib/crawlable-listing.ts); everything else, and any listing that fails
+    // to render, gets the pre-rendered page exactly as before.
+    const listing = crawlableListing(path, url.search);
+    if (listing && edgeSsrEnabled(env) && (request.method === 'GET' || request.method === 'HEAD')) {
+      const inner = new Request(new URL(listingPath(listing), url.origin).toString(), {
+        method: request.method,
+        headers: { Accept: 'text/html' },
+        redirect: 'manual',
+      });
+      let res: Response | null = null;
+      try {
+        res = ctx?.exports?.EdgePages
+          ? await ctx.exports.EdgePages.fetch(inner)
+          : await handleEdgePageRequest(inner, env, ctx);
+      } catch (err) {
+        console.warn('[edge-ssr] listing call failed', String((err as Error)?.message ?? err));
+      }
+      if (res?.status === 200) {
+        const response = new Response(res.body, res);
+        for (const name of EDGE_INTERNAL_HEADERS) response.headers.delete(name);
+        for (const [key, value] of Object.entries(secHeaders)) response.headers.set(key, value);
+        return response;
+      }
     }
 
     // Try to serve pre-rendered static asset

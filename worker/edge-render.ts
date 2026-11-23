@@ -78,13 +78,19 @@ function materialTailFromId(id: unknown): string | null {
 
 const TIMEOUT_RE = /timeout|timed out|aborted|ECONNABORTED/i;
 
-export async function renderEdgePage(
+type RenderResult = Awaited<ReturnType<EdgeBundle['render']>>;
+
+/**
+ * Render one page and apply every check that holds for ANY page: the deadline,
+ * failed and missing prefetches, and a title that proves the component used its
+ * data. Returns the render, or the failure outcome. Shared by record pages and
+ * search listings, so neither can be cached blank.
+ */
+async function renderChecked(
   bundle: EdgeBundle,
-  kind: EdgeKind,
-  tail: string,
   path: string,
   config: EdgeRenderConfig,
-): Promise<EdgeRenderOutcome> {
+): Promise<{ kind: 'rendered'; result: RenderResult } | Exclude<EdgeRenderOutcome, { kind: 'ok' | 'moved' }>> {
   bundle.setApiTimeout(config.apiTimeoutMs);
   bundle.setPrerenderToken(config.token);
 
@@ -93,7 +99,7 @@ export async function renderEdgePage(
     timer = setTimeout(() => resolve(DEADLINE), config.deadlineMs);
   });
 
-  let result: Awaited<ReturnType<EdgeBundle['render']>> | typeof DEADLINE;
+  let result: RenderResult | typeof DEADLINE;
   try {
     result = await Promise.race([bundle.render(path, undefined, { edge: true }), deadline]);
   } catch (err) {
@@ -135,6 +141,20 @@ export async function renderEdgePage(
     return { kind: 'error', reason: 'rendered page has no title (component did not consume its data)' };
   }
 
+  return { kind: 'rendered', result };
+}
+
+export async function renderEdgePage(
+  bundle: EdgeBundle,
+  kind: EdgeKind,
+  tail: string,
+  path: string,
+  config: EdgeRenderConfig,
+): Promise<EdgeRenderOutcome> {
+  const checked = await renderChecked(bundle, path, config);
+  if (checked.kind !== 'rendered') return checked;
+  const { result } = checked;
+
   const tails = [tail];
   if (kind === 'case') {
     for (const data of queryData(result.dehydratedState, 'case')) {
@@ -164,4 +184,33 @@ export async function renderEdgePage(
   }
 
   return { kind: 'ok', html: injectIntoTemplate(bundle.template, result), tails };
+}
+
+// A record link in rendered HTML: what a listing exists to provide.
+const RECORD_LINK_RE = /href="\/(case|entity|courtcase)\//;
+
+/**
+ * Render a crawlable search listing (lib/crawlable-listing.ts).
+ *
+ * Same checks as a record page, plus one of its own: a listing that rendered
+ * no record link has failed, however clean its head. An empty or skeleton list
+ * cached for an hour would be the 2026-11-20 outage in another shape — a page
+ * that looks fine to every check and leads a crawler nowhere.
+ *
+ * A "not found" from the search API is not an answer about a listing (the
+ * listing is ours, not a record), so it is an error here: the Worker falls back
+ * to the pre-rendered /search shell, exactly as it served before this existed.
+ */
+export async function renderEdgeListing(
+  bundle: EdgeBundle,
+  path: string,
+  config: EdgeRenderConfig,
+): Promise<EdgeRenderOutcome> {
+  const checked = await renderChecked(bundle, path, config);
+  if (checked.kind === 'not_found') return { kind: 'error', reason: 'search API answered 404 for a listing' };
+  if (checked.kind !== 'rendered') return checked;
+  if (!RECORD_LINK_RE.test(checked.result.html)) {
+    return { kind: 'error', reason: 'listing rendered no record links' };
+  }
+  return { kind: 'ok', html: injectIntoTemplate(bundle.template, checked.result), tails: [] };
 }
