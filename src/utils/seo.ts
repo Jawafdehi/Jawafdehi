@@ -156,6 +156,8 @@ export function caseMetaDescription(caseData: CaseDescriptionSource): string {
 /** The fields a case's <title> is built from. */
 export interface CaseTitleSource {
   title?: string | null;
+  /** The caseworker-written English title, when there is one. */
+  title_en?: string | null;
   /** Court-case @id IRIs, or the legacy "<court>:<number>" form (tolerated on read). */
   court_cases?: readonly string[] | null;
 }
@@ -195,7 +197,13 @@ function courtCaseReference(ref: string): string | null {
  * already carrying 071-CR-0139 and is not given it twice.
  */
 export function caseMetaTitle(caseData: CaseTitleSource): string {
-  const title = (caseData.title ?? "").trim() || "Jawafdehi Case";
+  const nepali = (caseData.title ?? "").trim() || "Jawafdehi Case";
+  // Both scripts when a caseworker has written an English title: someone
+  // searching in English has nothing to match in a Devanagari-only title, and
+  // the Nepali one stays first because it is the case's title and the page's
+  // language.
+  const english = (caseData.title_en ?? "").trim();
+  const title = english && english !== nepali ? `${nepali} · ${english}` : nepali;
   const lead = (caseData.court_cases ?? []).map(courtCaseReference).find(Boolean) ?? null;
   if (!lead || normalizeCaseRef(title).includes(lead)) return `${title} | Jawafdehi`;
   return `${title} (${lead}) | Jawafdehi`;

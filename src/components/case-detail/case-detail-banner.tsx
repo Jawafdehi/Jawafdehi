@@ -217,6 +217,16 @@ export function CaseDetailBanner({
               {title}
             </h1>
 
+            {/* The caseworker-written English title, when there is one: real,
+                visible text an English searcher's query can match, marked as
+                English for screen readers and search engines alike. Not shown
+                when it merely repeats the heading. */}
+            {caseData.title_en?.trim() && caseData.title_en.trim() !== title ? (
+              <p lang="en" className="mt-3 w-full text-balance break-words text-xl text-muted-foreground">
+                {caseData.title_en.trim()}
+              </p>
+            ) : null}
+
             {/* The short description: the one-line "what is this case" deck.
                 Authored content, rendered as-is; a placeholder with no letters
                 or digits in it (some cases carry a lone ".") is not a deck. */}

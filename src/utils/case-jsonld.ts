@@ -6,7 +6,7 @@ type CaseJsonLdSource = Pick<
   Case,
   "title" | "state" | "created_at" | "updated_at" | "entities" | "court_cases"
 > &
-  Partial<Pick<Case, "case_publish_date" | "authors" | "evidence">>;
+  Partial<Pick<Case, "case_publish_date" | "authors" | "evidence" | "title_en">>;
 
 // The schema.org type an entity bind names, without the registry's own
 // `jawafdehi:` subtypes: "AdministrativeArea,jawafdehi:District" → "AdministrativeArea".
@@ -89,6 +89,8 @@ export function caseJsonLd(
     "@type": "Report",
     ...(caseData.title.length <= HEADLINE_MAX ? { headline: caseData.title } : {}),
     name: caseData.title,
+    // The caseworker-written English title, as the headline's other language.
+    ...(caseData.title_en?.trim() ? { alternativeHeadline: caseData.title_en.trim() } : {}),
     description: opts.description,
     url: opts.canonicalUrl,
     image: opts.imageUrl,

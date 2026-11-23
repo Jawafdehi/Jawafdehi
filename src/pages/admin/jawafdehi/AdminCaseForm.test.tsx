@@ -442,3 +442,44 @@ describe("AdminCaseForm — AI-generated section boxes", () => {
     expect(paths).not.toContain("/ai_generated_sections");
   });
 });
+
+describe("AdminCaseForm — English title", () => {
+  const save = () => screen.getByRole("button", { name: /admin.caseForm.saveChanges/ });
+
+  it("loads the case's English title and saves an edit to it", async () => {
+    loadCase("DRAFT", { title_en: "Old English title" });
+    vi.mocked(patchCaseWithEtag).mockResolvedValue({
+      data: { slug: "ncell-tax-case", title: "Ncell tax case", case_type: "CORRUPTION", state: "DRAFT", title_en: "Namuna English title" },
+      etag: 'W/"2"',
+    });
+    render(<AdminCaseForm />);
+
+    const input = (await screen.findByLabelText("admin.caseForm.labelTitleEn")) as HTMLInputElement;
+    expect(input.value).toBe("Old English title");
+    expect(input.lang).toBe("en");
+    fireEvent.change(input, { target: { value: "Namuna English title" } });
+    fireEvent.click(save());
+
+    await waitFor(() => expect(patchCaseWithEtag).toHaveBeenCalledTimes(1));
+    expect(vi.mocked(patchCaseWithEtag).mock.calls[0][1]).toEqual([
+      { op: "replace", path: "/title_en", value: "Namuna English title" },
+    ]);
+  });
+
+  it("sends nothing for it when it was not touched", async () => {
+    loadCase("DRAFT", { title_en: "Unchanged" });
+    vi.mocked(patchCaseWithEtag).mockResolvedValue({
+      data: { slug: "ncell-tax-case", title: "Edited", case_type: "CORRUPTION", state: "DRAFT" },
+      etag: 'W/"2"',
+    });
+    render(<AdminCaseForm />);
+
+    const title = (await screen.findByLabelText("admin.caseForm.labelTitle")) as HTMLInputElement;
+    fireEvent.change(title, { target: { value: "Edited" } });
+    fireEvent.click(save());
+
+    await waitFor(() => expect(patchCaseWithEtag).toHaveBeenCalledTimes(1));
+    const paths = vi.mocked(patchCaseWithEtag).mock.calls[0][1].map((o) => o.path);
+    expect(paths).not.toContain("/title_en");
+  });
+});

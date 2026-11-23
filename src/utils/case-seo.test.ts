@@ -42,6 +42,23 @@ describe("caseMetaTitle", () => {
     ).toBe("Namuna (099-CR-0001) | Jawafdehi");
   });
 
+  it("carries both scripts when a caseworker wrote an English title — Nepali first", () => {
+    expect(
+      caseMetaTitle({ title: "नमुना सहकारी प्रकरण", title_en: "Namuna Cooperative Fraud", court_cases: [COURT_IRI] }),
+    ).toBe("नमुना सहकारी प्रकरण · Namuna Cooperative Fraud (099-C4-9001) | Jawafdehi");
+  });
+
+  it("does not add the number again when the English title carries it", () => {
+    expect(
+      caseMetaTitle({ title: "नमुना प्रकरण", title_en: "Namuna case (099-C4-9001)", court_cases: [COURT_IRI] }),
+    ).toBe("नमुना प्रकरण · Namuna case (099-C4-9001) | Jawafdehi");
+  });
+
+  it("ignores a blank English title, or one that repeats the title", () => {
+    expect(caseMetaTitle({ title: "Namuna", title_en: "  " })).toBe("Namuna | Jawafdehi");
+    expect(caseMetaTitle({ title: "Namuna", title_en: "Namuna" })).toBe("Namuna | Jawafdehi");
+  });
+
   it("is just the title when the case has no court case", () => {
     expect(caseMetaTitle({ title: "Namuna", court_cases: [] })).toBe("Namuna | Jawafdehi");
     expect(caseMetaTitle({ title: "Namuna" })).toBe("Namuna | Jawafdehi");
@@ -184,6 +201,13 @@ describe("caseJsonLd", () => {
   it("uses the whole title as headline when it fits", () => {
     const title = "क".repeat(110);
     expect(caseJsonLd(aCase({ title }), OPTS)!.headline).toBe(title);
+  });
+
+  it("gives the English title as the headline's other language", () => {
+    expect(caseJsonLd(aCase({ title_en: "Namuna Cooperative Fraud" } as Partial<Case>), OPTS)).toMatchObject({
+      alternativeHeadline: "Namuna Cooperative Fraud",
+    });
+    expect(caseJsonLd(aCase(), OPTS)).not.toHaveProperty("alternativeHeadline");
   });
 
   it("publishes nothing for a case that is not published", () => {
