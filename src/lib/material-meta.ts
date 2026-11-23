@@ -84,7 +84,8 @@ export interface MaterialMetaSource {
  * They answer different questions. `visibility` is "may the public reach this
  * document", and for this archive the answer is usually yes — that is the point
  * of publishing it. Indexability is "should we push this into Google", which is
- * an editorial judgement the archive has to make document-class by document-class.
+ * an editorial judgement — made document by document, never by flipping a whole
+ * collection.
  *
  * It is not a hypothetical distinction. Measured against the search API on
  * 2026-11-23 (fuzzy matching, so upper bounds): ~21,746 documents mention
@@ -98,9 +99,13 @@ export interface MaterialMetaSource {
  *
  * ## The contract with the API
  *
- * `jawafdehi:indexable` is a public boolean that ONLY the API may emit. It is
- * meant to be computed as LISTED **and** the document's class cleared for
- * indexing, and it leaks nothing the `robots` tag does not already say.
+ * `jawafdehi:indexable` is a public boolean that ONLY the API may emit, and it
+ * leaks nothing the `robots` tag does not already say. It is meant to be computed
+ * as LISTED **and** cited as evidence by at least one PUBLISHED case **and** not
+ * blocked on that specific record. That reuses an editorial decision the archive
+ * already makes and is accountable for — a caseworker chose the document as
+ * evidence, and the case passed review — rather than inventing a new one. It also
+ * reverts on its own: unpublish the case and its evidence is `noindex` again.
  *
  * Two halves, and they are not equally done:
  *
@@ -112,8 +117,9 @@ export interface MaterialMetaSource {
  *   backfills all write storage without passing the API's HTTP write checks —
  *   one bad row would make its page indexable.
  * - **Computation** — not yet built. Until it is, no read carries the key and
- *   every document page stays `noindex`. Which document classes get cleared is
- *   an editorial decision for the organisation, not a code default.
+ *   every document page stays `noindex`. The rule above is a proposal; which rule
+ *   the API applies is an editorial decision for the organisation, not a code
+ *   default. This function only obeys the answer.
  *
  * Open Graph is unaffected either way, so share cards keep working throughout.
  */

@@ -157,7 +157,7 @@ describe("materialRobots fails closed", () => {
     // authed caseworker reads, so keying indexability on it meant the guard
     // could never open for the edge renderer — which is the only head a crawler
     // ever sees. A LISTED material is NOT thereby indexable: that is an
-    // editorial decision the API makes per document class.
+    // editorial decision the API makes, document by document.
     expect(materialRobots({ "jawafdehi:visibility": "LISTED" })).toBe(
       "noindex, nofollow",
     );
