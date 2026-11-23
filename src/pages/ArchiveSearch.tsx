@@ -2,8 +2,6 @@ import {
   FormEvent,
   MouseEvent,
   ReactNode,
-  Suspense,
-  lazy,
   useEffect,
   useMemo,
   useRef,
@@ -149,7 +147,6 @@ export default function ArchiveSearch() {
     }
   }, [searchParams, setSearchParams]);
 
-  const stressMode = import.meta.env.DEV ? readStressParam(searchParams.get("data")) : null;
   // One per mounted page: paging within a result set reuses the facets from its
   // first request instead of recomputing them (see withHeldFacets).
   const [search] = useState(() => withHeldFacets(searchArchive));
@@ -161,17 +158,8 @@ export default function ArchiveSearch() {
     isPlaceholderData,
     refetch,
   } = useQuery({
-    queryKey: ["archive-search", params, stressMode],
-    queryFn: async () => {
-      const response = await search(params);
-      // DEV ONLY: ?data=worst|empty|one swaps in the stress fixture at this
-      // boundary. The branch is compiled out of production builds.
-      if (import.meta.env.DEV && stressMode) {
-        const { applyStress } = await import("@/dev/archive-search-stress");
-        return applyStress(stressMode, response);
-      }
-      return response;
-    },
+    queryKey: ["archive-search", params],
+    queryFn: () => search(params),
     placeholderData: (previousData) => previousData,
     staleTime: 5 * 60 * 1000,
   });
@@ -652,12 +640,6 @@ export default function ArchiveSearch() {
           </form>
         </div>
 
-        {StressToggle ? (
-          <Suspense fallback={null}>
-            <StressToggle />
-          </Suspense>
-        ) : null}
-
         <Sheet onOpenChange={setAllFiltersOpen} open={allFiltersOpen}>
           <SheetContent className="flex w-full flex-col gap-0 p-0 sm:max-w-md" side="right">
             <SheetHeader className="space-y-0 px-7 pb-0 pt-6 text-left">
@@ -924,13 +906,6 @@ const PLACEHOLDER_FALLBACK: Record<ArchiveSearchType, string> = {
   material: "Search documents",
   courtcase: "Search court cases by name or number",
 };
-
-// DEV ONLY: the worst-case data switch (see src/dev/archive-search-stress.ts).
-// Lazy and gated, so neither the switch nor the fixture reaches production.
-const StressToggle = import.meta.env.DEV ? lazy(() => import("@/dev/StressToggle")) : null;
-function readStressParam(value: string | null) {
-  return value === "worst" || value === "empty" || value === "one" ? value : null;
-}
 
 const listGridClass = "grid grid-cols-1 gap-3 lg:grid-cols-2";
 const entityCardGridClass = "grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4";

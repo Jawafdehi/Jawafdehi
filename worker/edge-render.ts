@@ -119,6 +119,22 @@ export async function renderEdgePage(
   // that under a record's URL for an hour.
   if (fulfilled.length === 0) return { kind: 'error', reason: 'no data was prefetched for this page' };
 
+  // Prefetching is necessary but not sufficient: the page also has to USE what
+  // was prefetched. A component reading the cache under a key the prefetch did
+  // not write gets a miss, renders its loading skeleton, and never reaches its
+  // <Seo> — so the prefetch report is clean, `fulfilled` is non-empty, and the
+  // page is still a blank-titled skeleton. That shipped for three days after
+  // #465 added a DEV-only element to CaseDetail's query key, and nothing here
+  // noticed, because nothing here looked at the output.
+  //
+  // A record page without a title is never correct, so treat it as a failure:
+  // the edge serves its stale copy or the meta-injection shell, and the empty
+  // page is not cached under the record's URL for an hour.
+  const title = result.helmetContext.helmet?.title?.toString() ?? '';
+  if (!/>[^<]+</.test(title)) {
+    return { kind: 'error', reason: 'rendered page has no title (component did not consume its data)' };
+  }
+
   const tails = [tail];
   if (kind === 'case') {
     for (const data of queryData(result.dehydratedState, 'case')) {

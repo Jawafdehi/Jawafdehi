@@ -97,6 +97,29 @@ describe('renderEdgePage', () => {
     expect((await renderEdgePage(bundle, 'entity', 'a/b', '/entity/a/b', CONFIG)).kind).toBe('error');
   });
 
+  // The failure this one guards is the nastiest shape available here, because
+  // every other signal says the render went fine: the prefetch resolved, the
+  // cache is full, nothing threw. The component simply read the cache under a
+  // key nobody wrote and rendered its skeleton. #465 did this to every case
+  // page for three days by appending a DEV-only element to CaseDetail's key.
+  it('rejects a page that prefetched fine but rendered no title', async () => {
+    const bundle = bundleWith(async () =>
+      result({
+        html: '<main><div class="animate-pulse" /></main>',
+        helmetContext: { helmet: { title: { toString: () => '<title data-rh="true"></title>' } } },
+        prefetch: { fulfilled: [['case', 'x']], failed: [] },
+      }),
+    );
+    const outcome = await renderEdgePage(bundle, 'case', 'x', '/case/x/', CONFIG);
+    expect(outcome.kind).toBe('error');
+    expect(outcome.kind === 'error' && outcome.reason).toContain('no title');
+  });
+
+  it('rejects a page with no title element at all', async () => {
+    const bundle = bundleWith(async () => result({ helmetContext: { helmet: {} } }));
+    expect((await renderEdgePage(bundle, 'entity', 'person/x', '/entity/person/x', CONFIG)).kind).toBe('error');
+  });
+
   it('gives up at the deadline', async () => {
     vi.useFakeTimers();
     try {
