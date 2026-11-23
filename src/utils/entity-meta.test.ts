@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 
 import type { Case } from "@/types/jds";
 
-import { bilingualName, entityJsonLd, entityMeta } from "./entity-meta";
+import { bilingualName, composeEntityDescription, entityJsonLd, entityMeta } from "./entity-meta";
 
 const LABELS: Record<string, string> = {
   "entityDetail.relationTypeAccused": "अभियुक्त",
@@ -209,5 +209,65 @@ describe("entityJsonLd", () => {
 
   it("does not assert a jobTitle — the registry's roles span time", () => {
     expect(entityJsonLd(base)).not.toHaveProperty("jobTitle");
+  });
+});
+
+
+describe("composeEntityDescription", () => {
+  // A conviction overturned on appeal: the status that must never be cut in
+  // half, because its first half alone says the opposite of the truth.
+  const STATUS = "अभियुक्त · विशेष अदालत: दोषी ठहर · सर्वोच्च अदालत: फैसला उल्टी";
+
+  it("keeps the whole status and shortens the NAME when a long name competes", () => {
+    const d = composeEntityDescription({
+      name: "न".repeat(150),
+      context: "संस्था · 1 मुद्दा",
+      status: STATUS,
+      caseTitle: "नमुना मुद्दा",
+    });
+    expect(d.length).toBeLessThanOrEqual(160);
+    expect(d).toContain(STATUS);
+  });
+
+  it("drops a status that cannot fit whole — never keeps half of one", () => {
+    const longStatus = `${STATUS} · ${"थप ".repeat(50)}`;
+    const d = composeEntityDescription({
+      name: "नमुना व्यक्ति",
+      context: "व्यक्ति · 1 मुद्दा",
+      status: longStatus,
+      caseTitle: "नमुना मुद्दा",
+    });
+    expect(d.length).toBeLessThanOrEqual(160);
+    expect(d).not.toContain("दोषी ठहर");
+    // ...and with no status, no case title: the title alone is the accusation
+    // without the outcome.
+    expect(d).not.toContain("नमुना मुद्दा");
+  });
+
+  it.each(Array.from({ length: 40 }, (_, i) => i * 7))(
+    "never shows part of the status (name length %i)",
+    (n) => {
+      const d = composeEntityDescription({
+        name: "न".repeat(n) || "x",
+        context: "व्यक्ति · 3 मुद्दाहरू",
+        status: STATUS,
+        caseTitle: "क".repeat(120),
+      });
+      expect(d.length).toBeLessThanOrEqual(160);
+      // All or nothing: if any of it is there, all of it is.
+      const has = d.includes("दोषी ठहर") || d.includes("फैसला उल्टी");
+      if (has) expect(d).toContain(STATUS);
+    },
+  );
+
+  it("prefers the page-language script over clipping a bilingual name", () => {
+    const d = composeEntityDescription({
+      name: `${"न".repeat(70)} · ${"N".repeat(70)}`,
+      context: "संस्था · 1 मुद्दा",
+      status: STATUS,
+      caseTitle: null,
+    });
+    expect(d).toContain("न".repeat(70));
+    expect(d).not.toContain("N".repeat(10));
   });
 });

@@ -25,6 +25,55 @@ export function bilingualName(
   return unique.length ? unique.join(" · ") : fallback;
 }
 
+const SNIPPET_MAX = 160;
+// Below this many characters a name or a case title is not worth showing.
+const MIN_PART = 12;
+
+function clip(text: string, max: number): string {
+  return text.length <= max ? text : `${text.slice(0, max - 1).trimEnd()}…`;
+}
+
+/**
+ * Fit an entity snippet into 160 characters WITHOUT ever showing part of a
+ * legal status.
+ *
+ * The status — role, forum-qualified verdict, appeal — is all or nothing.
+ * Truncation cuts from the end, so a status cut short can keep "Special Court:
+ * convicted" and drop the "Supreme Court: overturned" after it, which says the
+ * opposite of the truth. So space is given out in order of what may not be
+ * lost:
+ *
+ *   1. the status, whole — or, if it cannot fit with a minimal name, not at all;
+ *   2. the name, shortened to what is left (the page-language script first);
+ *   3. the case title, only if a useful amount of room remains.
+ */
+export function composeEntityDescription(parts: {
+  name: string;
+  context: string;
+  status: string | null;
+  caseTitle: string | null;
+}): string {
+  const base = ` — ${parts.context}`;
+  const withStatus = parts.status ? `${base} — ${parts.status}` : base;
+  // The status goes in only if it fits whole beside a minimal name.
+  const tail = withStatus.length + MIN_PART <= SNIPPET_MAX ? withStatus : base;
+
+  // A bilingual name gives up its second script before it gives up characters.
+  const primary = parts.name.split(" · ")[0];
+  const room = SNIPPET_MAX - tail.length;
+  const name =
+    parts.name.length <= room ? parts.name : primary.length <= room ? primary : clip(primary, room);
+
+  let description = `${name}${tail}`;
+  // No status, no case title: a title naming the case without the verdict
+  // beside it is the accusation without the outcome.
+  if (parts.caseTitle && tail !== base) {
+    const titleRoom = SNIPPET_MAX - description.length - 2;
+    if (titleRoom >= MIN_PART) description += `: ${clip(parts.caseTitle, titleRoom)}`;
+  }
+  return description;
+}
+
 export interface EntityMetaInput {
   names: { en: string; ne: string };
   /** What the page shows as the name when the record has neither. */
@@ -75,27 +124,25 @@ export function entityMeta(input: EntityMetaInput): { title: string; description
   const title = `${name} | Jawafdehi`;
 
   if (input.caseCount > 0 && input.cases.length > 0) {
-    // A long bilingual organisation name ("…Construction JV · …कन्स्ट्रक्सन
-    // जे.भी") can eat the snippet before the verdict is reached. The verdict
-    // must survive truncation, so drop to the page-language name first.
-    const lead = name.length > 60 ? name.split(" · ")[0] : name;
     const count = `${input.caseCount} ${input.t(
       input.caseCount === 1 ? "entityDetail.caseOne" : "entityDetail.cases",
     ).toLowerCase()}`;
-
     const first = orderCasesForEntity(input.cases, input.entityIri)[0];
     const involvement = caseInvolvement(first, input.entityIri, input.language, input.t);
-
-    let description = `${lead} — ${input.kindLabel} · ${count}`;
-    if (involvement.accused) {
-      const said = [involvement.roleLabel, involvement.outcomeText, involvement.appealText]
-        .filter(Boolean)
-        .join(" · ");
-      // The role and verdict come BEFORE the case title, so truncation can only
-      // ever shorten the title, never cut the verdict off.
-      description += ` — ${said}: ${first.title}`;
-    }
-    return { title, description: truncateMeta(description) };
+    const status = involvement.accused
+      ? [involvement.roleLabel, involvement.outcomeText, involvement.appealText]
+          .filter(Boolean)
+          .join(" · ")
+      : null;
+    return {
+      title,
+      description: composeEntityDescription({
+        name,
+        context: `${input.kindLabel} · ${count}`,
+        status,
+        caseTitle: involvement.accused ? first.title : null,
+      }),
+    };
   }
 
   return {
