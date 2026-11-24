@@ -1,7 +1,15 @@
 // SPDX-License-Identifier: Hippocratic-3.0
 import { describe, expect, it } from "vitest";
 
-import { bodyTextLength, checkHead, pageVerdict, sample, sitemapLocs, tagAttributes } from "./crawler-head-check";
+import {
+  bodyTextLength,
+  checkHead,
+  isCloudflareChallenge,
+  pageVerdict,
+  sample,
+  sitemapLocs,
+  tagAttributes,
+} from "./crawler-head-check";
 
 const BODY = `<main><h1>नमुना सहकारी प्रकरण</h1><p>${"विवरण ".repeat(600)}</p></main>`;
 
@@ -120,5 +128,51 @@ describe("pageVerdict", () => {
 
   it("judges a 200 by its head", () => {
     expect(pageVerdict(200, page(GOOD_HEAD), null, 1800).ok).toBe(true);
+  });
+});
+
+describe("the canonical must name the page itself", () => {
+  const url = "https://jawafdehi.org/case/namuna/";
+
+  it("passes a page whose canonical is its own URL (trailing slash either way)", () => {
+    expect(checkHead(page(GOOD_HEAD), 2500, url).ok).toBe(true);
+    expect(checkHead(page(GOOD_HEAD), 2500, "https://jawafdehi.org/case/namuna").ok).toBe(true);
+  });
+
+  it("fails the 2026-11-24 homepage-under-a-case-URL page", () => {
+    // Title, description, canonical and a long body: every other check passes.
+    const homepage =
+      '<title data-rh="true">जवाफदेही | Jawafdehi</title>' +
+      '<meta data-rh="true" name="description" content="नेपालको खुला अभिलेख।"/>' +
+      '<link data-rh="true" rel="canonical" href="https://jawafdehi.org/"/>';
+    const verdict = checkHead(page(homepage), 2500, url);
+    expect(verdict.ok).toBe(false);
+    expect(verdict.problems.join(" ")).toContain("not this page");
+  });
+
+  it("is passed the requested URL by pageVerdict", () => {
+    const homepage = GOOD_HEAD.replace("https://jawafdehi.org/case/namuna/", "https://jawafdehi.org/");
+    expect(pageVerdict(200, page(homepage), null, 2500, url).ok).toBe(false);
+  });
+});
+
+describe("a Cloudflare challenge is not a measurement", () => {
+  const challenge =
+    "<!DOCTYPE html><html><head><title>Just a moment...</title></head>" +
+    '<body><script src="/cdn-cgi/challenge-platform/h/b/orchestrate/chl_page/v1"></script></body></html>';
+
+  it("is recognised", () => {
+    expect(isCloudflareChallenge(challenge)).toBe(true);
+    expect(isCloudflareChallenge(page(GOOD_HEAD))).toBe(false);
+  });
+
+  it("is reported as a challenge, whatever the status, never as a blank page", () => {
+    for (const status of [200, 403, 503]) {
+      const verdict = pageVerdict(status, challenge, null, 2500, "https://jawafdehi.org/case/namuna/");
+      expect(verdict.ok).toBe(false);
+      expect(verdict.problems).toEqual([
+        "Cloudflare challenge served to our fake Googlebot — not a measurement of what Google gets",
+      ]);
+    }
   });
 });

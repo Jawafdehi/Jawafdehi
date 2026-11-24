@@ -56,18 +56,59 @@ export function tagAttributes(html: string, tag: string): Record<string, string>
  * outage failed: it shipped an empty <title>, no meta description, no canonical
  * and CaseDetail's `aria-busy` skeleton, with a body of chrome only.
  */
-export function checkHead(html: string, minBodyChars = 2500): HeadVerdict {
+/** An absolute URL compared the way a canonical should be: scheme, host and path, trailing slash ignored. */
+function comparableUrl(url: string): string | null {
+  try {
+    const u = new URL(url);
+    return `${u.protocol}//${u.host.toLowerCase()}${u.pathname.replace(/\/+$/, "")}${u.search}`;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * A Cloudflare interstitial instead of the page. We fetch with Googlebot's
+ * user-agent from a GitHub runner, and Cloudflare can tell that is not Google:
+ * if it challenges the request, what we measured is the challenge, not what
+ * Google is served. Reported as its own problem so it is never read as an outage.
+ */
+export function isCloudflareChallenge(html: string): boolean {
+  return (
+    /<title>\s*Just a moment\.\.\.\s*<\/title>/i.test(html) ||
+    /challenges\.cloudflare\.com|\/cdn-cgi\/challenge-platform\//i.test(html)
+  );
+}
+
+export function checkHead(html: string, minBodyChars = 2500, requestedUrl?: string): HeadVerdict {
   const problems: string[] = [];
+  if (isCloudflareChallenge(html)) {
+    return {
+      ok: false,
+      problems: ["Cloudflare challenge served to our fake Googlebot — not a measurement of what Google gets"],
+      title: "",
+    };
+  }
 
   const title = (/<title[^>]*>([\s\S]*?)<\/title>/i.exec(html)?.[1] ?? "").trim();
   if (!title) problems.push("empty or missing <title>");
 
-  const canonical = tagAttributes(html, "link").some(
+  const canonicals = tagAttributes(html, "link").filter(
     (a) =>
       (a.rel ?? "").toLowerCase().split(/\s+/).includes("canonical") &&
       /^https?:\/\/\S+$/i.test(a.href ?? ""),
   );
-  if (!canonical) problems.push("no rel=canonical");
+  if (!canonicals.length) problems.push("no rel=canonical");
+  // A page that names ANOTHER URL as canonical is, to a search engine, a copy of
+  // that URL. On 2026-11-24 a case URL was served the pre-rendered homepage —
+  // a title, a description, a canonical and a long body, so it passed every
+  // check above — with canonical=/. The record a sitemap lists must name itself.
+  if (requestedUrl && canonicals.length) {
+    const want = comparableUrl(requestedUrl);
+    const got = canonicals.map((a) => a.href ?? "");
+    if (!got.some((href) => comparableUrl(href) === want)) {
+      problems.push(`canonical is ${got.join(", ")}, not this page (${requestedUrl})`);
+    }
+  }
   const description = tagAttributes(html, "meta").some(
     (a) => (a.name ?? "").toLowerCase() === "description" && (a.content ?? "").trim() !== "",
   );
@@ -93,8 +134,10 @@ export function pageVerdict(
   html: string,
   location: string | null,
   minBodyChars: number,
+  requestedUrl?: string,
 ): HeadVerdict {
-  if (status === 200) return checkHead(html, minBodyChars);
+  if (isCloudflareChallenge(html)) return checkHead(html, minBodyChars, requestedUrl);
+  if (status === 200) return checkHead(html, minBodyChars, requestedUrl);
   if (status >= 300 && status < 400) {
     return {
       ok: false,
@@ -204,7 +247,7 @@ async function main(): Promise<number> {
     console.log(`sitemap-${section}.xml: ${locs.length} URLs`);
     for (const url of sample(locs, perType, seed)) {
       const page = await fetchText(url);
-      const verdict = pageVerdict(page.status, page.text, page.location, minBodyChars);
+      const verdict = pageVerdict(page.status, page.text, page.location, minBodyChars, url);
       if (!verdict.ok) failures++;
       console.log(
         `  ${verdict.ok ? "✓" : "✗"} ${url}${verdict.ok ? "" : `\n      ${verdict.problems.join("; ")}`}`,
