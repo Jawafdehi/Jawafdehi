@@ -2,7 +2,7 @@
 import type { TFunction } from "i18next";
 
 import type { Case } from "@/types/jds";
-import { caseInvolvement, orderCasesForEntity } from "@/utils/entity-involvement";
+import { caseInvolvement, isAccusedTier, orderCasesForEntity, roleFor } from "@/utils/entity-involvement";
 import { casePath } from "@/lib/case-links";
 import { SITE_URL, truncateMeta } from "@/utils/seo";
 
@@ -210,7 +210,13 @@ export interface EntityJsonLdInput {
  *
  * `subjectOf` asserts only that a case is ABOUT this entity, never a role:
  * the role, and its verdict, belong to the human-readable page where they can
- * carry their forum and context.
+ * carry their forum and context. For a PERSON it lists only the cases that cite
+ * them as accused or alleged: a witness, a victim or a petitioner linked by
+ * `subjectOf` to a corruption report is the accusation the snippet refuses to
+ * make (entityMeta), made instead to a search engine's graph. An organisation —
+ * an office, a bank, a company — keeps every case. A record whose type is
+ * unknown is treated as a person: fail closed. The case page's `about` follows
+ * the same rule, so the two directions of the graph agree.
  */
 export function entityJsonLd(input: EntityJsonLdInput): Record<string, unknown> {
   const types = schemaTypes(input.rawType);
@@ -220,6 +226,10 @@ export function entityJsonLd(input: EntityJsonLdInput): Record<string, unknown> 
     .filter((n) => n && n !== primary)
     .filter((n, i, all) => all.indexOf(n) === i);
   const sameAs = wikidataSameAs(input.identifiers);
+  const isPerson = types.includes("Person") || types.includes("Thing");
+  const about = input.cases.filter(
+    (c) => c.slug && (!isPerson || isAccusedTier(roleFor(c, input.recordIri).role)),
+  );
 
   return {
     "@context": "https://schema.org",
@@ -231,15 +241,13 @@ export function entityJsonLd(input: EntityJsonLdInput): Record<string, unknown> 
     ...(input.description ? { description: input.description } : {}),
     ...(input.imageUrl ? { image: input.imageUrl } : {}),
     ...(sameAs.length ? { sameAs } : {}),
-    ...(input.cases.length
+    ...(about.length
       ? {
-          subjectOf: input.cases
-            .filter((c) => c.slug)
-            .map((c) => ({
-              "@type": "CreativeWork",
-              name: c.title,
-              url: new URL(casePath(c.slug), SITE_URL).toString(),
-            })),
+          subjectOf: about.map((c) => ({
+            "@type": "CreativeWork",
+            name: c.title,
+            url: new URL(casePath(c.slug), SITE_URL).toString(),
+          })),
         }
       : {}),
   };

@@ -207,6 +207,38 @@ describe("entityJsonLd", () => {
     expect(text).not.toMatch(/accused|convicted|अभियुक्त/);
   });
 
+  it("links a PERSON only to the cases that accuse them — never as a witness or victim", () => {
+    // subjectOf ties a name to a corruption report in a search engine's graph;
+    // the snippet never names a non-accused role, and neither does this.
+    const ld = entityJsonLd({
+      ...base,
+      cases: [
+        aCase("accused-case", "अभियोग मुद्दा", { type: "accused", outcome: "charged" }),
+        aCase("alleged-case", "आरोप मुद्दा", { type: "alleged" }),
+        aCase("witness-case", "साक्षी मुद्दा", { type: "witness" }),
+        aCase("victim-case", "पीडित मुद्दा", { type: "victim" }),
+      ],
+    });
+    expect((ld.subjectOf as { url: string }[]).map((c) => c.url)).toEqual([
+      "https://jawafdehi.org/case/accused-case/",
+      "https://jawafdehi.org/case/alleged-case/",
+    ]);
+  });
+
+  it("omits subjectOf for a person no case accuses", () => {
+    const ld = entityJsonLd({ ...base, cases: [aCase("witness-case", "साक्षी मुद्दा", { type: "witness" })] });
+    expect(ld).not.toHaveProperty("subjectOf");
+  });
+
+  it("keeps every case for an organisation, and fails closed on an unknown type", () => {
+    const cases = [
+      aCase("accused-case", "अभियोग मुद्दा", { type: "accused" }),
+      aCase("victim-case", "पीडित मुद्दा", { type: "victim" }),
+    ];
+    expect(entityJsonLd({ ...base, rawType: "GovernmentOrganization", cases }).subjectOf).toHaveLength(2);
+    expect(entityJsonLd({ ...base, rawType: "jawafdehi:Unknown", cases }).subjectOf).toHaveLength(1);
+  });
+
   it("does not assert a jobTitle — the registry's roles span time", () => {
     expect(entityJsonLd(base)).not.toHaveProperty("jobTitle");
   });
