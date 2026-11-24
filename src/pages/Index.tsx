@@ -86,7 +86,7 @@ const Index = () => {
               "@type": "SearchAction",
               "target": {
                 "@type": "EntryPoint",
-                "urlTemplate": "https://jawafdehi.org/search?type=case&q={search_term_string}"
+                "urlTemplate": "https://jawafdehi.org/search/?type=case&q={search_term_string}"
               },
               "query-input": "required name=search_term_string"
             },
@@ -94,7 +94,7 @@ const Index = () => {
               "@type": "SearchAction",
               "target": {
                 "@type": "EntryPoint",
-                "urlTemplate": "https://jawafdehi.org/search?type=entity&q={search_term_string}"
+                "urlTemplate": "https://jawafdehi.org/search/?type=entity&q={search_term_string}"
               },
               "query-input": "required name=search_term_string"
             }

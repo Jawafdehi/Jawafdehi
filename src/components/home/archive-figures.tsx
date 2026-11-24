@@ -29,10 +29,10 @@ type Figure = {
 export function ArchiveFigures(props: Readonly<ArchiveFiguresProps>) {
   const { t, i18n } = useTranslation();
   const stats: Figure[] = [
-    { value: props.casesDocumented, label: t("home.hero.stats.casesDocumented"), href: "/search?type=case" },
-    { value: props.totalBigo, label: t("home.hero.stats.totalBigo"), href: "/search?type=case", highlight: true },
+    { value: props.casesDocumented, label: t("home.hero.stats.casesDocumented"), href: "/search/?type=case" },
+    { value: props.totalBigo, label: t("home.hero.stats.totalBigo"), href: "/search/?type=case", highlight: true },
     { value: props.materials, label: t("home.hero.stats.materials"), href: "/materials/" },
-    { value: props.courtCasesTracked, label: t("home.hero.stats.courtCasesTracked"), href: "/search?type=courtcase" },
+    { value: props.courtCasesTracked, label: t("home.hero.stats.courtCasesTracked"), href: "/search/?type=courtcase" },
   ];
 
   return (
