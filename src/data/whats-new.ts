@@ -45,7 +45,7 @@ export const WHATS_NEW: readonly WhatsNewEntry[] = [
       en: "Likhit, our open-source reader for Nepali government documents, now removes personal details such as citizenship and phone numbers as it converts, and can turn a PDF into a properly redacted one.",
       ne: "नेपाली सरकारी कागजात पढ्ने हाम्रो खुला स्रोत टुल लिखितले अब रूपान्तरण गर्दै नागरिकता र फोन नम्बरजस्ता व्यक्तिगत विवरण हटाउँछ, र PDF लाई साँच्चै सम्पादित PDF मा बदल्न सक्छ।",
     },
-    href: "/likhit",
+    href: "/likhit/",
   },
   {
     id: "mcp-document-tools",
@@ -59,7 +59,7 @@ export const WHATS_NEW: readonly WhatsNewEntry[] = [
       en: "Four new MCP tools let an assistant open a document, see what is inside, and read one part at a time: a page range, a table or a figure, even in an Auditor General report hundreds of pages long.",
       ne: "चार नयाँ MCP टुलले सहायकलाई कागजात खोल्न, भित्र के छ हेर्न, र एकपटकमा एउटा भाग पढ्न दिन्छन्: केही पाना, एउटा तालिका वा चित्र, सयौं पानाको महालेखा परीक्षकको प्रतिवेदनमा पनि।",
     },
-    href: "/mcp",
+    href: "/mcp/",
   },
   {
     id: "mcp-connect-page",
@@ -74,7 +74,7 @@ export const WHATS_NEW: readonly WhatsNewEntry[] = [
       en: "The Jawafdehi MCP brings the archive into Claude, ChatGPT or any MCP client. Ask about cases, court records and documents, and get answers that cite their sources.",
       ne: "जवाफदेही MCP ले अभिलेखलाई क्लाउड, च्याटजिपिटी वा कुनै पनि MCP क्लाइन्टभित्र ल्याउँछ। मुद्दा, अदालती अभिलेख र कागजातबारे सोध्नुहोस्, र स्रोतसहितको जवाफ पाउनुहोस्।",
     },
-    href: "/mcp",
+    href: "/mcp/",
   },
   {
     id: "likhit-quality-and-privacy",
@@ -88,7 +88,7 @@ export const WHATS_NEW: readonly WhatsNewEntry[] = [
       en: "Likhit can now audit a converted document for damage, such as broken Devanagari, so a bad conversion is caught without reading every page.",
       ne: "लिखितले अब रूपान्तरित कागजातमा बिग्रिएको देवनागरीजस्ता त्रुटि जाँच्न सक्छ, जसले हरेक पाना नपढी नराम्रो रूपान्तरण समात्छ।",
     },
-    href: "/likhit",
+    href: "/likhit/",
   },
   {
     id: "one-api",

@@ -134,7 +134,7 @@ export default function AuthorProfile() {
                 <Link to="/team" className={ACTION_DARK}>
                   {t("author.seeTeam", "Meet the team")}
                 </Link>
-                <Link to="/search?type=case" className={ACTION}>
+                <Link to="/search/?type=case" className={ACTION}>
                   {t("author.browseCases", "Browse the cases")}
                 </Link>
               </>

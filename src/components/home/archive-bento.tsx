@@ -51,7 +51,7 @@ export function ArchiveBento({ casesDocumented }: Readonly<{ casesDocumented: st
                   {t("home.bento.ask.answer")}
                 </p>
               </div>
-              <ArrowLink to="/mcp" tone="light" className="mt-6 w-full">
+              <ArrowLink to="/mcp/" tone="light" className="mt-6 w-full">
                 {t("home.bento.ask.cta")}
               </ArrowLink>
             </div>
@@ -86,7 +86,7 @@ export function ArchiveBento({ casesDocumented }: Readonly<{ casesDocumented: st
                   {t("home.bento.archive.casesLabel")}
                 </span>
               </p>
-              <ArrowLink to="/search" className="mt-6 w-full">
+              <ArrowLink to="/search/" className="mt-6 w-full">
                 {t("home.bento.archive.cta")}
               </ArrowLink>
             </div>
