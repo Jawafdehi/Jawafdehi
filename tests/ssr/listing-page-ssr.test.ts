@@ -1,4 +1,8 @@
 // SPDX-License-Identifier: Hippocratic-3.0
+// @vitest-environment node
+//
+// node, not jsdom: react-helmet-async only fills helmetContext when there is no
+// DOM, and some of these tests read the head. See case-page-ssr.test.ts.
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { ArchiveSearchResponse } from "@/types/search";
@@ -122,6 +126,32 @@ describe("SSR of a crawlable listing", () => {
     }));
     const { html } = await render("/search/?type=entity", undefined, { edge: true });
     expect(html).toMatch(/href="\/entity\/person\/namuna-byakti\/?"/);
+  });
+
+  it("names itself as canonical and stays indexable, so its links are followed", async () => {
+    // Canonicalised to /search/ (another page) or left noindex, a listing reads to
+    // Google as a duplicate whose links it need not follow — the crawl path cut.
+    const { helmetContext } = await render("/search/?type=case&page=2&utm_source=x", undefined, { edge: true });
+    const helmet = (helmetContext as { helmet?: Record<string, { toString(): string }> }).helmet;
+    const link = helmet?.link?.toString() ?? "";
+    const meta = helmet?.meta?.toString() ?? "";
+    expect(link).toContain('rel="canonical" href="https://jawafdehi.org/search/?type=case&amp;page=2"');
+    expect(meta).not.toMatch(/name="robots"[^>]*noindex/);
+  });
+
+  it("keeps page one's canonical free of ?page=1", async () => {
+    const { helmetContext } = await render("/search/?type=courtcase&page=1", undefined, { edge: true });
+    const helmet = (helmetContext as { helmet?: Record<string, { toString(): string }> }).helmet;
+    expect(helmet?.link?.toString() ?? "").toContain(
+      'rel="canonical" href="https://jawafdehi.org/search/?type=courtcase"',
+    );
+  });
+
+  it("still keeps a query's results out of the index, canonical to /search/", async () => {
+    const { helmetContext } = await render("/search/?type=case&q=bribe", undefined, { edge: true });
+    const helmet = (helmetContext as { helmet?: Record<string, { toString(): string }> }).helmet;
+    expect(helmet?.link?.toString() ?? "").toContain('rel="canonical" href="https://jawafdehi.org/search/"');
+    expect(helmet?.meta?.toString() ?? "").toMatch(/name="robots" content="noindex, follow"/);
   });
 
   it("leaves a filtered search alone: no prefetch, no linked pager", async () => {

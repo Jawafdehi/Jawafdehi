@@ -198,9 +198,6 @@ export default function ArchiveSearch() {
       "Search Jawafdehi's public accountability archive across cases, people, offices, locations, charges, and evidence documents.",
     );
 
-  // Every URL on this site 307s to its trailing-slash form, so the canonical
-  // carries one.
-  const canonicalUrl = `${SITE_URL}/search/`;
 
   // A result set is not a landing page. The bare browse view is worth
   // indexing; the same view narrowed by a query or paged past the first is thin, near-duplicate content, and Google's own guidance is
@@ -218,6 +215,20 @@ export default function ArchiveSearch() {
   // PaginationControls' own rule — paging a filtered set by href would invite a
   // crawler into an unbounded space of filter combinations.
   const listing = crawlableListing("/search", `?${searchParams.toString()}`);
+
+  // Every URL on this site 307s to its trailing-slash form, so the canonical
+  // carries one.
+  //
+  // A crawlable listing names ITSELF — `/search/?type=case&page=3` — and is
+  // indexable. It must: Google treats a page canonicalised to another URL as a
+  // duplicate it need not crawl, and a page left `noindex` for long enough as
+  // one whose links it stops following. Either would cut the crawl path these
+  // pages exist to be, and Google's pagination guidance is a self-canonical per
+  // page for exactly that reason. listingPath is the normalised form the edge
+  // renders and caches under, so ?page=1 and a stray utm_ fold into one URL.
+  // Every other view keeps the canonical and robots it had.
+  const canonicalUrl = listing ? `${SITE_URL}${listingPath(listing)}` : `${SITE_URL}/search/`;
+  const robots = listing ? null : isFilteredResultSet ? "noindex, follow" : null;
 
   const updateParams = (
     updates: Record<string, string | number | undefined>,
@@ -466,7 +477,7 @@ export default function ArchiveSearch() {
         canonicalUrl={canonicalUrl}
         {...pageCard(selectedRecordType === "courtcase" ? "court-records" : "search")}
         language={i18n.language}
-        robots={isFilteredResultSet ? "noindex, follow" : null}
+        robots={robots}
       />
 
       <div className="layout-container">

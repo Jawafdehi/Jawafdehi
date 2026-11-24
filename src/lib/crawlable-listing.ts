@@ -25,10 +25,11 @@
 //   - the "all" tab, which duplicates the three typed ones.
 //   - pages past the API's offset window, which 400.
 //
-// Indexing policy is NOT changed here: ArchiveSearch's own <Seo> still makes
-// page 2+ `noindex, follow` and canonicalises to /search/. A crawler is meant to
-// walk THROUGH these pages to the records, which `follow` allows; the pages
-// themselves were never meant to rank.
+// These pages are indexable and canonicalise to THEMSELVES (ArchiveSearch's
+// <Seo>, via listingPath). A crawler is meant to walk through them to the
+// records, and Google does not reliably follow links on a page it is told is a
+// duplicate of another URL, or that has been `noindex` for long. Every other
+// /search view keeps the /search/ canonical and its noindex for results.
 
 import { archiveSearchMaxOffsetResults, archiveSearchPageSize } from "../utils/archive-search-window";
 
