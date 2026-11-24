@@ -716,3 +716,32 @@ describe("MaterialProfile staff originals", () => {
     expect(screen.getByRole("button", { name: "Unredacted transcript" })).toBeTruthy();
   });
 });
+
+describe("MaterialProfile — a file withheld pending redaction (JAW-167)", () => {
+  it("says the file is withheld instead of offering it or claiming there is none", async () => {
+    getMaterial.mockResolvedValue(
+      material({
+        "jawafdehi:recordId": "116707",
+        associatedMedia: [],
+        "jawafdehi:artifacts": {
+          pdf: { original: true, redacted: false, withheld_pending_redaction: true },
+        },
+      }),
+    );
+    renderPage();
+
+    await screen.findByText("116707");
+    expect(screen.getByTestId("withheld-pending-redaction").textContent).toMatch(
+      /withheld until personal details in it\s+are redacted/,
+    );
+    expect(screen.queryByText(/No downloadable files/)).toBeNull();
+  });
+
+  it("shows no such note for an ordinary document", async () => {
+    getMaterial.mockResolvedValue(material({ "jawafdehi:recordId": "116707" }));
+    renderPage();
+
+    await screen.findByText("116707");
+    expect(screen.queryByTestId("withheld-pending-redaction")).toBeNull();
+  });
+});

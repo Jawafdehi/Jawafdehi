@@ -40,7 +40,10 @@ import {
 } from "@/components/DocumentPreviewDialog";
 import { ShareButton } from "@/components/ShareButton";
 import { seriesBySource, seriesSearchPath } from "@/data/material-series";
-import { getMaterialSourceLinks } from "@/lib/material-links";
+import {
+  getMaterialSourceLinks,
+  isWithheldPendingRedaction,
+} from "@/lib/material-links";
 import { StaffOriginals } from "@/components/materials/StaffOriginals";
 import { staffOriginalsOf } from "@/lib/staff-originals";
 import {
@@ -225,6 +228,7 @@ export default function MaterialProfile() {
     : { en: "", ne: "" };
   const fullTextStr = fullText.en || fullText.ne;
   const links = getMaterialSourceLinks(data);
+  const withheldPendingRedaction = isWithheldPendingRedaction(data);
   // Present only for staff holding the unredacted permission (the API adds it).
   const staffOriginals = staffOriginalsOf(data);
   const [previewDocument, setPreviewDocument] =
@@ -621,7 +625,18 @@ export default function MaterialProfile() {
                     ) : null}
                   </div>
 
-                  {links.length === 0 && !data.url ? (
+                  {withheldPendingRedaction ? (
+                    <p
+                      className="mt-4 text-sm leading-6 text-muted-foreground"
+                      data-testid="withheld-pending-redaction"
+                    >
+                      The original file is withheld until personal details in it
+                      are redacted.
+                      <span lang="ne" className="mt-1 block">
+                        व्यक्तिगत विवरण नहटाइन्जेल मूल फाइल सार्वजनिक गरिएको छैन।
+                      </span>
+                    </p>
+                  ) : links.length === 0 && !data.url ? (
                     <p className="mt-4 text-sm leading-6 text-muted-foreground">
                       No downloadable files are attached to this record.
                     </p>

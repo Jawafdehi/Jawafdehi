@@ -3,6 +3,7 @@ import type { Material } from "@/services/datalake-api";
 import { canPreviewDocument } from "@/utils/document-preview-url";
 
 interface MediaLink {
+  "jawafdehi:withheld"?: string;
   contentUrl?: string;
   url?: string;
   encodingFormat?: string;
@@ -102,6 +103,34 @@ export function withholdUnredacted<T>(
   });
 }
 
+/**
+ * Set by the API on an original of ours that could not be redacted (JAW-167):
+ * it is withheld with NOTHING published in its place, and the page says so.
+ */
+const WITHHELD_PENDING_REDACTION = "PENDING_REDACTION";
+
+/**
+ * Whether this document's file is withheld until it is redacted. The API's
+ * summary says so (`jawafdehi:artifacts.pdf.withheld_pending_redaction`); a
+ * flagged link left in a stale payload counts too.
+ */
+export function isWithheldPendingRedaction(data: Material | undefined): boolean {
+  if (!data) return false;
+  const summary = data["jawafdehi:artifacts"] as
+    | { pdf?: { withheld_pending_redaction?: unknown; redacted?: unknown } }
+    | undefined;
+  if (summary?.pdf?.withheld_pending_redaction === true) return true;
+  if (summary?.pdf?.redacted === true) return false;
+  return mediaEntries(data).some(
+    (e) => e["jawafdehi:withheld"] === WITHHELD_PENDING_REDACTION,
+  );
+}
+
+function mediaEntries(data: Material): MediaLink[] {
+  const media = data.associatedMedia;
+  return Array.isArray(media) ? media : media ? [media as MediaLink] : [];
+}
+
 const mediaRoleOf = (entry: MediaLink) =>
   entry["jawafdehi:linkRole"] || entry["jawafdehi:role"] || entry.role || "";
 
@@ -115,12 +144,11 @@ export interface MaterialSourceLink {
 
 export function getMaterialSourceLinks(data: Material | undefined): MaterialSourceLink[] {
   if (!data) return [];
-  const media = data.associatedMedia;
-  const entries: MediaLink[] = Array.isArray(media)
-    ? media
-    : media
-      ? [media as MediaLink]
-      : [];
+  // A link flagged as withheld pending redaction is never rendered, whatever
+  // else the payload holds: the API already omits it, this is the site's guard.
+  const entries = mediaEntries(data).filter(
+    (e) => e["jawafdehi:withheld"] !== WITHHELD_PENDING_REDACTION,
+  );
 
   const visible = withholdUnredacted(entries, (e) => e.contentUrl || e.url, mediaRoleOf);
 
