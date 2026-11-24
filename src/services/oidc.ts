@@ -4,6 +4,8 @@ import {
   OIDC_AUTHORITY,
   OIDC_CLIENT_ID,
   OIDC_AUDIENCE,
+  OIDC_ORG_ID,
+  OIDC_GOOGLE_IDP_ID,
 } from "./oidc-session";
 
 let userManager: UserManager | null = null;
@@ -32,6 +34,13 @@ function createUserManager(): UserManager {
   if (audience) {
     scope.push(`urn:zitadel:iam:org:project:id:${audience}:aud`);
   }
+  // Straight to Google, without Zitadel's own login page and its extra click (JAW-160). Zitadel's
+  // login v2 honours the IdP scope only when the org scope is in the same request: Google is
+  // enabled on the org's login policy, not the instance default, so the IdP hint alone is
+  // silently ignored. Every staff sign-in is a Google one (no password sign-ins in Zitadel's
+  // session events), so nobody loses a way in. Refreshes reuse the scopes of the original grant
+  // (oidc-client-ts sends the stored user's scope), so existing sessions are unaffected.
+  scope.push(`urn:zitadel:iam:org:id:${OIDC_ORG_ID}`, `urn:zitadel:iam:org:idp:id:${OIDC_GOOGLE_IDP_ID}`);
 
   userManager = new UserManager({
     authority,

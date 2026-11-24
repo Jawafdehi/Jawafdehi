@@ -7,6 +7,8 @@ interface ImportMetaEnv {
   readonly VITE_OIDC_AUTHORITY?: string;
   readonly VITE_OIDC_CLIENT_ID?: string;
   readonly VITE_OIDC_AUDIENCE?: string;
+  readonly VITE_OIDC_ORG_ID?: string;
+  readonly VITE_OIDC_GOOGLE_IDP_ID?: string;
   // DEV-ONLY: enables the username/password login form ("true"/"false").
   readonly VITE_DEV_AUTH?: string;
   readonly VITE_SENTRY_DSN?: string;
