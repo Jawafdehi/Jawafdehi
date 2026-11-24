@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { getMaterialSourceLinks } from "./material-links";
+import {
+  getMaterialSourceLinks,
+  isWithheldPendingRedaction,
+} from "./material-links";
 
 import type { Material } from "@/services/datalake-api";
 
@@ -115,5 +118,45 @@ describe("getMaterialSourceLinks never renders a private-bucket link", () => {
     } as Material;
     const hrefs = getMaterialSourceLinks(material).map((l) => l.href);
     expect(hrefs).toEqual(["https://ciaa.gov.np/charge-sheet.pdf"]);
+  });
+});
+
+describe("documents withheld pending redaction (JAW-167)", () => {
+  const OURS = "https://s3.jawafdehi.org/case_uploads/abc.pdf";
+  const pending = {
+    contentUrl: OURS,
+    "jawafdehi:linkRole": "RAW",
+    "jawafdehi:withheld": "PENDING_REDACTION",
+  };
+  const material = (extra: Partial<Material>): Material =>
+    ({ "@id": "https://jawafdehi.org/material/ag/1", ...extra }) as Material;
+
+  it("never renders a flagged original, even with no redacted copy", () => {
+    expect(getMaterialSourceLinks(material({ associatedMedia: [pending] }))).toEqual([]);
+  });
+
+  it("is pending when the API summary says so", () => {
+    const data = material({
+      associatedMedia: [],
+      "jawafdehi:artifacts": { pdf: { original: true, redacted: false, withheld_pending_redaction: true } },
+    });
+    expect(isWithheldPendingRedaction(data)).toBe(true);
+  });
+
+  it("is pending when a stale payload still carries the flagged link", () => {
+    expect(isWithheldPendingRedaction(material({ associatedMedia: [pending] }))).toBe(true);
+  });
+
+  it("is not pending once a redacted PDF exists, or for an ordinary document", () => {
+    const redacted = material({
+      associatedMedia: [pending],
+      "jawafdehi:artifacts": { pdf: { original: true, redacted: true, withheld_pending_redaction: false } },
+    });
+    expect(isWithheldPendingRedaction(redacted)).toBe(false);
+    expect(
+      isWithheldPendingRedaction(
+        material({ associatedMedia: [{ contentUrl: OURS, "jawafdehi:linkRole": "RAW" }] }),
+      ),
+    ).toBe(false);
   });
 });
