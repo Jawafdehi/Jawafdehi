@@ -18,6 +18,19 @@ function schemaType(entityType: string | undefined): string {
   return first || "Thing";
 }
 
+// Whether `about` may name this bound entity. Anyone accused or alleged — the
+// people the case is about in the sense a searcher means — and any entity that is
+// not a person: an office, a company, a bank. NOT a person bound as a witness, a
+// victim, a petitioner or anything else: `about` links their Person node to a
+// corruption report, and the page's own rule (the snippet names only accused and
+// alleged roles; see entityMeta) must hold in the structured data too. An entity
+// whose type is unknown is treated as a person — fail closed.
+function nameableInAbout(entity: { type?: string; entity_type?: string }): boolean {
+  if (entity.type === "accused" || entity.type === "alleged") return true;
+  const type = schemaType(entity.entity_type);
+  return type !== "Person" && type !== "Thing";
+}
+
 // Google shows at most ~110 characters of a headline and flags longer ones.
 function headline(title: string): string {
   return title.length <= 110 ? title : `${title.slice(0, 109).trimEnd()}…`;
@@ -31,11 +44,13 @@ function headline(title: string): string {
  * `NewsArticle`, which it is not and which Google would hold to news policies.
  * It links the case to everything the page is built from:
  *
- * - `about`: the people and organisations it names. It says the report is ABOUT
- *   them, and nothing about their role — a witness and an accused are both
- *   subjects of the report, and their roles belong on the page where they carry
- *   their verdicts and forums. This is the mirror of the entity page's
- *   `subjectOf`, so the graph connects in both directions.
+ * - `about`: the accused and alleged, and the organisations it names. It says
+ *   the report is ABOUT them and nothing about their role — roles belong on the
+ *   page, where they carry their verdicts and forums. A person bound in any other
+ *   role (witness, victim, petitioner) is left out: naming them here would tie
+ *   their name to a corruption report in a search engine's graph, which the page
+ *   itself is careful never to do in a snippet. The mirror of the entity page's
+ *   `subjectOf`, so the graph connects in both directions on the same terms.
  * - `spatialCoverage`: the places it names.
  * - `mentions`: the court cases, by their canonical @id.
  * - `citation`: the evidence documents.
@@ -52,7 +67,7 @@ export function caseJsonLd(
   if (caseData.state !== "PUBLISHED") return null;
 
   const named = (caseData.entities ?? []).filter((e) => e.nes_id && e.display_name);
-  const people = named.filter((e) => e.type !== "location");
+  const people = named.filter((e) => e.type !== "location" && nameableInAbout(e));
   const places = named.filter((e) => e.type === "location");
   // Unique by @id: one person can be bound to a case in two roles.
   const unique = <T extends { nes_id: string | null }>(list: T[]) =>

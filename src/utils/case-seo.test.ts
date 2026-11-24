@@ -113,14 +113,34 @@ describe("caseJsonLd", () => {
     });
   });
 
-  it("is about the people it names — once each, and without their roles", () => {
+  it("is about the accused it names — once each, and without their roles", () => {
     const ld = caseJsonLd(aCase(), OPTS)!;
     expect(ld.about).toEqual([
       { "@type": "Person", "@id": "https://jawafdehi.org/entity/person/namuna-abhiyukta", name: "Namuna Abhiyukta" },
-      { "@type": "Person", "@id": "https://jawafdehi.org/entity/person/namuna-sakshi", name: "Namuna Sakshi" },
     ]);
     // Roles and verdicts belong on the page, with their forum and context.
     expect(JSON.stringify(ld)).not.toMatch(/accused|witness|charged/);
+  });
+
+  it("never ties a witness, a victim or an unknown-type party's name to the report", () => {
+    // The snippet names only accused and alleged roles; the graph must not say more.
+    const ld = caseJsonLd(
+      aCase({
+        entities: [
+          { nes_id: "https://jawafdehi.org/entity/person/namuna-sakshi", display_name: "Namuna Sakshi", entity_type: "Person", type: "witness" },
+          { nes_id: "https://jawafdehi.org/entity/person/namuna-pidit", display_name: "Namuna Pidit", entity_type: "Person", type: "victim" },
+          { nes_id: "https://jawafdehi.org/entity/person/namuna-ajnat", display_name: "Namuna Ajnat", type: "related" },
+          { nes_id: "https://jawafdehi.org/entity/person/namuna-aaropit", display_name: "Namuna Aaropit", entity_type: "Person", type: "alleged" },
+          { nes_id: "https://jawafdehi.org/entity/organization/namuna-bank", display_name: "Namuna Bank", entity_type: "Organization", type: "victim" },
+        ],
+      } as Partial<Case>),
+      OPTS,
+    )!;
+    expect(ld.about).toEqual([
+      { "@type": "Person", "@id": "https://jawafdehi.org/entity/person/namuna-aaropit", name: "Namuna Aaropit" },
+      { "@type": "Organization", "@id": "https://jawafdehi.org/entity/organization/namuna-bank", name: "Namuna Bank" },
+    ]);
+    expect(JSON.stringify(ld)).not.toMatch(/Sakshi|Pidit|Ajnat/);
   });
 
   it("puts places in spatialCoverage, minus the registry's own subtypes", () => {
