@@ -461,16 +461,26 @@ function stripOverriddenHeadTags(head: string): string {
     .replace(/<link\b[^>]*\brel=["']canonical["'][^>]*>/gi, () => '');
 }
 
-// Remove the head tags that name the HOMEPAGE's URL (rel=canonical, og:url)
-// from the shell, for when it is served under some other path. Head only, and
-// the same attribute-escaping assumption as stripOverriddenHeadTags.
+// The title the shell carries under any path but `/`: the site name and
+// nothing that describes the homepage.
+const SHELL_TITLE = 'Jawafdehi';
+
+// Remove the head tags that claim the HOMEPAGE's identity from the shell, for
+// when it is served under some other path: its URL (rel=canonical, og:url) and
+// what it says it is (the description and the social title/description). The
+// <title> becomes the bare site name. Left in place, a crawler that does not run
+// the SPA read the page as a second homepage — the same title and description
+// on every such path. The SPA sets the page's own head once it runs. Head only,
+// and the same attribute-escaping assumption as stripOverriddenHeadTags.
 export function stripHomepageUrlClaims(html: string): string {
   const headEnd = html.indexOf('</head>');
   if (headEnd === -1) return html;
   const head = html
     .slice(0, headEnd)
     .replace(/<link\b[^>]*\brel=["']canonical["'][^>]*>/gi, () => '')
-    .replace(/<meta\b[^>]*\bproperty=["']og:url["'][^>]*>/gi, () => '');
+    .replace(/<meta\b[^>]*\bproperty=["']og:(?:url|title|description)["'][^>]*>/gi, () => '')
+    .replace(/<meta\b[^>]*\bname=["'](?:description|twitter:title|twitter:description)["'][^>]*>/gi, () => '')
+    .replace(/<title\b([^>]*)>[\s\S]*?<\/title>/i, (_m, attrs: string) => `<title${attrs}>${SHELL_TITLE}</title>`);
   return head + html.slice(headEnd);
 }
 
