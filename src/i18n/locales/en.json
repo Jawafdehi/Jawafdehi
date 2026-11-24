@@ -333,7 +333,8 @@
       "submitFeedback": "Submit Feedback"
     },
     "figures": {
-      "label": "The archive in figures"
+      "label": "The archive in figures",
+      "coverageLink": "Where these numbers come from"
     },
     "blog": {
       "heading": "Recent blogs",
@@ -1768,7 +1769,7 @@
     "honesty": {
       "heading": "How solid is this data?",
       "description": "What the records back up today, and where they fall short — we show the gaps rather than round them away.",
-      "ofTotal": "of {{total}}",
+      "ofTotal": "{{total}} records",
       "notStarted": "not started yet",
       "count": "{{part}} of {{total}}",
       "group": {
@@ -1845,7 +1846,8 @@
     "materialsBySource": {
       "heading": "Where the evidence comes from",
       "summary": "{{total}} documents from {{sources}} sources, filed in {{folders}} folders:",
-      "seeAll": "Browse the archive"
+      "seeAll": "Browse the archive",
+      "continued": "(continued)"
     },
     "materialsByType": {
       "heading": "What materials are hosted",

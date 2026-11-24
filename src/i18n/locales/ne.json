@@ -333,7 +333,8 @@
       "submitFeedback": "प्रतिक्रिया पेश गर्नुहोस्"
     },
     "figures": {
-      "label": "अभिलेख अंकमा"
+      "label": "अभिलेख अंकमा",
+      "coverageLink": "यी अंक कहाँबाट आउँछन्"
     },
     "blog": {
       "heading": "हालैका ब्लग",
@@ -1768,7 +1769,7 @@
     "honesty": {
       "heading": "यो डेटा कति भरपर्दो छ?",
       "description": "अभिलेखले आज के पुष्टि गर्न सक्छन्, र कहाँ चुक्छन् — हामी खाडललाई लुकाउनुभन्दा देखाउँछौं।",
-      "ofTotal": "{{total}} मध्ये",
+      "ofTotal": "{{total}} अभिलेख",
       "notStarted": "अझै सुरु भएको छैन",
       "count": "{{total}} मध्ये {{part}}",
       "group": {
@@ -1845,7 +1846,8 @@
     "materialsBySource": {
       "heading": "प्रमाण कहाँबाट आउँछ",
       "summary": "{{sources}} स्रोतका {{total}} कागजात, {{folders}} फोल्डरमा:",
-      "seeAll": "अभिलेख हेर्नुहोस्"
+      "seeAll": "अभिलेख हेर्नुहोस्",
+      "continued": "(जारी)"
     },
     "materialsByType": {
       "heading": "कस्ता सामग्री राखिएका छन्",

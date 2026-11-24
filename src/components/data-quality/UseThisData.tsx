@@ -72,11 +72,14 @@ export function UseThisData() {
             )}
           </p>
           <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" size="sm" className="mt-auto self-start">
-                {t("dataQuality.methodology.report.button", "Report a data error")}
-              </Button>
-            </DialogTrigger>
+            {/* Pinned to the card's foot with the same gap as "Open the API". */}
+            <div className="mt-auto pt-4">
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  {t("dataQuality.methodology.report.button", "Report a data error")}
+                </Button>
+              </DialogTrigger>
+            </div>
             <DialogContent className="flex h-[calc(100dvh-2rem)] w-[calc(100vw-1.5rem)] max-w-[calc(100vw-1.5rem)] flex-col gap-0 overflow-hidden rounded-[28px] p-0 sm:h-auto sm:max-h-[90vh] sm:w-full sm:max-w-[600px] sm:gap-4 sm:rounded-lg sm:p-6">
               <div className="flex min-h-0 flex-1 flex-col">
                 <DialogHeader className="shrink-0 px-4 pt-6 pb-4 text-left sm:px-0 sm:pt-0">

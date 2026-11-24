@@ -37,13 +37,13 @@ function CompletenessBar({ item, t }: { item: HonestyItem; t: Translate }) {
   return (
     <li>
       <div className="flex items-baseline justify-between gap-3">
-        <span className="text-sm text-foreground">{item.label}</span>
-        <span className="text-[15px] font-medium tabular-nums" style={{ color }}>
+        <span className="text-base text-foreground">{item.label}</span>
+        <span className="text-base font-semibold tabular-nums" style={{ color }}>
           {pct}%
         </span>
       </div>
       <div
-        className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-muted"
+        className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted"
         aria-hidden="true"
       >
         <div
@@ -171,19 +171,17 @@ export function DataHonesty({
         )}
       </p>
 
-      <div className="mt-8 max-w-2xl space-y-8">
+      {/* One record set per column on wide screens, stacked below lg. */}
+      <div className="mt-8 grid max-w-2xl grid-cols-1 gap-10 lg:max-w-none lg:grid-cols-3 lg:gap-12">
         {groups.map((g) => (
           <div key={g.key}>
-            <p className="text-[15px] text-muted-foreground">
-              {g.heading}
-              <span className="font-normal normal-case tracking-normal text-muted-foreground/70">
-                {" · "}
-                {t("dataQuality.honesty.ofTotal", "of {{total}}", {
-                  total: formatCount(g.total),
-                })}
-              </span>
+            <h3 className="font-card-title">{g.heading}</h3>
+            <p className="mt-1 text-sm tabular-nums text-muted-foreground">
+              {t("dataQuality.honesty.ofTotal", "{{total}} records", {
+                total: formatCount(g.total),
+              })}
             </p>
-            <ul className="mt-3 space-y-4">
+            <ul className="mt-4 space-y-5">
               {g.items.map((item) => (
                 <CompletenessBar key={item.label} item={item} t={t} />
               ))}

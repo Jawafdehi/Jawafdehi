@@ -50,13 +50,16 @@ describe("DataHonesty", () => {
 
   it("renders the three domain groups with their totals", () => {
     render(<DataHonesty nes={nes} ngm={ngm} materials={materials} />);
-    expect(screen.getByText("Court records")).toBeTruthy();
-    expect(screen.getByText("People & offices tracked")).toBeTruthy();
-    expect(screen.getByText("Source materials")).toBeTruthy();
-    // Group denominator context is shown (the "· of N" heading span, distinct
-    // from the per-row "N of M" counts).
+    // Each record set is a subheading of its own (one column each on wide screens).
+    expect(screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent)).toEqual([
+      "Court records",
+      "People & offices tracked",
+      "Source materials",
+    ]);
+    // Group denominator context is shown under its heading, distinct from the
+    // per-row "N of M" counts.
     expect(
-      screen.getByText(`· of ${ngm.court_cases_total.toLocaleString("en-IN")}`),
+      screen.getByText(`${ngm.court_cases_total.toLocaleString("en-IN")} records`),
     ).toBeTruthy();
   });
 

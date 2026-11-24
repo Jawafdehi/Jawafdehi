@@ -7,6 +7,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 import { AnimatedCount } from "@/components/ui/animated-count";
+import { ArrowRight } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import { localiseNumber } from "@/utils/number";
 
@@ -58,6 +59,16 @@ export function ArchiveFigures(props: Readonly<ArchiveFiguresProps>) {
           </p>
         </Link>
       ))}
+    </div>
+    {/* Where the figures come from and how complete they are. */}
+    <div className="layout-container mt-8">
+      <Link
+        to="/data-quality"
+        className="group inline-flex items-center gap-2 text-base font-semibold text-primary hover:text-accent"
+      >
+        {t("home.figures.coverageLink")}
+        <ArrowRight aria-hidden="true" className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+      </Link>
     </div>
     </section>
   );
