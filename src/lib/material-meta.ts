@@ -100,12 +100,15 @@ export interface MaterialMetaSource {
  * ## The contract with the API
  *
  * `jawafdehi:indexable` is a public boolean that ONLY the API may emit, and it
- * leaks nothing the `robots` tag does not already say. It is meant to be computed
- * as LISTED **and** cited as evidence by at least one PUBLISHED case **and** not
+ * leaks nothing the `robots` tag does not already say. The API computes it
+ * as LISTED **and** cited as evidence by at least one PUBLISHED case **and**
+ * naming no protected matter (no sexual-offence or trafficking record, no court
+ * pseudonym, no court order of a case kept out of public search) **and** not
  * blocked on that specific record. That reuses an editorial decision the archive
  * already makes and is accountable for — a caseworker chose the document as
- * evidence, and the case passed review — rather than inventing a new one. It also
- * reverts on its own: unpublish the case and its evidence is `noindex` again.
+ * evidence and a caseworker published the case — rather than inventing a new one.
+ * It also reverts on its own: unpublish the case and its evidence is `noindex`
+ * again.
  *
  * Two halves, and they are not equally done:
  *
@@ -116,9 +119,10 @@ export interface MaterialMetaSource {
  *   carry `"jawafdehi:indexable": true` through to a read — and ingest, moves and
  *   backfills all write storage without passing the API's HTTP write checks —
  *   one bad row would make its page indexable.
- * - **Computation** — not yet built. Until it is, no read carries the key and
- *   every document page stays `noindex`. The rule above is a proposal; which rule
- *   the API applies is an editorial decision for the organisation, not a code
+ * - **Computation** — in the API (`materials/indexability.py`, JawafdehiAPI
+ *   #688), behind `MATERIAL_INDEXING_RULE`, which defaults to `none`. Until the
+ *   organisation turns it on, no read carries the key and every document page
+ *   stays `noindex`. Which rule applies is an editorial decision, not a code
  *   default. This function only obeys the answer.
  *
  * Open Graph is unaffected either way, so share cards keep working throughout.
