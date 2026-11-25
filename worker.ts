@@ -32,6 +32,7 @@ import {
   authorCardUrl,
   buildHeadTags,
   caseMetaDescription,
+  caseMetaTitle,
   escapeHtml,
   previewImageUrl,
   renderHeadTagsToHtml,
@@ -620,7 +621,11 @@ async function handleCaseMetaFallback(
   if (!indexHtml) return null;
 
   const metaTags = buildMetaTags({
-    title: `${titleRaw} | Jawafdehi`,
+    // Shared with CaseDetail.tsx, like the description: see caseMetaTitle.
+    title: caseMetaTitle({
+      title: titleRaw,
+      court_cases: Array.isArray(caseData.court_cases) ? caseData.court_cases.map(String) : null,
+    }),
     description,
     canonicalUrl,
     imageUrl,

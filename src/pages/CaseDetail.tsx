@@ -40,7 +40,8 @@ import { caseBindToEntity } from "@/services/entity-adapters";
 import type { CourtCase, JawafEntity } from "@/types/jds";
 import type { Entity } from "@/types/entity";
 import { useQueries, useQuery } from "@tanstack/react-query";
-import { caseMetaDescription, previewImageUrl, SITE_URL, SOCIAL_IMAGE_URL } from "@/utils/seo";
+import { caseMetaDescription, caseMetaTitle, previewImageUrl, SITE_URL, SOCIAL_IMAGE_URL } from "@/utils/seo";
+import { caseJsonLd } from "@/utils/case-jsonld";
 import { getSubjectEntities } from "@/utils/case-entities";
 import { ReportCaseDialog } from "@/components/ReportCaseDialog";
 import { DisqusComments } from "@/components/DisqusComments";
@@ -434,11 +435,23 @@ const CaseDetail = () => {
   // the native share sheet, the sidebar and the mobile expander all offered an
   // empty string.
   const metaDescription = caseMetaDescription(caseData);
-  const metaTitle = `${caseData.title} | Jawafdehi`;
+  // Shared with worker.ts: the title, plus the lead court number when the title
+  // lacks it. See caseMetaTitle.
+  const metaTitle = caseMetaTitle(caseData);
   const ogImage =
     previewImageUrl(caseData.banner_url, "https://portal.jawafdehi.org") ||
     previewImageUrl(caseData.thumbnail_url, "https://portal.jawafdehi.org") ||
     SOCIAL_IMAGE_URL;
+  // Escaped as material-meta.ts does: a title or a name is data we do not
+  // control, and `</script>` in it must not be able to end the element.
+  const structured = caseJsonLd(caseData, {
+    canonicalUrl,
+    description: metaDescription,
+    imageUrl: ogImage,
+  });
+  const structuredData = structured
+    ? JSON.stringify(structured).replace(/</g, "\\u003c")
+    : null;
 
   return (
     <div className="flex min-h-screen flex-col overflow-x-clip bg-background">
@@ -469,6 +482,7 @@ const CaseDetail = () => {
           href={`${SITE_URL}/oembed/?url=${encodeURIComponent(canonicalUrl)}&format=json`}
           title={`${caseData.title} oEmbed`}
         />
+        {structuredData ? <script type="application/ld+json">{structuredData}</script> : null}
       </Seo>
 
       <CaseDetailBanner

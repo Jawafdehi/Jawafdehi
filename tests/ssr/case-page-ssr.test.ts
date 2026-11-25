@@ -143,4 +143,26 @@ describe("SSR of a case page", () => {
 
     expect(keys(await renderCase())).toContainEqual(["case", SLUG]);
   });
+
+  it("titles the case with its court number when the title lacks one", async () => {
+    // 099-* is fictional: it cannot collide with a real register entry.
+    getCaseById.mockResolvedValue({
+      ...testCase,
+      court_cases: ["https://jawafdehi.org/courtcase/special/099-cr-9001"],
+    });
+    const title = (await renderCase()).helmetContext.helmet?.title?.toString() ?? "";
+    expect(title).toContain(`${TITLE} (099-CR-9001) | Jawafdehi`);
+  });
+
+  it("ships the case as a schema.org Report", async () => {
+    const script = (await renderCase()).helmetContext.helmet?.script?.toString() ?? "";
+    const blocks = [...script.matchAll(/<script[^>]*application\/ld\+json[^>]*>([\s\S]*?)<\/script>/g)].map(
+      (m) => JSON.parse(m[1]) as Record<string, unknown>,
+    );
+    const report = blocks.find((b) => b["@type"] === "Report");
+    expect(report).toMatchObject({
+      name: TITLE,
+      url: `https://jawafdehi.org/case/${SLUG}/`,
+    });
+  });
 });
