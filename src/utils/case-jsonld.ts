@@ -31,10 +31,11 @@ function nameableInAbout(entity: { type?: string; entity_type?: string }): boole
   return type !== "Person" && type !== "Thing";
 }
 
-// Google shows at most ~110 characters of a headline and flags longer ones.
-function headline(title: string): string {
-  return title.length <= 110 ? title : `${title.slice(0, 109).trimEnd()}…`;
-}
+// Google flags a headline over ~110 characters. A longer title is left out of
+// `headline` rather than cut: a Nepali title often ends on the outcome
+// ("…लाई सफाई"), so a cut would keep the charge and drop the acquittal. The
+// full title is always in `name`.
+const HEADLINE_MAX = 110;
 
 /**
  * schema.org JSON-LD for a case page, or null for a case that is not published.
@@ -86,7 +87,7 @@ export function caseJsonLd(
   return {
     "@context": "https://schema.org",
     "@type": "Report",
-    headline: headline(caseData.title),
+    ...(caseData.title.length <= HEADLINE_MAX ? { headline: caseData.title } : {}),
     name: caseData.title,
     description: opts.description,
     url: opts.canonicalUrl,

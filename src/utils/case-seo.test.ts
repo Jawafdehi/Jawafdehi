@@ -173,10 +173,17 @@ describe("caseJsonLd", () => {
     });
   });
 
-  it("keeps the headline within what Google shows", () => {
-    const ld = caseJsonLd(aCase({ title: "क".repeat(200) }), OPTS)!;
-    expect((ld.headline as string).length).toBeLessThanOrEqual(110);
-    expect(ld.name).toBe("क".repeat(200));
+  it("leaves a long title out of headline instead of cutting off its outcome", () => {
+    const title = `${"क".repeat(150)} लाई सफाई`;
+    const ld = caseJsonLd(aCase({ title }), OPTS)!;
+    expect(ld).not.toHaveProperty("headline");
+    expect(ld.name).toBe(title);
+    expect(JSON.stringify(ld)).not.toContain("…");
+  });
+
+  it("uses the whole title as headline when it fits", () => {
+    const title = "क".repeat(110);
+    expect(caseJsonLd(aCase({ title }), OPTS)!.headline).toBe(title);
   });
 
   it("publishes nothing for a case that is not published", () => {
