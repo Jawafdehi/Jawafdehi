@@ -625,6 +625,7 @@ async function handleCaseMetaFallback(
     // Shared with CaseDetail.tsx, like the description: see caseMetaTitle.
     title: caseMetaTitle({
       title: titleRaw,
+      title_en: typeof caseData.title_en === 'string' ? caseData.title_en : null,
       court_cases: Array.isArray(caseData.court_cases) ? caseData.court_cases.map(String) : null,
     }),
     description,

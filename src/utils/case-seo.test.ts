@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import type { Case } from "@/types/jds";
 
 import { caseJsonLd } from "./case-jsonld";
-import { caseMetaTitle } from "./seo";
+import { CASE_TITLE_BILINGUAL_BUDGET, caseMetaTitle } from "./seo";
 
 // Fictional throughout, per this repo's fixture rule: a fixture asserting
 // corruption must not name a real body or person. Case numbers are 099-* so
@@ -40,6 +40,44 @@ describe("caseMetaTitle", () => {
         court_cases: ["special:099-CR-0001", "https://jawafdehi.org/courtcase/supreme/099-ap-0002"],
       }),
     ).toBe("Namuna (099-CR-0001) | Jawafdehi");
+  });
+
+  it("carries both scripts when a caseworker wrote an English title — Nepali first", () => {
+    expect(
+      caseMetaTitle({ title: "नमुना सहकारी प्रकरण", title_en: "Namuna Cooperative Fraud", court_cases: [COURT_IRI] }),
+    ).toBe("नमुना सहकारी प्रकरण · Namuna Cooperative Fraud (099-C4-9001) | Jawafdehi");
+  });
+
+  it("does not add the number again when the English title carries it", () => {
+    expect(
+      caseMetaTitle({ title: "नमुना प्रकरण", title_en: "Namuna case (099-C4-9001)", court_cases: [COURT_IRI] }),
+    ).toBe("नमुना प्रकरण · Namuna case (099-C4-9001) | Jawafdehi");
+  });
+
+  it("keeps the long Nepali title whole and drops the English half past the budget", () => {
+    // A real-length title: the pair would be ~200 characters, which a result
+    // cannot show; the Nepali title is never cut, because its end is often the
+    // outcome.
+    const nepali =
+      "रोयल मर्चेन्ट फाइनान्स कर्जा अनियमितता: रु. ४ करोड ३५ लाखभन्दा बढी बिगो दाबी, नमुनासमेतविरुद्धको मुद्दामा विशेष अदालतबाट सफाइ";
+    const title = caseMetaTitle({
+      title: nepali,
+      title_en: "Royal Merchant Finance loan irregularity: Namuna and others acquitted by the Special Court",
+      court_cases: [COURT_IRI],
+    });
+    expect(title).toBe(`${nepali} (099-C4-9001) | Jawafdehi`);
+    expect(title).toContain("सफाइ");
+  });
+
+  it("never exceeds the budget when it carries both scripts", () => {
+    const title = caseMetaTitle({ title: "नमुना सहकारी प्रकरण", title_en: "Namuna Cooperative Fraud", court_cases: [COURT_IRI] });
+    expect(title).toContain("Namuna Cooperative Fraud");
+    expect(title.length).toBeLessThanOrEqual(CASE_TITLE_BILINGUAL_BUDGET);
+  });
+
+  it("ignores a blank English title, or one that repeats the title", () => {
+    expect(caseMetaTitle({ title: "Namuna", title_en: "  " })).toBe("Namuna | Jawafdehi");
+    expect(caseMetaTitle({ title: "Namuna", title_en: "Namuna" })).toBe("Namuna | Jawafdehi");
   });
 
   it("is just the title when the case has no court case", () => {
@@ -184,6 +222,13 @@ describe("caseJsonLd", () => {
   it("uses the whole title as headline when it fits", () => {
     const title = "क".repeat(110);
     expect(caseJsonLd(aCase({ title }), OPTS)!.headline).toBe(title);
+  });
+
+  it("gives the English title as the headline's other language", () => {
+    expect(caseJsonLd(aCase({ title_en: "Namuna Cooperative Fraud" } as Partial<Case>), OPTS)).toMatchObject({
+      alternativeHeadline: "Namuna Cooperative Fraud",
+    });
+    expect(caseJsonLd(aCase(), OPTS)).not.toHaveProperty("alternativeHeadline");
   });
 
   it("publishes nothing for a case that is not published", () => {

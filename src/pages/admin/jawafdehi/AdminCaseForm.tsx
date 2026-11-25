@@ -81,6 +81,8 @@ const num = (v: unknown): number | null =>
 // edited by the F3/F4/F5 child editors; F6 field editors extend this shape.
 interface CaseFormState {
   title: string;
+  // The case title in English. Optional; `title` stays the case's title.
+  title_en: string;
   // Plain-text one/two-sentence summary rendered on case cards and search
   // results (public read plane strips any markup from it). Distinct from the
   // full markdown `description`.
@@ -127,6 +129,7 @@ interface CaseFormState {
 
 const EMPTY: CaseFormState = {
   title: "",
+  title_en: "",
   short_description: "",
   slug: "",
   case_type: "CORRUPTION",
@@ -317,6 +320,7 @@ function fromCase(c: Record<string, unknown>): CaseFormState {
     Array.isArray(v) ? (v as unknown[]).map(str) : [];
   return {
     title: str(c.title),
+    title_en: str(c.title_en),
     short_description: str(c.short_description),
     slug: str(c.slug),
     case_type: str(c.case_type) || "CORRUPTION",
@@ -546,6 +550,7 @@ export default function AdminCaseForm() {
   const buildPatch = (): PatchOp[] => {
     const ops: PatchOp[] = [];
     if (form.title !== original.title) ops.push(replaceOp("/title", form.title));
+    if (form.title_en !== original.title_en) ops.push(replaceOp("/title_en", form.title_en));
     if (form.short_description !== original.short_description)
       ops.push(replaceOp("/short_description", form.short_description));
     if (form.slug !== original.slug) ops.push(replaceOp("/slug", form.slug));
@@ -664,6 +669,7 @@ export default function AdminCaseForm() {
       } else {
         const payload: CreateCasePayload = {
           title: form.title.trim(),
+          title_en: form.title_en.trim() || undefined,
           short_description: form.short_description || undefined,
           case_type: form.case_type,
           description: form.description || undefined,
@@ -852,6 +858,21 @@ export default function AdminCaseForm() {
             value={form.title}
             onChange={(e) => set("title", e.target.value)}
             placeholder={t("admin.caseForm.titlePlaceholder")}
+          />
+        </div>
+
+        {/* Optional. Searchers look for a case in both scripts, and a page whose
+            title is only Devanagari has nothing to match an English query. */}
+        <div className="space-y-1">
+          <Label htmlFor="title_en">{t("admin.caseForm.labelTitleEn")}</Label>
+          <p className="text-xs text-muted-foreground">{t("admin.caseForm.titleEnHelp")}</p>
+          <Input
+            id="title_en"
+            lang="en"
+            maxLength={200}
+            value={form.title_en}
+            onChange={(e) => set("title_en", e.target.value)}
+            placeholder={t("admin.caseForm.titleEnPlaceholder")}
           />
         </div>
 

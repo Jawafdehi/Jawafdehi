@@ -263,3 +263,22 @@ describe("CaseDetailBanner chips", () => {
     expect(screen.getByText("cases.type.moneyLaundering")).toBeTruthy();
   });
 });
+
+describe("CaseDetailBanner English title", () => {
+  it("shows a caseworker-written English title under the heading, marked as English", () => {
+    renderBanner(makeCase({ title: "नमुना सहकारी प्रकरण", title_en: "Namuna Cooperative Fraud" }));
+    const english = screen.getByText("Namuna Cooperative Fraud");
+    // Real, visible text an English query can match — and labelled as English.
+    expect(english.getAttribute("lang")).toBe("en");
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("नमुना सहकारी प्रकरण");
+  });
+
+  it.each([
+    ["absent", undefined],
+    ["blank", "   "],
+    ["the same as the heading", "नमुना सहकारी प्रकरण"],
+  ])("shows nothing when it is %s", (_, titleEn) => {
+    const { container } = renderBanner(makeCase({ title: "नमुना सहकारी प्रकरण", title_en: titleEn }));
+    expect(container.querySelector('p[lang="en"]')).toBeNull();
+  });
+});

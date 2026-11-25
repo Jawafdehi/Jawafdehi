@@ -75,6 +75,15 @@ describe('worker case-meta fallback: <title>', () => {
     expect(await titleOf()).toBe('नमुना सहकारी प्रकरण (099-C4-9001) | Jawafdehi');
   });
 
+  it('carries the English title too, exactly as the page does', async () => {
+    stubCaseApi({
+      title: 'नमुना सहकारी प्रकरण',
+      title_en: 'Namuna Cooperative Fraud',
+      court_cases: ['https://jawafdehi.org/courtcase/kathmandudc/099-c4-9001'],
+    });
+    expect(await titleOf()).toBe('नमुना सहकारी प्रकरण · Namuna Cooperative Fraud (099-C4-9001) | Jawafdehi');
+  });
+
   it('survives an API that sends no court cases at all', async () => {
     stubCaseApi({ title: 'Namuna Cooperative Fraud' });
     expect(await titleOf()).toBe('Namuna Cooperative Fraud | Jawafdehi');

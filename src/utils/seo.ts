@@ -156,6 +156,8 @@ export function caseMetaDescription(caseData: CaseDescriptionSource): string {
 /** The fields a case's <title> is built from. */
 export interface CaseTitleSource {
   title?: string | null;
+  /** The caseworker-written English title, when there is one. */
+  title_en?: string | null;
   /** Court-case @id IRIs, or the legacy "<court>:<number>" form (tolerated on read). */
   court_cases?: readonly string[] | null;
 }
@@ -195,11 +197,36 @@ function courtCaseReference(ref: string): string | null {
  * already carrying 071-CR-0139 and is not given it twice.
  */
 export function caseMetaTitle(caseData: CaseTitleSource): string {
-  const title = (caseData.title ?? "").trim() || "Jawafdehi Case";
+  const nepali = (caseData.title ?? "").trim() || "Jawafdehi Case";
+  // Both scripts when a caseworker has written an English title: someone
+  // searching in English has nothing to match in a Devanagari-only title, and
+  // the Nepali one stays first because it is the case's title and the page's
+  // language.
+  const english = (caseData.title_en ?? "").trim();
   const lead = (caseData.court_cases ?? []).map(courtCaseReference).find(Boolean) ?? null;
-  if (!lead || normalizeCaseRef(title).includes(lead)) return `${title} | Jawafdehi`;
-  return `${title} (${lead}) | Jawafdehi`;
+  const withLead = (title: string) =>
+    !lead || normalizeCaseRef(title).includes(lead) ? `${title} | Jawafdehi` : `${title} (${lead}) | Jawafdehi`;
+
+  const nepaliOnly = withLead(nepali);
+  if (!english || english === nepali) return nepaliOnly;
+  // ...but only when the pair fits. Our Nepali titles are long — a case title
+  // routinely runs past 100 characters — and a result shows roughly the first
+  // 60, so a 200-character "nepali · english" pair shows the Nepali and never
+  // the English, while reading as stuffed. Past the budget the <title> keeps the
+  // Nepali title whole. It is never shortened: the end of a Nepali title is
+  // often its outcome (…लाई सफाई), and a cut title would keep the accusation
+  // and lose the acquittal. The English title still reaches an English
+  // searcher on such pages, as the banner's visible English line and the
+  // JSON-LD alternativeHeadline.
+  const bilingual = withLead(`${nepali} · ${english}`);
+  return bilingual.length <= CASE_TITLE_BILINGUAL_BUDGET ? bilingual : nepaliOnly;
 }
+
+/**
+ * The longest <title> that still carries both scripts. Above it the English
+ * half adds length a result cannot show; see caseMetaTitle.
+ */
+export const CASE_TITLE_BILINGUAL_BUDGET = 120;
 
 // The social card's intrinsic size. Emitted as og:image:width/height so scrapers
 // can lay out the card before they have fetched the bytes. Only ever attached to

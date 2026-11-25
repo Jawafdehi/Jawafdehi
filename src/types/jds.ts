@@ -438,6 +438,8 @@ export interface Case {
   proceedings_started_on?: string | null;
   proceedings_decided_on?: string | null;
   title: string;
+  /** The case title in English, written by a caseworker; optional. `title` stays the case's title. */
+  title_en?: string | null;
   short_description?: string | null;
   // DEPRECATED free-text byline, superseded by `authors` / `case_publish_date` /
   // `public_edit_history` below. Still returned, and still rendered as a
