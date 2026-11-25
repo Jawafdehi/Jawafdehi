@@ -1,0 +1,254 @@
+// SPDX-License-Identifier: Hippocratic-3.0
+import type { TFunction } from "i18next";
+
+import type { Case } from "@/types/jds";
+import { caseInvolvement, isAccusedTier, orderCasesForEntity, roleFor } from "@/utils/entity-involvement";
+import { casePath } from "@/lib/case-links";
+import { SITE_URL, truncateMeta } from "@/utils/seo";
+
+/**
+ * The entity's name in both scripts, the page's language first: "रवि लामिछाने ·
+ * Rabi Lamichhane" on a Nepali page.
+ *
+ * Both, because the people searching for a name use both. A title carrying only
+ * "Rabi Lamichhane" has nothing to match रवि लामिछाने, and the reverse — and
+ * the record already holds both, so this costs no new URL and no hreflang.
+ */
+export function bilingualName(
+  names: { en: string; ne: string },
+  language: string,
+  fallback: string,
+): string {
+  const ordered = language === "en" ? [names.en, names.ne] : [names.ne, names.en];
+  const parts = ordered.map((n) => n.trim()).filter(Boolean);
+  const unique = parts.filter((n, i) => parts.indexOf(n) === i);
+  return unique.length ? unique.join(" · ") : fallback;
+}
+
+const SNIPPET_MAX = 160;
+// Below this many characters a name or a case title is not worth showing.
+const MIN_PART = 12;
+
+function clip(text: string, max: number): string {
+  return text.length <= max ? text : `${text.slice(0, max - 1).trimEnd()}…`;
+}
+
+/**
+ * Fit an entity snippet into 160 characters WITHOUT ever showing part of a
+ * legal status.
+ *
+ * The status — role, forum-qualified verdict, appeal — is all or nothing.
+ * Truncation cuts from the end, so a status cut short can keep "Special Court:
+ * convicted" and drop the "Supreme Court: overturned" after it, which says the
+ * opposite of the truth. So space is given out in order of what may not be
+ * lost:
+ *
+ *   1. the status, whole — or, if it cannot fit with a minimal name, not at all;
+ *   2. the name, shortened to what is left (the page-language script first);
+ *   3. the case title, only if a useful amount of room remains.
+ */
+export function composeEntityDescription(parts: {
+  name: string;
+  context: string;
+  status: string | null;
+  caseTitle: string | null;
+}): string {
+  const base = ` — ${parts.context}`;
+  const withStatus = parts.status ? `${base} — ${parts.status}` : base;
+  // The status goes in only if it fits whole beside a minimal name.
+  const tail = withStatus.length + MIN_PART <= SNIPPET_MAX ? withStatus : base;
+
+  // A bilingual name gives up its second script before it gives up characters.
+  const primary = parts.name.split(" · ")[0];
+  const room = SNIPPET_MAX - tail.length;
+  const name =
+    parts.name.length <= room ? parts.name : primary.length <= room ? primary : clip(primary, room);
+
+  let description = `${name}${tail}`;
+  // No status, no case title: a title naming the case without the verdict
+  // beside it is the accusation without the outcome.
+  if (parts.caseTitle && tail !== base) {
+    const titleRoom = SNIPPET_MAX - description.length - 2;
+    if (titleRoom >= MIN_PART) description += `: ${clip(parts.caseTitle, titleRoom)}`;
+  }
+  return description;
+}
+
+export interface EntityMetaInput {
+  names: { en: string; ne: string };
+  /** What the page shows as the name when the record has neither. */
+  fallbackName: string;
+  /** Localised kind, as the page's identity line shows it — "व्यक्ति". */
+  kindLabel: string;
+  language: string;
+  entityIri: string;
+  /** Published cases citing this entity (may be a first page of `caseCount`). */
+  cases: readonly Case[];
+  caseCount: number;
+  /** The record's own curated description in the page's language, if any. */
+  recordDescription: string;
+  t: TFunction;
+}
+
+/**
+ * Title and meta description for an entity page, built from the record and the
+ * cases that cite it.
+ *
+ * Every one of 15,473 person pages used to say "<Name> — Person in the
+ * Jawafdehi public entity registry." That tells a searcher nothing — pages said
+ * it while listing several cases and arbas of alleged damage beneath it — and
+ * identical text across thousands of pages reads as duplicate content on
+ * exactly the pages that need to look distinct.
+ *
+ * What it says, and what it deliberately does not:
+ *
+ * - **The role and verdict come from caseInvolvement()** — the same function the
+ *   page's own case cards use — so the snippet can never say something the page
+ *   does not. Verdicts are named with their forum ("विशेष अदालत: सफाइ"), never
+ *   bare, and an undecided case gets no verdict at all: "charged" can mean only
+ *   that the outcome is not recorded, so claiming "pending" would be a guess.
+ * - **Only an accused/alleged role is ever named.** For anyone else — a witness,
+ *   a victim, a petitioner — the snippet says how many cases cite them and
+ *   stops. It does not announce in a search result that a person was a victim,
+ *   and it does not put a case title naming someone ELSE as accused beside
+ *   their name, where it would read as an accusation of them.
+ * - Only the lead case is described: the one the page lists first (accused
+ *   tier, newest first — orderCasesForEntity).
+ *
+ * An entity with no cases keeps its curated description or the old sentence;
+ * those pages are `noindex, follow` already (EntityRelatedCases), so their
+ * snippet is not what a searcher reads.
+ */
+export function entityMeta(input: EntityMetaInput): { title: string; description: string } {
+  const name = bilingualName(input.names, input.language, input.fallbackName);
+  const title = `${name} | Jawafdehi`;
+
+  if (input.caseCount > 0 && input.cases.length > 0) {
+    const count = `${input.caseCount} ${input.t(
+      input.caseCount === 1 ? "entityDetail.caseOne" : "entityDetail.cases",
+    ).toLowerCase()}`;
+    const first = orderCasesForEntity(input.cases, input.entityIri)[0];
+    const involvement = caseInvolvement(first, input.entityIri, input.language, input.t);
+    const status = involvement.accused
+      ? [involvement.roleLabel, involvement.outcomeText, involvement.appealText]
+          .filter(Boolean)
+          .join(" · ")
+      : null;
+    return {
+      title,
+      description: composeEntityDescription({
+        name,
+        context: `${input.kindLabel} · ${count}`,
+        status,
+        caseTitle: involvement.accused ? first.title : null,
+      }),
+    };
+  }
+
+  return {
+    title,
+    description: truncateMeta(
+      input.recordDescription ||
+        `${input.fallbackName} — ${input.kindLabel} in the Jawafdehi public entity registry.`,
+    ),
+  };
+}
+
+// schema.org types we will assert. The registry's own `jawafdehi:` subtypes are
+// meaningful to us and to nobody else, so they are dropped rather than emitted.
+function schemaTypes(rawType: unknown): string[] {
+  const list = Array.isArray(rawType) ? rawType : [rawType];
+  const kept = list.filter(
+    (v): v is string => typeof v === "string" && v.length > 0 && !v.includes(":"),
+  );
+  return kept.length ? kept : ["Thing"];
+}
+
+function wikidataSameAs(identifiers: unknown): string[] {
+  if (!Array.isArray(identifiers)) return [];
+  return identifiers
+    .filter(
+      (id): id is { propertyID: string; value: string } =>
+        typeof id === "object" &&
+        id !== null &&
+        (id as { propertyID?: unknown }).propertyID === "wikidata" &&
+        /^Q\d+$/.test(String((id as { value?: unknown }).value ?? "")),
+    )
+    .map((id) => `https://www.wikidata.org/wiki/${id.value}`);
+}
+
+export interface EntityJsonLdInput {
+  recordIri: string;
+  canonicalUrl: string;
+  rawType: unknown;
+  names: { en: string; ne: string };
+  alternateNames: readonly string[];
+  description: string;
+  imageUrl: string | null;
+  identifiers: unknown;
+  cases: readonly Case[];
+}
+
+/**
+ * schema.org JSON-LD for an entity page: `Person` / `Organization` / … with
+ * `subjectOf` pointing at the cases about it.
+ *
+ * Entity pages emitted NO structured data at all — on a registry whose records
+ * are schema.org JSON-LD in the API. This hands search engines the node the page
+ * is about, so it can be reconciled with the same person or organisation
+ * elsewhere, and links it to its cases.
+ *
+ * `sameAs` comes ONLY from a Wikidata identifier the record carries. A wrong
+ * `sameAs` on a page that cites corruption cases attaches them to someone else
+ * — in a naming culture with heavy collisions, that is a misattribution with a
+ * real victim — so nothing is inferred, matched or guessed here.
+ *
+ * No `jobTitle`. schema.org reads it as the CURRENT role, and the registry
+ * records roles across time — a former Deputy Prime Minister's record lists
+ * that office alongside his later ones. Emitting them would assert a present
+ * that is not true; picking "the current one" would be a guess.
+ *
+ * `subjectOf` asserts only that a case is ABOUT this entity, never a role:
+ * the role, and its verdict, belong to the human-readable page where they can
+ * carry their forum and context. For a PERSON it lists only the cases that cite
+ * them as accused or alleged: a witness, a victim or a petitioner linked by
+ * `subjectOf` to a corruption report is the accusation the snippet refuses to
+ * make (entityMeta), made instead to a search engine's graph. An organisation —
+ * an office, a bank, a company — keeps every case. A record whose type is
+ * unknown is treated as a person: fail closed. The case page's `about` follows
+ * the same rule, so the two directions of the graph agree.
+ */
+export function entityJsonLd(input: EntityJsonLdInput): Record<string, unknown> {
+  const types = schemaTypes(input.rawType);
+  const primary = input.names.ne || input.names.en;
+  const alternates = [input.names.en, input.names.ne, ...input.alternateNames]
+    .map((n) => n.trim())
+    .filter((n) => n && n !== primary)
+    .filter((n, i, all) => all.indexOf(n) === i);
+  const sameAs = wikidataSameAs(input.identifiers);
+  const isPerson = types.includes("Person") || types.includes("Thing");
+  const about = input.cases.filter(
+    (c) => c.slug && (!isPerson || isAccusedTier(roleFor(c, input.recordIri).role)),
+  );
+
+  return {
+    "@context": "https://schema.org",
+    "@type": types.length === 1 ? types[0] : types,
+    "@id": input.recordIri,
+    url: input.canonicalUrl,
+    name: primary,
+    ...(alternates.length ? { alternateName: alternates } : {}),
+    ...(input.description ? { description: input.description } : {}),
+    ...(input.imageUrl ? { image: input.imageUrl } : {}),
+    ...(sameAs.length ? { sameAs } : {}),
+    ...(about.length
+      ? {
+          subjectOf: about.map((c) => ({
+            "@type": "CreativeWork",
+            name: c.title,
+            url: new URL(casePath(c.slug), SITE_URL).toString(),
+          })),
+        }
+      : {}),
+  };
+}

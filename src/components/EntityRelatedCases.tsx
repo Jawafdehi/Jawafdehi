@@ -12,54 +12,18 @@ import { cn } from "@/lib/utils";
 import { formatDate } from "@/utils/date";
 import { formatBigo } from "@/utils/number";
 import { getCaseTypeLabelKey } from "@/utils/case-entities";
-import {
-  outcomeBadgeClass,
-  outcomeWithForumLabel,
-  shouldShowOutcome,
-} from "@/utils/case-outcome";
-import { caseVerdictForum } from "@/utils/case-stages";
-import { accusedAppeal, appealBadgeClass, appealWithForumLabel } from "@/utils/appeal-verdict";
+import { outcomeBadgeClass } from "@/utils/case-outcome";
+import { appealBadgeClass } from "@/utils/appeal-verdict";
+import { caseInvolvement, orderCasesForEntity } from "@/utils/entity-involvement";
 import type { Case } from "@/types/jds";
 import { casePath } from "@/lib/case-links";
-
-// Relationship role -> i18n label key. Mirrors the case-side relation labels so
-// the reverse view reads the same as the forward (case detail) view.
-const ROLE_LABEL_KEY: Record<string, string> = {
-  accused: "entityDetail.relationTypeAccused",
-  alleged: "entityDetail.relationTypeAlleged",
-  related: "entityDetail.relationTypeRelated",
-  witness: "entityDetail.relationTypeWitness",
-  opposition: "entityDetail.relationTypeOpposition",
-  victim: "entityDetail.relationTypeVictim",
-  respondent: "entityDetail.relationTypeRespondent",
-  petitioner: "entityDetail.relationTypePetitioner",
-  location: "entityDetail.relationTypeLocation",
-};
 
 // One page holds the lot: the corpus is small (the busiest entity has ~20
 // cases) and the list scrolls inside its column, so nothing is left behind a
 // "+N more" line short of an entity with over fifty citations.
-
-// accused + alleged form the emphasized top tier (matches the server ordering).
-function isAccusedTier(role: string): boolean {
-  return role === "accused" || role === "alleged";
-}
-
-// The date a card is ordered by — the same one it displays. Falls back to the
-// record's creation time only when the case has no start date of its own.
-function sortDateOf(caseItem: Case): string {
-  return caseItem.proceedings_started_on || caseItem.created_at || "";
-}
-
-// This entity's role/verdict on a given case, read from the case's own entity
-// binds (the list serializer resolves every bind's nes_id/type/outcome). When a
-// case cites the entity in more than one role, prefer the accused/alleged bind
-// so the badge matches why the card floated to the top.
-function roleFor(caseItem: Case, entityIri: string) {
-  const binds = (caseItem.entities ?? []).filter((e) => e.nes_id === entityIri);
-  const bind = binds.find((b) => isAccusedTier(b.type ?? "")) ?? binds[0];
-  return { role: bind?.type ?? "related", outcome: bind?.outcome ?? null };
-}
+//
+// Role, verdict and appeal for each card come from caseInvolvement() — shared
+// with the page's search snippet, so the two can never say different things.
 
 /**
  * "Related cases" section for an entity record page: the published cases that
@@ -94,19 +58,8 @@ export function EntityRelatedCases({
   // Nothing to say on error; an empty result keeps the heading and says so.
   if (isError || !data) return null;
 
-  // accused/alleged first, then newest case first within each tier.
-  //
-  // Sort on the SAME date the card shows (`proceedings_started_on`, i.e. when
-  // the case began) rather than `created_at` (when we happened to author the record).
-  // Those orders are unrelated: this entity's five cases were authored in the
-  // reverse of their real chronology, so ordering by `created_at` rendered the
-  // dates on screen as an apparently random sequence.
-  const cases = [...data.results].sort((a, b) => {
-    const ra = isAccusedTier(roleFor(a, entityIri).role) ? 0 : 1;
-    const rb = isAccusedTier(roleFor(b, entityIri).role) ? 0 : 1;
-    if (ra !== rb) return ra - rb;
-    return sortDateOf(b).localeCompare(sortDateOf(a));
-  });
+  // accused/alleged first, then newest first — see orderCasesForEntity.
+  const cases = orderCasesForEntity(data.results, entityIri);
 
   const remaining = data.count - cases.length;
 
@@ -152,32 +105,13 @@ export function EntityRelatedCases({
 
       <ul className="mt-5 min-h-0 space-y-3 overflow-y-auto pr-1 [scrollbar-width:thin]">
         {cases.map((c) => {
-          const { role, outcome } = roleFor(c, entityIri);
-          const accused = isAccusedTier(role);
-          const roleLabel = t(
-            ROLE_LABEL_KEY[role] ?? "entityDetail.relationTypeUnknown",
-          );
+          const { outcome, accused, roleLabel, showOutcome, outcomeText, appeal, appealText } =
+            caseInvolvement(c, entityIri, language, t);
           const date = formatDate(c.proceedings_started_on || c.created_at);
           const offenceType = c.offence_type || c.case_type;
           const typeKey = getCaseTypeLabelKey(offenceType);
           const typeLabel = typeKey ? t(typeKey) : offenceType;
           const href = c.slug ? casePath(c.slug) : undefined;
-          const showOutcome = accused && shouldShowOutcome(outcome);
-          // Same rule as the case page; see `accusedAppeal`.
-          const bind = (c.entities ?? []).find(
-            (e) => e.nes_id === entityIri && e.type === "accused",
-          );
-          const appeal =
-            showOutcome && bind
-              ? accusedAppeal(
-                  bind,
-                  c.entities ?? [],
-                  c.dates,
-                  c.appeal_verdicts,
-                  c.appeal_parties,
-                  language,
-                )
-              : null;
 
           const row = (
             <div
@@ -203,12 +137,7 @@ export function EntityRelatedCases({
                   </CaseTagBadge>
                   {showOutcome ? (
                     <Badge variant="outline" className={outcomeBadgeClass(outcome)}>
-                      {outcomeWithForumLabel(
-                        outcome,
-                        // `remanded` comes from the appeal court's order.
-                        outcome === "remanded" ? null : caseVerdictForum(c.dates, language),
-                        language,
-                      )}
+                      {outcomeText}
                     </Badge>
                   ) : null}
                   {appeal ? (
@@ -217,7 +146,7 @@ export function EntityRelatedCases({
                       className={appealBadgeClass(appeal.result, outcome)}
                       data-testid="related-case-appeal"
                     >
-                      {appealWithForumLabel(appeal, language)}
+                      {appealText}
                     </Badge>
                   ) : null}
                   <span className="text-sm tabular-nums text-muted-foreground">
