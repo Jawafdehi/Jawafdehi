@@ -28,7 +28,8 @@ describe("the product-updates changelog", () => {
     const paths: string[] = SITE_ROUTES.map((route) => route.path);
     for (const { href } of WHATS_NEW) {
       if (!href || /^https?:\/\//.test(href)) continue;
-      const path = href.split("?")[0];
+      // Links carry the trailing slash (the canonical form); routes do not.
+      const path = href.split("?")[0].replace(/(.)\/$/, "$1");
       expect(paths).toContain(path);
     }
   });

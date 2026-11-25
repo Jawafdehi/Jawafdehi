@@ -150,7 +150,7 @@ export default function MaterialsLanding() {
           <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-4">
             {/* The redesign's pill with the round arrow (ui/arrow-link): straight
                 into archive search, on its Materials tab. */}
-            <ArrowLink to="/search?type=material" tone="light">
+            <ArrowLink to="/search/?type=material" tone="light">
               {t("materialsLanding.ctaBrowse", "Browse the archive")}
             </ArrowLink>
             {/* The archive inside the reader's own AI tool: the MCP page. The same
