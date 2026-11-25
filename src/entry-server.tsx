@@ -11,6 +11,9 @@ import { EAGER_LEGAL_BODIES } from './pages/legal/eager-bodies';
 import { ThemeProvider } from './components/ThemeProvider';
 import './i18n/config';
 import { getCaseById, getStatistics } from './services/jds-api';
+import { searchArchive } from './services/search-api';
+import { crawlableListing } from './lib/crawlable-listing';
+import { readParams, readRecordType } from './utils/archive-search-params';
 import { getArticleBySlug, getArticles } from './services/cms-api';
 import { featuredCasesQuery } from './queries/home';
 import { blogPostsQuery } from './queries/blog';
@@ -207,6 +210,29 @@ async function prefetch(
   // times in a single build. At that volume a 10s timeout stops being a
   // hypothetical: one case timed out on the first full build that rendered them
   // all. Retrying a timeout is cheap next to re-running a 3-minute deploy.
+  // A crawlable search listing: the UNFILTERED listing of one record type, one
+  // page at a time — the only /search URLs the edge renders
+  // (lib/crawlable-listing.ts). Their results are the archive's crawl path, so
+  // they must be in the HTML, not fetched after hydration. The params come from
+  // the page's own readParams, so this fills exactly the cache entry
+  // ArchiveSearch reads (["archive-search", params]); a key the page does not
+  // read is a prefetch nobody consumes.
+  //
+  // The build never reaches this: it pre-renders bare /search, which is not a
+  // listing, so the static page — and the build's time budget — are unchanged.
+  {
+    const parsed = new URL(url, 'https://jawafdehi.org');
+    if (crawlableListing(parsed.pathname, parsed.search)) {
+      const params = readParams(parsed.searchParams, readRecordType(parsed.searchParams));
+      await queryClient.prefetchQuery({
+        queryKey: ['archive-search', params],
+        queryFn: () => searchArchive(params),
+        ...transientRetry,
+      });
+      return;
+    }
+  }
+
   const caseMatch = url.match(/^\/case\/([^/?#]+)/);
   if (caseMatch) {
     const slug = decodeURIComponent(caseMatch[1]);
