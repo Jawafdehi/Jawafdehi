@@ -8,8 +8,8 @@ import { bundle } from '../support/edge-bundle-stub';
 
 // Crawlable search listings through the Worker: which /search URLs reach the
 // edge renderer, what URL they are rendered and cached under, and that anything
-// else — or a listing that fails — still gets the pre-rendered /search page,
-// exactly as every /search URL did before.
+// else still gets the pre-rendered /search page exactly as every /search URL
+// did before, and a listing that fails gets it as an uncached 503.
 
 const PRERENDERED_SEARCH = '<!doctype html><html><head><title>अभिलेख खोज</title></head><body>static</body></html>';
 
@@ -90,27 +90,32 @@ describe('crawlable search listings at the edge', () => {
     expect(await res.text()).toContain('static');
   });
 
-  it('falls back to the pre-rendered page when a listing renders no record links', async () => {
+  it('answers an uncached 503 over the pre-rendered page when a listing renders no record links', async () => {
     // A clean head over an empty list is still a page that leads nowhere; it
-    // must not be served, nor cached for an hour.
+    // must not be served as a 200, nor cached for an hour.
     vi.spyOn(bundle, 'render').mockResolvedValue(listingRender('<main><p>Loading…</p></main>') as never);
     const env = makeEnv();
     const { ctx } = makeCtx(env);
 
     const res = await worker.fetch(new Request('https://jawafdehi.org/search/?type=entity'), env as never, ctx as never);
 
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(503);
+    expect(res.headers.get('Cache-Control')).toBe('no-store');
+    expect(res.headers.get('Retry-After')).toBe('120');
     expect(await res.text()).toContain('static');
   });
 
-  it('falls back to the pre-rendered page when the render fails outright', async () => {
+  it('answers an uncached 503 over the pre-rendered page when the render fails outright', async () => {
     vi.spyOn(bundle, 'render').mockRejectedValue(new Error('search API down'));
     const env = makeEnv();
     const { ctx } = makeCtx(env);
 
     const res = await worker.fetch(new Request('https://jawafdehi.org/search/?type=case'), env as never, ctx as never);
 
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(503);
+    expect(res.headers.get('Cache-Control')).toBe('no-store');
+    expect(res.headers.get('Retry-After')).toBe('120');
+    // The reader still gets the app, which loads the listing client-side.
     expect(await res.text()).toContain('static');
   });
 

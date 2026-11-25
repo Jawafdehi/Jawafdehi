@@ -1530,8 +1530,8 @@ export default {
     // every /search URL — ?type=case&page=3 included — with the same static
     // page: no results, no record links, nothing for a crawler to walk. Only
     // the unfiltered listing of one record type qualifies
-    // (lib/crawlable-listing.ts); everything else, and any listing that fails
-    // to render, gets the pre-rendered page exactly as before.
+    // (lib/crawlable-listing.ts); everything else gets the pre-rendered page
+    // exactly as before, and a listing that fails to render gets it as a 503.
     const listing = crawlableListing(path, url.search);
     if (listing && edgeSsrEnabled(env) && (request.method === 'GET' || request.method === 'HEAD')) {
       const inner = new Request(new URL(listingPath(listing), url.origin).toString(), {
@@ -1551,6 +1551,23 @@ export default {
         const response = new Response(res.body, res);
         for (const name of EDGE_INTERNAL_HEADERS) response.headers.delete(name);
         for (const [key, value] of Object.entries(secHeaders)) response.headers.set(key, value);
+        return response;
+      }
+      // The render failed or led nowhere. The pre-rendered /search page still
+      // goes out, so a reader's browser loads the listing itself, but as a 503
+      // that is never cached: a 200 here would hand a crawler an empty page
+      // that names itself canonical once its script runs (as #533 does for
+      // record pages).
+      const shell = await env.ASSETS.fetch(request);
+      if (shell.status === 200) {
+        const response = new Response(shell.body, { status: 503, headers: shell.headers });
+        for (const [key, value] of Object.entries(secHeaders)) response.headers.set(key, value);
+        response.headers.set('Cache-Control', 'no-store');
+        response.headers.set('Retry-After', '120');
+        if (res) {
+          const marker = res.headers.get('X-Edge-SSR');
+          if (marker) response.headers.set('X-Edge-SSR', marker);
+        }
         return response;
       }
     }
