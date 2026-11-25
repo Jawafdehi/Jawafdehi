@@ -72,12 +72,22 @@ describe('Property 14: Worker returns a real 404 for unrouted paths', () => {
   });
 
   it('still returns 200 for a routed path that is not pre-rendered', async () => {
-    for (const path of ['/donate/success', '/entity/organization/np/tu/', '/newsletter/unsubscribe/tok3n']) {
+    for (const path of ['/donate/success', '/newsletter/unsubscribe/tok3n']) {
       const result = await worker.fetch(
         new Request(`https://jawafdehi.org${path}`),
         shellOnlyEnv('<html>shell</html>'),
       );
       expect({ path, status: result.status }).toEqual({ path, status: 200 });
     }
+  });
+
+  it('never 404s a record route it could not load, only a temporary 503', async () => {
+    // A record page with no data would otherwise be the pre-rendered homepage
+    // at 200 (canonical=/); see the 503 in worker.ts.
+    const result = await worker.fetch(
+      new Request('https://jawafdehi.org/entity/organization/np/tu/'),
+      shellOnlyEnv('<html>shell</html>'),
+    );
+    expect(result.status).toBe(503);
   });
 });

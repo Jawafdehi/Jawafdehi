@@ -334,10 +334,12 @@ describe('the fallback fails in the safe direction', () => {
     expect(res.headers.get('X-Robots-Tag')).toBe('noindex');
   });
 
-  it('serves the shell at 200 when the API is unreachable', async () => {
+  it('answers a temporary 503 when the API is unreachable', async () => {
     // Not a 404. A 404 is what REMOVES a URL from the index, so deciding one
     // over a backend blip is strictly worse than serving a thin page — the same
     // reasoning handleCaseMetaFallback and isCasePageOutOfRange document.
+    // Not a 200 either: with no record data the body is the pre-rendered
+    // homepage, canonical=/ included. 503 is temporary to a crawler.
     vi.stubGlobal('fetch', vi.fn(async () => { throw new Error('network'); }));
 
     const res = await worker.fetch(
@@ -346,7 +348,7 @@ describe('the fallback fails in the safe direction', () => {
       {} as never,
     );
 
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(503);
   });
 
   it('asks the API for the encoded tail, with the trailing slash', async () => {

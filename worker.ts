@@ -461,6 +461,29 @@ function stripOverriddenHeadTags(head: string): string {
     .replace(/<link\b[^>]*\brel=["']canonical["'][^>]*>/gi, () => '');
 }
 
+// The title the shell carries under any path but `/`: the site name and
+// nothing that describes the homepage.
+const SHELL_TITLE = 'Jawafdehi';
+
+// Remove the head tags that claim the HOMEPAGE's identity from the shell, for
+// when it is served under some other path: its URL (rel=canonical, og:url) and
+// what it says it is (the description and the social title/description). The
+// <title> becomes the bare site name. Left in place, a crawler that does not run
+// the SPA read the page as a second homepage — the same title and description
+// on every such path. The SPA sets the page's own head once it runs. Head only,
+// and the same attribute-escaping assumption as stripOverriddenHeadTags.
+export function stripHomepageUrlClaims(html: string): string {
+  const headEnd = html.indexOf('</head>');
+  if (headEnd === -1) return html;
+  const head = html
+    .slice(0, headEnd)
+    .replace(/<link\b[^>]*\brel=["']canonical["'][^>]*>/gi, () => '')
+    .replace(/<meta\b[^>]*\bproperty=["']og:(?:url|title|description)["'][^>]*>/gi, () => '')
+    .replace(/<meta\b[^>]*\bname=["'](?:description|twitter:title|twitter:description)["'][^>]*>/gi, () => '')
+    .replace(/<title\b([^>]*)>[\s\S]*?<\/title>/i, (_m, attrs: string) => `<title${attrs}>${SHELL_TITLE}</title>`);
+  return head + html.slice(headEnd);
+}
+
 // Inject the record's share metadata into the SPA shell.
 //
 // If the fetched HTML still has the helmet placeholders (raw template), replace
@@ -988,6 +1011,8 @@ const DEFAULT_EDGE_DEADLINE_MS = 8000;
 // After a render timed out, the meta fallback's own API call gets this long:
 // the API has just failed to answer once, so do not wait another 4 s on it.
 const FALLBACK_AFTER_TIMEOUT_MS = 1500;
+// Retry-After on a record page served with no record data (see the 503 below).
+const RECORD_UNAVAILABLE_RETRY_AFTER_SECONDS = 120;
 // Purge bodies are a list of at most 100 short tags.
 const MAX_PURGE_BODY_BYTES = 16 * 1024;
 
@@ -1565,11 +1590,34 @@ export default {
     // link checkers the site had no broken links at all. The body is still the
     // shell so React Router renders the styled NotFound page — only the status
     // line changes, which is the part crawlers read.
-    const status = matched ? 200 : 404;
-    const spaResponse = new Response(indexResponse.body, {
+    // A record page whose render AND meta fallback both failed (the API is slow
+    // or down, nothing cached) has no record data at all, and the shell here is
+    // the PRE-RENDERED HOMEPAGE: its title, description and `canonical=/`. At
+    // 200 that told a crawler the case or entity was a duplicate of the home
+    // page (seen on /case/rabi-lamichhane-… on 2026-11-24, byte-identical to /).
+    // A 503 with Retry-After is the honest answer: search engines treat it as
+    // temporary and keep the indexed copy, while a browser still renders the
+    // body, so a reader gets the SPA, which loads the record itself.
+    const recordUnavailable = Boolean(matched && fallbackMarker);
+    const status = matched ? (recordUnavailable ? 503 : 200) : 404;
+    // The shell is the pre-rendered HOMEPAGE, and its head says so: canonical=/
+    // and og:url=/. Under any other path that was a false claim that the page
+    // is a copy of the home page (/data-quality was served that way on
+    // 2026-11-24). Drop the two URL claims; the SPA sets the page's own head
+    // once it runs, and a crawler that renders JS reads that.
+    const body =
+      normalizePath(path) === '/' || !indexResponse.ok
+        ? indexResponse.body
+        : stripHomepageUrlClaims(await indexResponse.text());
+    const spaResponse = new Response(body, {
       status,
       headers: indexResponse.headers,
     });
+    if (body !== indexResponse.body) {
+      // The asset's length and validator describe the unedited file.
+      spaResponse.headers.delete('Content-Length');
+      spaResponse.headers.delete('ETag');
+    }
     for (const [key, value] of Object.entries(secHeaders)) {
       spaResponse.headers.set(key, value);
     }
@@ -1578,8 +1626,10 @@ export default {
       // become real the moment a case is published.
       spaResponse.headers.set('Cache-Control', 'no-store');
       spaResponse.headers.set('X-Robots-Tag', 'noindex');
-    } else if (fallbackMarker) {
-      spaResponse.headers.set('Cache-Control', CACHE_CONTROL_FALLBACK);
+    } else if (recordUnavailable) {
+      // Never cached: the next request should try the API again, not replay this.
+      spaResponse.headers.set('Cache-Control', 'no-store');
+      spaResponse.headers.set('Retry-After', String(RECORD_UNAVAILABLE_RETRY_AFTER_SECONDS));
       markFallback(spaResponse);
     }
     return spaResponse;

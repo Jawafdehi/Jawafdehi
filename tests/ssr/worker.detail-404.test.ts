@@ -82,21 +82,26 @@ describe('detail routes that the API says do not exist', () => {
     });
   });
 
-  it('keeps 200 when the API does not answer at all', async () => {
+  // Never a 404: that would remove the URL from the index over a backend blip.
+  // Not a 200 either: the only body left is the pre-rendered homepage, whose
+  // canonical=/ would call the case a duplicate of the home page. A 503 is
+  // temporary to a crawler and still renders the SPA for a reader.
+  it('answers a temporary 503, never a 404, when the API does not answer at all', async () => {
     stubApi(() => {
       throw new Error('connection reset');
     });
 
     const res = await worker.fetch(new Request('https://jawafdehi.org/case/some-live-case/'), makeEnv());
 
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(503);
+    expect(res.headers.get('Retry-After')).toBe('120');
   });
 
-  it('keeps 200 when the API errors with a 500', async () => {
+  it('answers a temporary 503, never a 404, when the API errors with a 500', async () => {
     stubApi(() => new Response('upstream exploded', { status: 500 }));
 
     const res = await worker.fetch(new Request('https://jawafdehi.org/case/some-live-case/'), makeEnv());
 
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(503);
   });
 });

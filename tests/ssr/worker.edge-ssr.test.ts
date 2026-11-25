@@ -125,16 +125,36 @@ describe('edge SSR record pages', () => {
     expect(await res.text()).toContain('Some case | Jawafdehi');
   });
 
-  it('serves the plain shell with a short TTL for a route with no meta fallback', async () => {
+  // The shell is the pre-rendered HOMEPAGE (title, description, canonical=/).
+  // Served at 200 under a record URL, it told crawlers the record duplicated
+  // the home page. 503 + Retry-After is temporary to a crawler; a browser still
+  // renders the body, and the SPA loads the record itself.
+  it('answers 503, uncached, when a route with no meta fallback has no data at all', async () => {
     vi.spyOn(bundle, 'render').mockResolvedValue(renderResult([{ reason: 'Request failed', status: 502 }]));
     const env = makeEnv();
     const { ctx } = makeCtx(env);
 
     const res = await worker.fetch(new Request('https://jawafdehi.org/courtcase/achhamdc/078-c1-0053'), env, ctx);
 
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(503);
+    expect(res.headers.get('Retry-After')).toBe('120');
     expect(res.headers.get('X-Edge-SSR')).toBe('fallback-error');
-    expect(res.headers.get('Cache-Control')).toBe('public, max-age=60');
+    expect(res.headers.get('Cache-Control')).toBe('no-store');
+    expect(await res.text()).toBe(INDEX_HTML);
+  });
+
+  it('answers 503, not the homepage at 200, when a case render and its meta fallback both fail', async () => {
+    vi.spyOn(bundle, 'render').mockResolvedValue(renderResult([{ reason: 'timeout of 4000ms exceeded' }]));
+    stubApi(() => new Response('upstream down', { status: 502 }));
+    const env = makeEnv();
+    const { ctx } = makeCtx(env);
+
+    const res = await worker.fetch(new Request('https://jawafdehi.org/case/some-case/'), env, ctx);
+
+    expect(res.status).toBe(503);
+    expect(res.headers.get('Retry-After')).toBe('120');
+    expect(res.headers.get('X-Edge-SSR')).toBe('fallback-timeout');
+    expect(res.headers.get('Cache-Control')).toBe('no-store');
   });
 
   it('404s a record the API says does not exist', async () => {
