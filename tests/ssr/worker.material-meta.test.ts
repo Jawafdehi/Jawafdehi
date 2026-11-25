@@ -269,48 +269,52 @@ describe('the splat cannot be steered at another endpoint', () => {
   });
 });
 
-describe('visibility gates indexing, the way it does for cases', () => {
-  it('leaves a LISTED material indexable', async () => {
+describe('the API decides indexing, and the edge obeys it', () => {
+  const fetchMaterial = async () =>
+    (
+      await worker.fetch(
+        new Request('https://jawafdehi.org/material/document/oag-11353'),
+        makeEnv() as never,
+        {} as never,
+      )
+    ).text();
+
+  it('leaves a material the API cleared for indexing indexable', async () => {
+    stubMaterialApi({ ...A_MATERIAL, 'jawafdehi:indexable': true });
+
+    expect(await fetchMaterial()).not.toContain('name="robots"');
+  });
+
+  it('noindexes a material the API has not cleared', async () => {
+    stubMaterialApi({ ...A_MATERIAL, 'jawafdehi:indexable': false });
+
+    expect(await fetchMaterial()).toContain('name="robots" content="noindex, nofollow"');
+  });
+
+  it('noindexes a LISTED material, because LISTED is not a licence to index', async () => {
+    // The regression this replaces. The guard used to open on
+    // `visibility === "LISTED"` — but `_with_admin_visibility` attaches that
+    // field only for authed caseworker reads, and the edge authenticates as
+    // `sa-prerender`, a principal with no permissions that "sees exactly what an
+    // anonymous reader sees". So the field never arrived, the guard never
+    // opened, and every document page served noindex while the API sitemap
+    // advertised them as public.
+    //
+    // Keeping this noindex is also correct on its own terms: on 2026-11-23 a
+    // fuzzy search found ~21,746 documents carrying court-ordered identity
+    // protection for a complainant alongside a named defendant. Reachable-by-the-public and
+    // fit-to-rank-in-Google are different questions, and only the API answers
+    // the second (see materialRobots).
     stubMaterialApi({ ...A_MATERIAL, 'jawafdehi:visibility': 'LISTED' });
 
-    const res = await worker.fetch(
-      new Request('https://jawafdehi.org/material/document/oag-11353'),
-      makeEnv() as never,
-      {} as never,
-    );
-
-    expect(await res.text()).not.toContain('name="robots"');
+    expect(await fetchMaterial()).toContain('name="robots" content="noindex, nofollow"');
   });
 
-  it('noindexes an UNLISTED material', async () => {
-    // UNLISTED is "reachable by direct IRI, NOT searchable / NOT in sitemaps"
-    // (materials/models.py) — the documents of an IN_REVIEW case. The API serves
-    // them 200 to anonymous callers, so without this the edge would publish
-    // in-review editorial work to search engines.
-    stubMaterialApi({ ...A_MATERIAL, 'jawafdehi:visibility': 'UNLISTED' });
-
-    const res = await worker.fetch(
-      new Request('https://jawafdehi.org/material/document/oag-11353'),
-      makeEnv() as never,
-      {} as never,
-    );
-
-    expect(await res.text()).toContain('name="robots" content="noindex, nofollow"');
-  });
-
-  it('noindexes when the API does not report visibility at all', async () => {
-    // Fails CLOSED. Every API build before the companion change omits the field,
-    // so this is the live behaviour on merge: material pages are noindex until
-    // that deploys. Publishing an in-review document is not reversible; a few
-    // days of noindex is.
+  it('noindexes when the API says nothing about indexability', async () => {
+    // Fails CLOSED, and this is the live behaviour on merge: no API build emits
+    // the field yet, so every document page keeps exactly the head it has today.
     stubMaterialApi(A_MATERIAL);
-
-    const res = await worker.fetch(
-      new Request('https://jawafdehi.org/material/document/oag-11353'),
-      makeEnv() as never,
-      {} as never,
-    );
-    const html = await res.text();
+    const html = await fetchMaterial();
 
     expect(html).toContain('name="robots" content="noindex, nofollow"');
     // Open Graph is unaffected, so share cards keep working throughout.

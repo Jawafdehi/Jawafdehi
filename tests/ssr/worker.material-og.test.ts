@@ -20,7 +20,6 @@ const MATERIAL = {
   '@id': `https://jawafdehi.org/material/${TAIL}`,
   '@type': 'DigitalDocument',
   name: { ne: 'महालेखापरीक्षकको वार्षिक प्रतिवेदन' },
-  'jawafdehi:visibility': 'LISTED',
 };
 
 function makeEnv() {
