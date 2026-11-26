@@ -424,6 +424,12 @@ export function CaseReportForm({ onSuccess }: Readonly<CaseReportFormProps>) {
                     </Label>
                 </div>
 
+                {isAnonymous && (
+                    <p role="note" className="text-xs text-muted-foreground" data-testid="anonymous-no-reply-notice">
+                        {t("report.anonymousNoReply")}
+                    </p>
+                )}
+
                 {!isAnonymous && (
                     <>
                         <div className="space-y-2">
