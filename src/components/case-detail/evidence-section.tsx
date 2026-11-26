@@ -148,6 +148,10 @@ export function EvidenceSection({ evidence, title }: Readonly<EvidenceSectionPro
               </h3>
               {renderRows(shown, false)}
               {shown.length < groupRows.length ? (
+                // Collapsed rows stay out of the screen but not out of print.
+                <div className="hidden print:block">{renderRows(groupRows.slice(shown.length), false)}</div>
+              ) : null}
+              {shown.length < groupRows.length ? (
                 <button
                   type="button"
                   onClick={() => setExpanded((e) => ({ ...e, [group]: true }))}

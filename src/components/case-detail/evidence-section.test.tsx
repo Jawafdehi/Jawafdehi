@@ -40,7 +40,7 @@ describe("EvidenceSection", () => {
       entry(20, "court_order"),
       entry(21, "news"),
     ];
-    renderSection(evidence);
+    const { container } = renderSection(evidence);
 
     const headings = screen.getAllByRole("heading", { level: 3 }).filter((h) => h.textContent?.startsWith("caseSources.group"));
     expect(headings.map((h) => h.textContent)).toEqual([
@@ -49,8 +49,13 @@ describe("EvidenceSection", () => {
       "caseSources.group.news1",
     ]);
     // 8 documents: 5 shown, then "show the rest".
-    expect(link("Source 6")).toBeNull();
+    // Collapsed rows are kept out of the screen list but mounted for print.
+    const printOnly = container.querySelector("div.hidden.print\\:block");
+    expect(printOnly?.textContent).toContain("Source 6");
+    expect(printOnly?.textContent).toContain("Source 8");
+    expect(link("Source 6")?.closest("div.hidden.print\\:block")).toBe(printOnly);
     fireEvent.click(screen.getByText("caseSources.showRest:3"));
+    expect(container.querySelector("div.hidden.print\\:block")).toBeNull();
     expect(link("Source 8")).not.toBeNull();
   });
 

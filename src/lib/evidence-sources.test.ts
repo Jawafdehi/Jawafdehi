@@ -176,6 +176,27 @@ describe("origin", () => {
     });
   });
 
+  it("uses the same URL trimming as the links (danda, balanced brackets)", () => {
+    expect(
+      evidenceOrigin({
+        group: "news",
+        materialIri: "",
+        title: "",
+        links: [],
+        description: "स्रोत: https://ekantipur.com/news/article.html।",
+      }),
+    ).toMatchObject({ href: "https://ekantipur.com/news/article.html" });
+    expect(
+      evidenceOrigin({
+        group: "document",
+        materialIri: "",
+        title: "",
+        links: [],
+        description: "Source: https://en.wikipedia.org/wiki/Rabi_Lamichhane_(politician)",
+      }),
+    ).toMatchObject({ href: "https://en.wikipedia.org/wiki/Rabi_Lamichhane_(politician)" });
+  });
+
   it("names the platform and the account for social posts", () => {
     const origin = evidenceOrigin({
       group: "social",

@@ -10,6 +10,7 @@
 import { COURT_NAMES } from "@/data/court-names";
 import { formatCourtName } from "@/utils/court-case-format";
 import { NEPALI_MONTHS, adStringToBSString, toNepaliNumerals } from "@/utils/bs-calendar";
+import { extractUrls } from "@/lib/linkify";
 import { withholdUnredacted } from "@/lib/material-links";
 import type { EvidenceEntry, EvidenceMaterial, SourceLink } from "@/types/jds";
 
@@ -244,8 +245,6 @@ const fromKnown = (host: string, href?: string): EvidenceOrigin => {
   };
 };
 
-const URL_RE = /https?:\/\/[^\s<>"()]+/gi;
-
 /** The court a material belongs to, as a court identifier ("supreme", "patanhc"). */
 export function courtOf(materialIri: string, title: string, court?: string | null): string | null {
   if (court) return court;
@@ -292,7 +291,7 @@ export function evidenceOrigin(args: {
   const sourcePage = links.find((l) => l.role === "SOURCE_PAGE")?.link;
   const urls = [
     ...(sourcePage ? [sourcePage] : []),
-    ...(description?.match(URL_RE) ?? []),
+    ...(description ? extractUrls(description) : []),
   ].filter((u) => {
     const h = hostOf(u);
     return h && !OWN_HOST_RE.test(h);
