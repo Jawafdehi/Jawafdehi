@@ -51,9 +51,9 @@ afterEach(() => {
 });
 
 describe("sign-in scopes", () => {
-  it("asks for a refresh token and goes straight to Google (org + IdP scope together)", async () => {
-    // The IdP hint alone is ignored by Zitadel's login v2 (Google is on the org's
-    // login policy, not the instance's), so the two must travel together (JAW-160).
+  it("asks for a refresh token and the org, but sends no IdP hint", async () => {
+    // An IdP hint makes Zitadel's login v2 skip the browser's existing session, so
+    // every sign-in made a new session and asked for the second factor again (JAW-160).
     getUser.mockResolvedValue({ expired: false, access_token: "live-token" });
     const { getUserManager } = await loadModule();
     const { UserManager } = await import("oidc-client-ts");
@@ -62,7 +62,7 @@ describe("sign-in scopes", () => {
     const scopes = settings.scope.split(" ");
     expect(scopes).toContain("offline_access");
     expect(scopes).toContain("urn:zitadel:iam:org:id:377588697018728812");
-    expect(scopes).toContain("urn:zitadel:iam:org:idp:id:377591079031013740");
+    expect(scopes.some((s) => s.startsWith("urn:zitadel:iam:org:idp:id:"))).toBe(false);
   });
 });
 
