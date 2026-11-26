@@ -156,8 +156,9 @@ describe("origin", () => {
       kind: "court",
       label: "Supreme Court",
       labelNe: "सर्वोच्च अदालत",
-      logo: "/source-logos/nepal-judiciary.png",
     });
+    // Courts get the scales (तराजु) glyph, not an image.
+    expect(origin?.logo).toBeUndefined();
   });
 
   it("gives police documents a police chip with the issuing office", () => {

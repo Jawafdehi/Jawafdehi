@@ -66,10 +66,7 @@ function OriginChip({ origin }: Readonly<{ origin: EvidenceOrigin }>) {
           alt=""
           width={16}
           height={16}
-          className={cn(
-            "h-4 w-4 shrink-0 object-contain",
-            origin.kind === "court" ? "" : "rounded-full bg-white",
-          )}
+          className="h-4 w-4 shrink-0 rounded-full bg-white object-contain"
         />
       ) : (
         <span

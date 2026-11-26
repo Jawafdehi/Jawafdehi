@@ -221,9 +221,6 @@ const NAME_HINTS: Array<[RegExp, string]> = [
   [/\binstagram\b/i, "instagram.com"],
 ];
 
-/** The judiciary's emblem, as shown on supremecourt.gov.np. */
-export const JUDICIARY_EMBLEM = "/source-logos/nepal-judiciary.png";
-
 const OWN_HOST_RE = /(^|\.)jawafdehi\.org$/i;
 
 const hostOf = (url: string): string | null => {
@@ -342,8 +339,6 @@ export function evidenceOrigin(args: {
         kind: "court",
         label: COURT_NAMES[court]?.en ?? formatCourtName(court, "en"),
         labelNe: COURT_NAMES[court]?.ne ?? formatCourtName(court, "ne"),
-        // The emblem supremecourt.gov.np uses, for every court.
-        logo: JUDICIARY_EMBLEM,
       };
     }
   }
