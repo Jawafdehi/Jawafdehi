@@ -565,6 +565,11 @@ export interface CaseSearchParams {
   page?: number;
   /** Server honours ?page_size= up to 200 (CasePagination). */
   page_size?: number;
+  /** e.g. "-case_publish_date" (nulls last). Ignored by APIs that predate it. */
+  ordering?: string;
+  /** Inclusive bounds on `case_publish_date`, "YYYY-MM-DD". Ignored by APIs that predate them. */
+  published_after?: string;
+  published_before?: string;
 }
 
 // ============================================================================

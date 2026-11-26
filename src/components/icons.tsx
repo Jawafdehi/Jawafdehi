@@ -163,6 +163,7 @@ export const Printer = make("Printer", "Printer");
 export const QrCode = make("QrCode", "QrCode");
 export const RefreshCw = make("ArrowsClockwise", "RefreshCw");
 export const Repeat = make("Repeat", "Repeat");
+export const Rss = make("Rss", "Rss");
 export const Save = make("FloppyDisk", "Save");
 export const Scale = make("Scales", "Scale");
 export const ScrollText = make("Scroll", "ScrollText");

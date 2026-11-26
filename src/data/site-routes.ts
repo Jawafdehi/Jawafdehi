@@ -287,6 +287,17 @@ export const SITE_ROUTES = [
     icon: "Newspaper",
     sitemapTitle: "Updates — Jawafdehi",
   },
+  // Cases published in the last few weeks, by digest week. The shell and its
+  // metadata are pre-rendered; the list is fetched in the browser.
+  {
+    path: "/new-cases",
+    chrome: "app",
+    titleKey: "newCases.meta.title",
+    descriptionKey: "searchCommand.descriptions.newCases",
+    keywords: ["new", "latest", "recent", "cases", "weekly", "digest", "rss", "atom", "feed", "नयाँ मुद्दा"],
+    icon: "Newspaper",
+    sitemapTitle: "New Cases — Jawafdehi",
+  },
   {
     path: "/feedback",
     chrome: "app",
