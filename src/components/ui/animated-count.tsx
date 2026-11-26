@@ -84,12 +84,27 @@ export function AnimatedCount({
   language?: string;
 }>) {
   const hostRef = React.useRef<HTMLSpanElement>(null);
-  const format = (n: number) =>
-    localiseNumber(
-      `${prefix ?? ""}${formatCount(n, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}${suffix ?? ""}`,
-      language,
-    );
-  const [animate, setAnimate] = React.useState(false);
+  // Memoised on purpose: react-countup RESTARTS the count whenever
+  // `formattingFn` changes identity (its restart effect lists it as a dep), so
+  // an inline arrow replayed the animation on every parent re-render — e.g. the
+  // finish-pop state change in archive-figures, or a stats refetch.
+  const format = React.useCallback(
+    (n: number) =>
+      localiseNumber(
+        `${prefix ?? ""}${formatCount(n, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}${suffix ?? ""}`,
+        language,
+      ),
+    [prefix, suffix, decimals, language],
+  );
+  // idle -> running -> done. Once done, the figure renders statically for good,
+  // so the count-up plays exactly once per mount whatever re-renders follow.
+  const [phase, setPhase] = React.useState<"idle" | "running" | "done">("idle");
+  const onEndRef = React.useRef(onEnd);
+  onEndRef.current = onEnd;
+  const handleEnd = React.useCallback(() => {
+    setPhase("done");
+    onEndRef.current?.();
+  }, []);
 
   React.useEffect(() => {
     const host = hostRef.current;
@@ -114,7 +129,7 @@ export function AnimatedCount({
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries.some((entry) => entry.isIntersecting)) {
-          setAnimate(true);
+          setPhase((p) => (p === "idle" ? "running" : p));
           observer.disconnect();
         }
       },
@@ -124,7 +139,7 @@ export function AnimatedCount({
     return () => observer.disconnect();
   }, []);
 
-  if (animate) {
+  if (phase === "running") {
     return (
       <CountUp
         end={end}
@@ -133,7 +148,7 @@ export function AnimatedCount({
         // countup.js groups in threes; this keeps every frame in lakh/crore
         // grouping. A formattingFn replaces prefix/suffix, so it adds them.
         formattingFn={format}
-        onEnd={onEnd}
+        onEnd={handleEnd}
       />
     );
   }
