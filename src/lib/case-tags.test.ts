@@ -12,6 +12,11 @@ describe("caseTagLabel", () => {
     expect(caseTagLabel("tax-evasion", "en")).toBe("Tax Evasion");
   });
 
+  it("names the Deepak Bhatta case series in both languages", () => {
+    expect(caseTagLabel("deepak-bhatta-affair", "ne")).toBe("दीपक भट्ट प्रकरण");
+    expect(caseTagLabel("deepak-bhatta-affair", "en")).toBe("Deepak Bhatta Affair");
+  });
+
   it("treats any non-Nepali language as English", () => {
     expect(caseTagLabel("bribery", "en-US")).toBe("Bribery");
   });
