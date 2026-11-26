@@ -84,6 +84,8 @@ const DataQuality = lazy(() => import("./pages/DataQuality"));
 const AuthorProfile = lazy(() => import("./pages/AuthorProfile"));
 const MaterialProfile = lazy(() => import("./pages/MaterialProfile"));
 const CourtCaseProfile = lazy(() => import("./pages/CourtCaseProfile"));
+// /series/:slug is client-rendered (not pre-rendered, not edge-rendered), so lazy.
+const SeriesDetail = lazy(() => import("./pages/SeriesDetail"));
 const UpdatePreview = lazy(() => import("./pages/UpdatePreview"));
 const EmbedCaseCard = lazy(() => import("./pages/EmbedCaseCard"));
 const NewsletterUnsubscribe = lazy(() => import("./pages/NewsletterUnsubscribe"));
@@ -134,6 +136,7 @@ export const ROUTE_ELEMENTS: Record<RoutePath, ReactElement> = {
   "/entity/*": <EntityRecordProfile />,
   "/material/*": <MaterialProfile />,
   "/courtcase/*": <CourtCaseProfile />,
+  "/series/:slug": <SeriesDetail />,
   "/feedback": <Feedback />,
   "/report": <ReportCase />,
   "/openhouse": <OpenHouse />,

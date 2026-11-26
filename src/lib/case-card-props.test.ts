@@ -54,6 +54,13 @@ describe("caseCardPropsFromSearchResult", () => {
     expect(caseCardPropsFromSearchResult(searchResult({}), "en").bigo).toBe(9_000_000);
   });
 
+  it("carries the case's series memberships through to the card chip", () => {
+    const series = [{ slug: "deepak-bhatta-affair", title: { ne: "दीपक भट्ट प्रकरण", en: null }, ordinal: 2, member_count: 5 }];
+    expect(caseCardPropsFromSearchResult(searchResult({ series }), "ne").series).toEqual(series);
+    // A card indexed before the API's series change has no key at all.
+    expect(caseCardPropsFromSearchResult(searchResult({}), "ne").series).toBeUndefined();
+  });
+
   it("maps the indexed card onto the card's props", () => {
     const props = caseCardPropsFromSearchResult(searchResult({}), "en");
 

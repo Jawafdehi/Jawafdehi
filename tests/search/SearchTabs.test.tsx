@@ -71,3 +71,24 @@ describe("SearchTabs keyboard navigation", () => {
     expect(screen.getAllByRole("tab").map((t) => t.textContent)).toEqual(LABELS);
   });
 });
+
+describe("SearchTabs series tab", () => {
+  it("is hidden until the API reports a series count", () => {
+    render(<SearchTabs activeType="all" onChange={vi.fn()} />);
+    expect(screen.getAllByRole("tab")).toHaveLength(5);
+  });
+
+  it("is offered second, after All records, once the API serves series", () => {
+    const onChange = vi.fn();
+    render(<SearchTabs activeType="all" onChange={onChange} showSeries />);
+    const tabs = screen.getAllByRole("tab");
+    expect(tabs).toHaveLength(6);
+    fireEvent.click(tabs[1]);
+    expect(onChange).toHaveBeenCalledWith("series");
+  });
+
+  it("stays visible while it is the active tab", () => {
+    render(<SearchTabs activeType="series" onChange={vi.fn()} />);
+    expect(screen.getAllByRole("tab")).toHaveLength(6);
+  });
+});

@@ -291,3 +291,27 @@ describe("CaseCard entity summary", () => {
     expect(summaryOf({ entity: "Unknown Entity", entityNames: ["   "] })).toBe("Unknown Entity");
   });
 });
+
+describe("CaseCard series chip", () => {
+  const series = [
+    { slug: "deepak-bhatta-affair", title: { ne: "दीपक भट्ट प्रकरण", en: "Deepak Bhatta Affair" }, ordinal: 3, member_count: 5 },
+  ];
+
+  it("links to the series the case belongs to", () => {
+    const { getByRole } = render(
+      <MemoryRouter>
+        <CaseCard {...baseProps} series={series} />
+      </MemoryRouter>,
+    );
+    expect(getByRole("link", { name: "series.partOf" }).getAttribute("href")).toBe("/series/deepak-bhatta-affair/");
+  });
+
+  it("shows no chip when the payload has no series", () => {
+    const { queryByRole } = render(
+      <MemoryRouter>
+        <CaseCard {...baseProps} />
+      </MemoryRouter>,
+    );
+    expect(queryByRole("link", { name: "series.partOf" })).toBeNull();
+  });
+});

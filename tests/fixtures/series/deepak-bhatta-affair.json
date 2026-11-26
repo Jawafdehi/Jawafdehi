@@ -1,0 +1,882 @@
+{
+  "slug": "deepak-bhatta-affair",
+  "iri": "https://jawafdehi.org/series/deepak-bhatta-affair",
+  "tag": "deepak-bhatta-affair",
+  "title": {
+    "ne": "दीपक भट्ट प्रकरण",
+    "en": "Deepak Bhatta Affair"
+  },
+  "summary": {
+    "ne": "बीमा कम्पनीहरूको कोष र पुनर्बीमा कम्पनीको सेयर कारोबारसँग जोडिएका पाँच मुद्दा: सम्पत्ति शुद्धीकरण, बैंकिङ कसूर, धितोपत्र र बीमा ऐनअन्तर्गत तीन अदालतमा दायर। सबै मुद्दा विचाराधीन छन्; कुनै अदालतले आरोप प्रमाणित गरेको छैन।",
+    "en": null
+  },
+  "members": [
+    {
+      "ordinal": 1,
+      "note": {
+        "ne": "मुख्य मुद्दा: सम्पत्ति शुद्धीकरण अनुसन्धान विभागको अनुसन्धानपछि विशेष अदालतमा ३९ प्रतिवादीविरुद्ध; दीपक भट्टविरुद्ध रु. २६.६३ अर्ब बिगो दाबी।",
+        "en": null
+      },
+      "case": {
+        "slug": "case-082-cr-0154-deepak-bhatta",
+        "title": "दीपक भट्ट समेतविरुद्ध सम्पत्ति शुद्धीकरण मुद्दा: बीमा कम्पनीको कोष र पुनर्बीमा शेयर कारोबार (082-CR-0154)",
+        "title_en": "",
+        "short_description": "सम्पत्ति शुद्धीकरण अनुसन्धान विभागको अनुसन्धानपछि विशेष अदालतमा दायर मुद्दा 082-CR-0154: विभागको प्रेस विज्ञप्तिअनुसार दीपक भट्ट समेत ३९ प्रतिवादीविरुद्ध प्रतिवादीअनुसार छुट्टाछुट्टै बिगो दाबी; दीपक भट्टविरुद्ध रु. २६,६३,२७,७१,०५९ (एउटै कुल बिगो तोकिएको छैन)। मुद्दा विचाराधीन छ; फैसला भएको छैन।",
+        "status": "ongoing",
+        "case_type": "MONEY_LAUNDERING",
+        "bigo": 26632771059,
+        "proceedings_started_on": "2021-06-27",
+        "proceedings_decided_on": null,
+        "court_cases": [
+          "https://jawafdehi.org/courtcase/special/082-cr-0154"
+        ]
+      }
+    },
+    {
+      "ordinal": 2,
+      "note": {
+        "ne": "कर्जा सुविधाको दुरुपयोग गरेको आरोपमा दीपक भट्ट समेत ४ जनाविरुद्ध बैंकिङ कसूर मुद्दा।",
+        "en": null
+      },
+      "case": {
+        "slug": "deepak-bhatta-banking-offence-patan-hc-082-cb-0048",
+        "title": "दीपक भट्ट समेतविरुद्ध बैंकिङ कसूर मुद्दा, उच्च अदालत पाटन (082-CB-0048)",
+        "title_en": "",
+        "short_description": "उच्च अदालत पाटनमा २०८३-०२-२८ (11 June 2026) मा दीपक भट्ट, सुलभ अग्रवाल, साहिल अग्रवाल र शंकरलाल अग्रवालविरुद्ध बैंकिङ कसूर मुद्दा 082-CB-0048 दर्ता भएको छ। द काठमाडौं पोस्ट र सेतोपाटीका अनुसार कर्जा सुविधाको दुरुपयोग गरेको आरोपमा रु. ४२ करोड १४ लाख ९० हजार बिगो दाबी गरिएको छ। मुद्दा विचाराधीन छ; फैसला भएको छैन। अदालतले कसैलाई दोषी ठहर गरेको छैन।",
+        "status": "ongoing",
+        "case_type": "BANKING_OFFENCE",
+        "bigo": 421490000,
+        "proceedings_started_on": "2026-06-11",
+        "proceedings_decided_on": null,
+        "court_cases": [
+          "https://jawafdehi.org/courtcase/patanhc/082-cb-0048"
+        ]
+      }
+    },
+    {
+      "ordinal": 3,
+      "note": {
+        "ne": "नेपाल धितोपत्र बोर्डको पत्रका आधारमा शेखर गोल्छा, दीपक भट्ट समेत ८२ जनाविरुद्ध धितोपत्रसम्बन्धी ऐनअन्तर्गत मुद्दा।",
+        "en": null
+      },
+      "case": {
+        "slug": "cib-463",
+        "title": "धितोपत्रसम्बन्धी ऐन अन्तर्गत शेखर गोल्छा, दीपक भट्ट समेत ८२ जनाविरुद्ध मुद्दा, काठमाडौं जिल्ला अदालत (082-C2-0091)",
+        "title_en": "",
+        "short_description": "काठमाडौं जिल्ला अदालतमा २०८३-०२-२८ (11 June 2026) मा नेपाल धितोपत्र बोर्डको पत्रका आधारमा शेखर गोल्छा, दीपक भट्ट समेत ८२ जनाविरुद्ध धितोपत्रसम्बन्धी ऐन, २०६३ अन्तर्गतको कसूरमा मुद्दा 082-C2-0091 दर्ता भएको छ। कान्तिपुर र द काठमाडौं पोस्टका अनुसार करिब रु. १ अर्ब १५ करोड बिगो दाबी गरिएको छ। मुद्दा विचाराधीन छ; फैसला भएको छैन। अदालतले कसैलाई दोषी ठहर गरेको छैन।",
+        "status": "ongoing",
+        "case_type": "FORGERY",
+        "bigo": 1148609900,
+        "proceedings_started_on": "2026-06-11",
+        "proceedings_decided_on": null,
+        "court_cases": [
+          "https://jawafdehi.org/courtcase/kathmandudc/082-c2-0091"
+        ]
+      }
+    },
+    {
+      "ordinal": 4,
+      "note": {
+        "ne": "हिमालयन रिइन्स्योरेन्सको कोषसम्बन्धी: दीपक भट्ट, शेखर गोल्छा, सुलभ अग्रवाल समेत ४२ जनाविरुद्ध बीमा ऐन, २०७९ अन्तर्गत मुद्दा।",
+        "en": null
+      },
+      "case": {
+        "slug": "himalayan-re-insurance-offence-kdc-082-c2-0088",
+        "title": "बीमा ऐन, २०७९ अन्तर्गत ४२ जनाविरुद्ध मुद्दा: हिमालयन रिइन्स्योरेन्सको कोष, काठमाडौं जिल्ला अदालत (082-C2-0088)",
+        "title_en": "",
+        "short_description": "काठमाडौं जिल्ला अदालतमा २०८३-०२-२८ (11 June 2026) मा दीपक भट्ट, शेखर गोल्छा, सुलभ अग्रवाल समेत ४२ जनाविरुद्ध बीमा ऐन, २०७९ अन्तर्गतको कसूरमा मुद्दा 082-C2-0088 दर्ता भएको छ। समाचारअनुसार जिल्ला सरकारी वकिल कार्यालय, काठमाडौंले करिब रु. ३ अर्ब ७४ करोड बिगो दाबी गरेको छ। मुद्दा विचाराधीन छ; फैसला भएको छैन। अदालतले कसैलाई दोषी ठहर गरेको छैन।",
+        "status": "ongoing",
+        "case_type": "EMBEZZLEMENT",
+        "bigo": 3738524227,
+        "proceedings_started_on": "2026-06-11",
+        "proceedings_decided_on": null,
+        "court_cases": [
+          "https://jawafdehi.org/courtcase/kathmandudc/082-c2-0088"
+        ]
+      }
+    },
+    {
+      "ordinal": 5,
+      "note": {
+        "ne": "पूरक अभियोगपत्र: पूर्वअर्थमन्त्री विष्णुप्रसाद पौडेलसहित ६ व्यक्ति र १० कम्पनीविरुद्ध सम्पत्ति शुद्धीकरण मुद्दा।",
+        "en": null
+      },
+      "case": {
+        "slug": "bishnu-prasad-paudel-money-laundering-082-cr-0179",
+        "title": "विष्णुप्रसाद पौडेल समेतविरुद्ध सम्पत्ति शुद्धीकरण पूरक मुद्दा: श्रीराम टोबाको सेयर हस्तान्तरण, विशेष अदालत (082-CR-0179)",
+        "title_en": "",
+        "short_description": "सम्पत्ति शुद्धीकरण अनुसन्धान विभागको अनुसन्धानका आधारमा पूर्वअर्थमन्त्री विष्णुप्रसाद पौडेलसहित ६ व्यक्ति र १० कम्पनीविरुद्ध २०८३-०३-३२ (16 July 2026) मा विशेष अदालतमा पूरक अभियोगपत्र दायर भएको समाचारमा उल्लेख छ; पौडेलविरुद्ध रु. २० करोड ९० लाख बिगो दाबी गरिएको छ। मुद्दा विशेष अदालतमा विचाराधीन छ; फैसला भएको छैन। अदालतले कसैलाई दोषी ठहर गरेको छैन।",
+        "status": "ongoing",
+        "case_type": "MONEY_LAUNDERING",
+        "bigo": 209000000,
+        "proceedings_started_on": "2026-07-16",
+        "proceedings_decided_on": null,
+        "court_cases": [
+          "https://jawafdehi.org/courtcase/special/082-cr-0179"
+        ]
+      }
+    }
+  ],
+  "court_cases": [
+    {
+      "iri": "https://jawafdehi.org/courtcase/special/082-cr-0154",
+      "court": "special",
+      "court_name": {
+        "ne": "विशेष अदालत",
+        "en": "Special Court"
+      },
+      "court_tier": 1,
+      "case_number": "082-CR-0154",
+      "member_slug": "case-082-cr-0154-deepak-bhatta",
+      "case_type": "सम्पत्ति शुद्धीकरण",
+      "registration_date_bs": "2083-02-28",
+      "registration_date_ad": "2026-06-11",
+      "case_status": "चलिरहेको",
+      "verdict_type": null,
+      "verdict_date_bs": null,
+      "verdict_date_ad": null,
+      "plaintiff": "नेपाल सरकार",
+      "defendant": "दिपक भट्ट समेत ३९",
+      "about": "मुख्य मुद्दा: सम्पत्ति शुद्धीकरण अनुसन्धान विभागको अनुसन्धानपछि विशेष अदालतमा ३९ प्रतिवादीविरुद्ध; दीपक भट्टविरुद्ध रु. २६.६३ अर्ब बिगो दाबी।"
+    },
+    {
+      "iri": "https://jawafdehi.org/courtcase/patanhc/082-cb-0048",
+      "court": "patanhc",
+      "court_name": {
+        "ne": "उच्च अदालत पाटन",
+        "en": "High Court Patan"
+      },
+      "court_tier": 2,
+      "case_number": "082-CB-0048",
+      "member_slug": "deepak-bhatta-banking-offence-patan-hc-082-cb-0048",
+      "case_type": "बैकिङ्ग कसूर",
+      "registration_date_bs": "2083-02-28",
+      "registration_date_ad": "2026-06-11",
+      "case_status": "चलिरहेको",
+      "verdict_type": null,
+      "verdict_date_bs": null,
+      "verdict_date_ad": null,
+      "plaintiff": "नेपाल सरकार",
+      "defendant": "दीपक भट्ट समेत ४",
+      "about": "कर्जा सुविधाको दुरुपयोग गरेको आरोपमा दीपक भट्ट समेत ४ जनाविरुद्ध बैंकिङ कसूर मुद्दा।"
+    },
+    {
+      "iri": "https://jawafdehi.org/courtcase/kathmandudc/082-c2-0091",
+      "court": "kathmandudc",
+      "court_name": {
+        "ne": "जिल्ला अदालत काठमाडौं",
+        "en": "District Court Kathmandu"
+      },
+      "court_tier": 1,
+      "case_number": "082-C2-0091",
+      "member_slug": "cib-463",
+      "case_type": "धितोपत्रसम्बन्धी ऐन, २०६३ अन्तर्गतको कसूर",
+      "registration_date_bs": "2083-02-28",
+      "registration_date_ad": "2026-06-11",
+      "case_status": "चालु",
+      "verdict_type": null,
+      "verdict_date_bs": null,
+      "verdict_date_ad": null,
+      "plaintiff": "नेपाल धितोपत्र बोर्ड खुुमल्टार ललितपुरको पत्र",
+      "defendant": "नेपाल माईक्रो इन्स्योरेन्स लि. को लगानी समिति सदस्य सुजल मल्ल समेत ८१ जना",
+      "about": "नेपाल धितोपत्र बोर्डको पत्रका आधारमा शेखर गोल्छा, दीपक भट्ट समेत ८२ जनाविरुद्ध धितोपत्रसम्बन्धी ऐनअन्तर्गत मुद्दा।"
+    },
+    {
+      "iri": "https://jawafdehi.org/courtcase/kathmandudc/082-c2-0088",
+      "court": "kathmandudc",
+      "court_name": {
+        "ne": "जिल्ला अदालत काठमाडौं",
+        "en": "District Court Kathmandu"
+      },
+      "court_tier": 1,
+      "case_number": "082-C2-0088",
+      "member_slug": "himalayan-re-insurance-offence-kdc-082-c2-0088",
+      "case_type": "बीमा ऐन २०७९ अन्तर्गतको कसूर",
+      "registration_date_bs": "2083-02-28",
+      "registration_date_ad": "2026-06-11",
+      "case_status": "चालु",
+      "verdict_type": null,
+      "verdict_date_bs": null,
+      "verdict_date_ad": null,
+      "plaintiff": "नेपाल बीमा प्राधिकरण कुपण्डोल ललितपुरको पत्र",
+      "defendant": "दिपक कुमार श्रेष्ठ समेत ४२ जना",
+      "about": "हिमालयन रिइन्स्योरेन्सको कोषसम्बन्धी: दीपक भट्ट, शेखर गोल्छा, सुलभ अग्रवाल समेत ४२ जनाविरुद्ध बीमा ऐन, २०७९ अन्तर्गत मुद्दा।"
+    },
+    {
+      "iri": "https://jawafdehi.org/courtcase/special/082-cr-0179",
+      "court": "special",
+      "court_name": {
+        "ne": "विशेष अदालत",
+        "en": "Special Court"
+      },
+      "court_tier": 1,
+      "case_number": "082-CR-0179",
+      "member_slug": "bishnu-prasad-paudel-money-laundering-082-cr-0179",
+      "case_type": "सम्पत्ति शुद्धीकरण",
+      "registration_date_bs": "2083-03-32",
+      "registration_date_ad": "2026-07-16",
+      "case_status": null,
+      "verdict_type": null,
+      "verdict_date_bs": null,
+      "verdict_date_ad": null,
+      "plaintiff": "नेपाल सरकार",
+      "defendant": "विष्णु प्रसाद पौडेल समेत २",
+      "about": "पूरक अभियोगपत्र: पूर्वअर्थमन्त्री विष्णुप्रसाद पौडेलसहित ६ व्यक्ति र १० कम्पनीविरुद्ध सम्पत्ति शुद्धीकरण मुद्दा।"
+    }
+  ],
+  "timeline": [
+    {
+      "date": "2021-06-26",
+      "title": "शंकास्पद कारोबार पहिचान (समाचारअनुसार)",
+      "date_bs": "2078-03-12",
+      "description": "समाचारअनुसार नेपाल राष्ट्र बैंकको वित्तीय जानकारी इकाई (FIU) ले जगदम्बा स्टिलबाट भट्टको खातामा सारिएको रु. ४५ करोडलाई शंकास्पद कारोबार भनी पहिचान गरेको। अभियोगपत्रमा सूचना पठाउने निकायको नाम पढ्न सकिएको छैन।",
+      "member_slug": "case-082-cr-0154-deepak-bhatta"
+    },
+    {
+      "date": "2021-06-27",
+      "title": "जगदम्बा स्टिलबाट रकम स्थानान्तरण (अभियोगपत्रले उद्धृत सूचनाअनुसार)",
+      "date_bs": "2078-03-13",
+      "description": "अभियोगपत्रले उद्धृत गरेको शंकास्पद कारोबारको सूचनाअनुसार जगदम्बा स्टील्सको खाताबाट रु. ४५ करोड भट्टको नाममा जम्मा भई इन्फिनिटी होल्डिङ्स हुँदै सन् २०२१ जुलाई १ मा हिमालयन रिइन्स्योरेन्सको खातामा गएको आरोप; जगदम्बाको आ.व. २०७७/७८ को लेखापरीक्षण प्रतिवेदनमा यो कारोबार स्पष्ट नदेखिएको।",
+      "member_slug": "case-082-cr-0154-deepak-bhatta"
+    },
+    {
+      "date": "2022-11-06",
+      "title": "विभागमा शंकास्पद कारोबारको सूचना दर्ता",
+      "date_bs": "2079-07-20",
+      "description": "अभियोगपत्रअनुसार सम्पत्ति शुद्धीकरण अनुसन्धान विभागमा दर्ता नं. १४९४ को शंकास्पद कारोबारको सूचना दर्ता भयो; थप सूचना संकलनपछि यसैलाई उजुरी मानेर अनुसन्धान गरियो।",
+      "member_slug": "case-082-cr-0154-deepak-bhatta"
+    },
+    {
+      "date": "2022-11-15",
+      "title": "DMLI अनुसन्धान सुरु",
+      "date_bs": "2079-07-29",
+      "description": "सम्पत्ति शुद्धीकरण अनुसन्धान विभागले भट्टका वित्तीय कारोबारमाथि अनुसन्धान थालेको (पछि सुस्त भई पुनः सक्रिय)।",
+      "member_slug": "case-082-cr-0154-deepak-bhatta"
+    },
+    {
+      "date": "2026-03-28",
+      "title": "राहदानी रोक / अध्यागमन कालोसूची (समाचारअनुसार)",
+      "date_bs": "2082-12-15",
+      "description": "अध्यागमन विभागले भट्टलाई विदेश जान रोक लगाउँदै कालोसूचीमा राखेको।",
+      "member_slug": "case-082-cr-0154-deepak-bhatta"
+    },
+    {
+      "date": "2026-04-02",
+      "title": "दीपक भट्ट पक्राउ",
+      "date_bs": "2082-12-19",
+      "description": "प्रहरीको केन्द्रीय अनुसन्धान ब्युरो (CIB) ले नक्सालबाट भट्टलाई पक्राउ गरी विभागमा बुझाएको; काठमाडौं जिल्ला अदालतबाट १० दिन अनुसन्धान अवधि।",
+      "member_slug": "case-082-cr-0154-deepak-bhatta"
+    },
+    {
+      "date": "2026-04-04",
+      "title": "सुलभ अग्रवाल पक्राउ",
+      "description": "अनुसन्धानका क्रममा सुलभ अग्रवाल पक्राउ (द काठमाडौं पोस्टअनुसार)।",
+      "member_slug": "deepak-bhatta-banking-offence-patan-hc-082-cb-0048"
+    },
+    {
+      "date": "2026-04-05",
+      "title": "सुलभ अग्रवाल पक्राउ",
+      "date_bs": "2082-12-22",
+      "description": "समाचारअनुसार सम्पत्ति शुद्धीकरण अनुसन्धानका क्रममा सुलभ अग्रवाल पक्राउ परे; पछि प्रेस विज्ञप्तिमा उनीविरुद्ध दोस्रो ठूलो बिगो दाबी।",
+      "member_slug": "case-082-cr-0154-deepak-bhatta"
+    },
+    {
+      "date": "2026-04-08",
+      "title": "SEBON — दलाल नं. ५५ निलम्बन",
+      "date_bs": "2082-12-25",
+      "description": "धितोपत्र बोर्ड नेपालले भृकुटी स्टक ब्रोकिङ (दलाल नं. ५५) लाई ३ महिना निलम्बन गरेको।",
+      "member_slug": "case-082-cr-0154-deepak-bhatta"
+    },
+    {
+      "date": "2026-04-23",
+      "title": "शेखर गोल्छा पक्राउ, पछि रिहा",
+      "description": "धितोपत्र बोर्डको छानबिनका आधारमा शेखर गोल्छा पक्राउ; पछि सर्वोच्च अदालतको आदेशपछि रिहा (द काठमाडौं पोस्टअनुसार)।",
+      "member_slug": "cib-463"
+    },
+    {
+      "date": "2026-04-23",
+      "title": "शेखर गोल्छा पक्राउ",
+      "description": "शेखर गोल्छा पक्राउ; पछि सर्वोच्च अदालतको आदेशमा रिहा (द काठमाडौं पोस्टअनुसार)।",
+      "member_slug": "himalayan-re-insurance-offence-kdc-082-c2-0088"
+    },
+    {
+      "date": "2026-05-14",
+      "title": "बीमा प्राधिकरण — हिमालयन रि लाई रोक",
+      "date_bs": "2083-01-31",
+      "description": "नेपाल बीमा प्राधिकरणले (निर्णय २०८३/०१/२९) हिमालयन रिइन्स्योरेन्सलाई आ.व. २०८२/८३ को असार मसान्तसम्म नयाँ पुनर्बीमा व्यवसाय गर्न रोक लगाएको (बीमा ऐन २०७९ दफा १३६(१), सूचना दफा १३६(४) बमोजिम); दाबी भुक्तानी र पहिलेका व्यवसायको रेट्रोसेसनलाई छुट।",
+      "member_slug": "case-082-cr-0154-deepak-bhatta"
+    },
+    {
+      "date": "2026-06-11",
+      "title": "विशेष अदालतमा अभियोगपत्र (082-CR-0154)",
+      "date_bs": "2083-02-28",
+      "description": "विशेष सरकारी वकील कार्यालयले दीपक भट्ट समेत ३९ प्रतिवादीविरुद्ध प्रतिवादीअनुसार छुट्टाछुट्टै बिगो दाबीसहित विशेष अदालतमा सम्पत्ति शुद्धीकरण मुद्दा दर्ता; समाचारअनुसार समानान्तर मुद्दा उच्च अदालत पाटन र काठमाडौं जिल्ला अदालतमा।",
+      "member_slug": "case-082-cr-0154-deepak-bhatta"
+    },
+    {
+      "date": "2026-06-11",
+      "title": "उच्च अदालत पाटनमा मुद्दा दर्ता (082-CB-0048)",
+      "date_bs": "2083-02-28",
+      "description": "नेपाल सरकार वादी, दीपक भट्ट समेत ४ प्रतिवादी; बैंकिङ कसूर; रु. ४२ करोड १४ लाख ९० हजार बिगो दाबी (दर्ता: अदालतको अभिलेख; बिगो: समाचार)।",
+      "member_slug": "deepak-bhatta-banking-offence-patan-hc-082-cb-0048"
+    },
+    {
+      "date": "2026-06-11",
+      "title": "काठमाडौं जिल्ला अदालतमा मुद्दा दर्ता (082-C2-0091)",
+      "date_bs": "2083-02-28",
+      "description": "नेपाल धितोपत्र बोर्डको पत्रका आधारमा ८२ जनाविरुद्ध धितोपत्रसम्बन्धी ऐन, २०६३ अन्तर्गतको कसूरमा मुद्दा दर्ता (अदालतको अभिलेख)।",
+      "member_slug": "cib-463"
+    },
+    {
+      "date": "2026-06-11",
+      "title": "काठमाडौं जिल्ला अदालतमा मुद्दा दर्ता (082-C2-0088)",
+      "date_bs": "2083-02-28",
+      "description": "नेपाल बीमा प्राधिकरणको पत्रका आधारमा ४२ जनाविरुद्ध बीमा ऐन, २०७९ अन्तर्गतको कसूरमा मुद्दा दर्ता (अदालतको अभिलेख)।",
+      "member_slug": "himalayan-re-insurance-offence-kdc-082-c2-0088"
+    },
+    {
+      "date": "2026-06-17",
+      "title": "थुनछेक आदेश",
+      "date_bs": "2083-03-03",
+      "description": "विशेष अदालत (न्या. सुदर्शनदेव भट्ट, उमेश कोइराला, विदुर कोइराला) ले भट्ट र अग्रवाललाई पुर्पक्षका लागि थुनामा पठाउने आदेश — जटिल वित्तीय सञ्जाल, कृत्रिम शेयर उतारचढाव, विशाल बिगो र प्रविधिको प्रयोगलाई आधार मानी।",
+      "member_slug": "case-082-cr-0154-deepak-bhatta"
+    },
+    {
+      "date": "2026-06-22",
+      "title": "पौडेल पक्राउ",
+      "date_bs": "2083-03-08",
+      "description": "सम्पत्ति शुद्धीकरण अनुसन्धान विभागले विष्णुप्रसाद पौडेललाई सुर्खेतबाट पक्राउ गरेको (समाचारअनुसार)।",
+      "member_slug": "bishnu-prasad-paudel-money-laundering-082-cr-0179"
+    },
+    {
+      "date": "2026-07-16",
+      "title": "पूरक मुद्दा 082-CR-0179 दर्ता",
+      "date_bs": "2083-03-32",
+      "description": "विशेष अदालतको दर्ता अभिलेखअनुसार \"विष्णु प्रसाद पौडेल समेत २\" विरुद्ध सम्पत्ति शुद्धीकरण मुद्दा 082-CR-0179 दर्ता; समाचारअनुसार यो पूरक अभियोग हो र पूर्व अर्थमन्त्री विष्णुप्रसाद पौडेल प्रतिवादी छन्।",
+      "member_slug": "case-082-cr-0154-deepak-bhatta"
+    },
+    {
+      "date": "2026-07-16",
+      "title": "विशेष अदालतमा पूरक अभियोगपत्र दायर (082-CR-0179)",
+      "date_bs": "2083-03-32",
+      "description": "पौडेलसहित ६ व्यक्ति र १० कम्पनीविरुद्ध सम्पत्ति शुद्धीकरण पूरक अभियोगपत्र दायर; दर्ता अदालतको अभिलेखमा।",
+      "member_slug": "bishnu-prasad-paudel-money-laundering-082-cr-0179"
+    },
+    {
+      "date": "2026-07-17",
+      "title": "थुनछेक आदेश: पौडेल साधारण तारेखमा",
+      "date_bs": "2083-04-01",
+      "description": "विशेष अदालतले विशेष अदालत ऐन, २०५९ को दफा ७(ग) बमोजिम पौडेललाई साधारण तारेखमा राखी पुर्पक्ष गर्ने आदेश दिएको (समाचारअनुसार)।",
+      "member_slug": "bishnu-prasad-paudel-money-laundering-082-cr-0179"
+    }
+  ],
+  "accused": [
+    {
+      "nes_id": "https://jawafdehi.org/entity/person/sulabh-agrawal",
+      "name": {
+        "en": "Sulabh Agrawal",
+        "ne": "सुलभ अग्रवाल"
+      },
+      "entity_type": "Person",
+      "member_slugs": [
+        "case-082-cr-0154-deepak-bhatta",
+        "deepak-bhatta-banking-offence-patan-hc-082-cb-0048",
+        "cib-463",
+        "himalayan-re-insurance-offence-kdc-082-c2-0088"
+      ]
+    },
+    {
+      "nes_id": "https://jawafdehi.org/entity/person/deepak-bhatta",
+      "name": {
+        "en": "Deepak Bhatta",
+        "ne": "दीपक भट्ट"
+      },
+      "entity_type": "Person",
+      "member_slugs": [
+        "case-082-cr-0154-deepak-bhatta",
+        "deepak-bhatta-banking-offence-patan-hc-082-cb-0048",
+        "cib-463",
+        "himalayan-re-insurance-offence-kdc-082-c2-0088"
+      ]
+    },
+    {
+      "nes_id": "https://jawafdehi.org/entity/person/shekhar-golchha",
+      "name": {
+        "en": "Shekhar Golchha",
+        "ne": "शेखर गोल्छा"
+      },
+      "entity_type": "Person",
+      "member_slugs": [
+        "case-082-cr-0154-deepak-bhatta",
+        "cib-463",
+        "himalayan-re-insurance-offence-kdc-082-c2-0088"
+      ]
+    },
+    {
+      "nes_id": "https://jawafdehi.org/entity/person/sandeep-chachan-agrawal",
+      "name": {
+        "en": "Sandeep Chachan Agrawal",
+        "ne": "सन्दीप चाचन अग्रवाल"
+      },
+      "entity_type": "Person",
+      "member_slugs": [
+        "case-082-cr-0154-deepak-bhatta",
+        "cib-463",
+        "himalayan-re-insurance-offence-kdc-082-c2-0088"
+      ]
+    },
+    {
+      "nes_id": "https://jawafdehi.org/entity/person/shankarlal-agrawal",
+      "name": {
+        "en": "Shankarlal Agrawal",
+        "ne": "शंकरलाल अग्रवाल"
+      },
+      "entity_type": "Person",
+      "member_slugs": [
+        "case-082-cr-0154-deepak-bhatta",
+        "deepak-bhatta-banking-offence-patan-hc-082-cb-0048"
+      ]
+    },
+    {
+      "nes_id": "https://jawafdehi.org/entity/organization/bhrikuti-stock-broking",
+      "name": {
+        "en": "Bhrikuti Stock Broking (Broker No. 55)",
+        "ne": "भृकुटी स्टक ब्रोकिङ (दलाल नं. ५५)"
+      },
+      "entity_type": "Organization",
+      "member_slugs": [
+        "case-082-cr-0154-deepak-bhatta"
+      ]
+    },
+    {
+      "nes_id": "https://jawafdehi.org/entity/organization/infinity-holdings",
+      "name": {
+        "en": "Infinity Holdings Pvt. Ltd.",
+        "ne": "इन्फिनिटी होल्डिङ्स प्रा.लि."
+      },
+      "entity_type": "Organization",
+      "member_slugs": [
+        "case-082-cr-0154-deepak-bhatta"
+      ]
+    },
+    {
+      "nes_id": "https://jawafdehi.org/entity/person/bishnu-prasad-paudel",
+      "name": {
+        "en": "Bishnu Prasad Paudel",
+        "ne": "विष्णुप्रसाद पौडेल"
+      },
+      "entity_type": "Person",
+      "member_slugs": [
+        "bishnu-prasad-paudel-money-laundering-082-cr-0179"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "material_iri": "https://jawafdehi.org/material/ag/115677",
+      "material": {
+        "display_name": "सम्पत्ति शुद्धीकरण अनुसन्धान विभागको तर्फबाट अख्तियार प्राप्त संयुक्त अनुसन्धान टोलीका संयोजक शिव हरि पोखरेल समेतको अनुसन्धान प्रतिवेदनले वादी नेपाल सरकार प्रतिवादी शुलभ अग्रवाल समेत ३९ जना",
+        "material_type": "charge_sheet",
+        "date": "2083-02-29",
+        "date_ad": "2026-06-12",
+        "description": null,
+        "source_type": "AG_ABHIYOG_PATRA",
+        "withheld": {
+          "pdf": false,
+          "transcript": false
+        },
+        "court": null
+      },
+      "member_slugs": [
+        "case-082-cr-0154-deepak-bhatta"
+      ]
+    },
+    {
+      "material_iri": "https://jawafdehi.org/material/dmli/20260612-abhiyogpatra-pr",
+      "material": {
+        "display_name": "DMLI press release — charge sheet filed (per-defendant bigo table)",
+        "material_type": "press_release",
+        "date": null,
+        "date_ad": null,
+        "description": null,
+        "source_type": null,
+        "withheld": {
+          "pdf": false,
+          "transcript": false
+        },
+        "court": null
+      },
+      "member_slugs": [
+        "case-082-cr-0154-deepak-bhatta"
+      ]
+    },
+    {
+      "material_iri": "https://jawafdehi.org/material/sebon/broker55-suspension-2026",
+      "material": {
+        "display_name": "SEBON — Broker No. 55 (Bhrikuti Stock Broking) 3-month suspension order",
+        "material_type": "official_report",
+        "date": null,
+        "date_ad": null,
+        "description": null,
+        "source_type": null,
+        "withheld": {
+          "pdf": false,
+          "transcript": false
+        },
+        "court": null
+      },
+      "member_slugs": [
+        "case-082-cr-0154-deepak-bhatta"
+      ]
+    },
+    {
+      "material_iri": "https://jawafdehi.org/material/nia/himalayan-re-ban-2026",
+      "material": {
+        "display_name": "Nepal Insurance Authority — Himalayan Re reinsurance-business ban",
+        "material_type": "official_report",
+        "date": null,
+        "date_ad": null,
+        "description": null,
+        "source_type": null,
+        "withheld": {
+          "pdf": false,
+          "transcript": false
+        },
+        "court": null
+      },
+      "member_slugs": [
+        "case-082-cr-0154-deepak-bhatta"
+      ]
+    },
+    {
+      "material_iri": "https://jawafdehi.org/material/ratopati/2026-bhatta-seizure-inventory",
+      "material": {
+        "display_name": "Seizure inventory (muchulka) submitted to court — Ratopati",
+        "material_type": "news",
+        "date": null,
+        "date_ad": null,
+        "description": null,
+        "source_type": null,
+        "withheld": {
+          "pdf": true,
+          "transcript": false
+        },
+        "court": null
+      },
+      "member_slugs": [
+        "case-082-cr-0154-deepak-bhatta"
+      ]
+    },
+    {
+      "material_iri": "https://jawafdehi.org/material/occrp/2026-bhatta-arrest",
+      "material": {
+        "display_name": "OCCRP — Nepal arrests power broker Deepak Bhatta in money-laundering probe",
+        "material_type": "news",
+        "date": null,
+        "date_ad": null,
+        "description": null,
+        "source_type": null,
+        "withheld": {
+          "pdf": true,
+          "transcript": false
+        },
+        "court": null
+      },
+      "member_slugs": [
+        "case-082-cr-0154-deepak-bhatta"
+      ]
+    },
+    {
+      "material_iri": "https://jawafdehi.org/material/court/patanhc.082-cb-0048",
+      "material": {
+        "display_name": "082-CB-0048",
+        "material_type": "court_case",
+        "date": null,
+        "date_ad": null,
+        "description": "नेपाल सरकार · दीपक भट्ट समेत ४",
+        "source_type": null,
+        "withheld": {
+          "pdf": false,
+          "transcript": false
+        },
+        "court": "patanhc"
+      },
+      "member_slugs": [
+        "deepak-bhatta-banking-offence-patan-hc-082-cb-0048"
+      ]
+    },
+    {
+      "material_iri": "https://jawafdehi.org/material/ag/115641",
+      "material": {
+        "display_name": "नेपाल राष्ट्र बैंक, बैंक सुपरिवेक्षण विभागको प्रतिवेदनको जाहेरीले वादी नेपाल सरकार प्रतिवादी दिपक भट्ट समेत ४ जना",
+        "material_type": "charge_sheet",
+        "date": "2083-02-28",
+        "date_ad": "2026-06-11",
+        "description": null,
+        "source_type": "AG_ABHIYOG_PATRA",
+        "withheld": {
+          "pdf": false,
+          "transcript": false
+        },
+        "court": null
+      },
+      "member_slugs": [
+        "deepak-bhatta-banking-offence-patan-hc-082-cb-0048"
+      ]
+    },
+    {
+      "material_iri": "https://jawafdehi.org/material/news/20261119.1db08370",
+      "material": {
+        "display_name": "The Kathmandu Post, 11 June 2026: Nepal business groups face Rs27.8b claims in sweeping financial misconduct cases",
+        "material_type": "news",
+        "date": "2083-02-28",
+        "date_ad": "2026-06-11",
+        "description": "News report on the cases filed on 11 June 2026 (2083-02-28) in three courts against Shanker Group executives, Infinity Holdings chair Deepak Bhatta, FNCCI ex-president Shekhar Golchha and others for securities, insurance, banking and money-laundering offences (Rs 27.8 billion claimed in total), including the Patan High Court banking-offence case against Bhatta, Sulav, Sahil and Shankarlal Agrawal over the Jagdamba Steels loan (over Rs 421 million). Original: https://kathmandupost.com/national/2026/06/11/banking-offence-case-filed-against-agrawal-bhatta-for-over-rs421-million-alleged-loss (the address keeps the first headline, 'Banking offence case filed against Agrawal, Bhatta for over Rs421 million alleged loss'; file is the Wayback Machine capture of 20 July 2026).",
+        "source_type": null,
+        "withheld": {
+          "pdf": false,
+          "transcript": false
+        },
+        "court": null
+      },
+      "member_slugs": [
+        "deepak-bhatta-banking-offence-patan-hc-082-cb-0048",
+        "cib-463",
+        "himalayan-re-insurance-offence-kdc-082-c2-0088"
+      ]
+    },
+    {
+      "material_iri": "https://jawafdehi.org/material/news/20261119.bc0b3ab1",
+      "material": {
+        "display_name": "Setopati, 11 June 2026: Court cases filed against Deepak Bhatta, Sulav Agrawal, Shekhar Golchha, and others",
+        "material_type": "news",
+        "date": "2083-02-28",
+        "date_ad": "2026-06-11",
+        "description": "News report on the cases filed on 11 June 2026 (2083-02-28) after investigations by the Department of Money Laundering Investigation and the CIB: insurance-offence case against 42 defendants and securities-offence case against 81 at the Kathmandu District Court, money-laundering case against 39 at the Special Court (Rs 26.63 billion claimed from Bhatta), and banking-offence case against Bhatta, Sahil, Sulav and Shanker Lal Agrawal at the Patan High Court (Rs 421.49 million). Original: https://en.setopati.com/social/166584 (file is the Wayback Machine capture of 17 July 2026).",
+        "source_type": null,
+        "withheld": {
+          "pdf": true,
+          "transcript": false
+        },
+        "court": null
+      },
+      "member_slugs": [
+        "deepak-bhatta-banking-offence-patan-hc-082-cb-0048",
+        "himalayan-re-insurance-offence-kdc-082-c2-0088"
+      ]
+    },
+    {
+      "material_iri": "https://jawafdehi.org/material/news/20261119.077e2dd6",
+      "material": {
+        "display_name": "The Kathmandu Post, 14 June 2026: From banks to brokers and insurers: The multi-billion-rupee empire of the Bhatta-Agrawal syndicate",
+        "material_type": "news",
+        "date": "2083-02-31",
+        "date_ad": "2026-06-14",
+        "description": "Analysis of the charge sheets filed on 11 June 2026 against Deepak Bhatta, the Agrawals of Shanker Group and others: corporate loans, land deals, credit-financed share trading and alleged market manipulation across the securities, insurance, banking and money-laundering cases (Rs 27 billion). Original: https://kathmandupost.com/national/2026/06/14/from-banks-to-brokers-and-insurers-the-multi-billion-rupee-empire-of-the-bhatta-agrawal-syndicate (file is the Wayback Machine capture of 20 July 2026).",
+        "source_type": null,
+        "withheld": {
+          "pdf": false,
+          "transcript": false
+        },
+        "court": null
+      },
+      "member_slugs": [
+        "deepak-bhatta-banking-offence-patan-hc-082-cb-0048",
+        "cib-463"
+      ]
+    },
+    {
+      "material_iri": "https://jawafdehi.org/material/news/20261119.48402378",
+      "material": {
+        "display_name": "The Kathmandu Post, 10 October 2026: Bhatta’s paper trail leads to court for the sixth time",
+        "material_type": "news",
+        "date": "2083-06-24",
+        "date_ad": "2026-10-10",
+        "description": "News report on the sixth case against Deepak Bhatta and 19 others, filed at the Kathmandu District Court in October 2026 under the Insurance Act and money-laundering law (Rs 450.7 million claimed from Bhatta; Himalayan Reinsurance and Alliant Insurance Brokers funds), with a summary of the five earlier cases at the Special Court, Patan High Court and Kathmandu District Court, including the 16 July 2026 supplementary money-laundering charge sheet against Bishnu Paudel and others. Original: https://kathmandupost.com/national/2026/10/10/bhatta-s-paper-trail-leads-to-court-for-the-sixth-time (file is the Wayback Machine capture of 11 October 2026).",
+        "source_type": null,
+        "withheld": {
+          "pdf": false,
+          "transcript": false
+        },
+        "court": null
+      },
+      "member_slugs": [
+        "deepak-bhatta-banking-offence-patan-hc-082-cb-0048",
+        "himalayan-re-insurance-offence-kdc-082-c2-0088",
+        "bishnu-prasad-paudel-money-laundering-082-cr-0179"
+      ]
+    },
+    {
+      "material_iri": "https://jawafdehi.org/material/news/20261119.bae77568",
+      "material": {
+        "display_name": "Kantipur, 12 June 2026: 4 cases in 3 courts for financial crimes, Rs 27.8 billion claimed, 86 defendants",
+        "material_type": "news",
+        "date": "2083-02-29",
+        "date_ad": "2026-06-12",
+        "description": "News report on the four financial-crime cases filed on 11 June 2026 (2083-02-28) in three courts: securities offence (81 defendants) and insurance offence (42) at the Kathmandu District Court, money laundering (39) at the Special Court and banking offence (4) at the Patan High Court, against Deepak Bhatta, Shanker Group's Shankarlal, Sulabh and Sahil Agrawal, Shekhar Golchha and others; Rs 27.8 billion claimed; Jagdamba Steels loan of Rs 421.5 million. Original (Nepali): https://ekantipur.com/news/2026/06/12/4-cases-in-3-courts-for-financial-crimes-278-billion-rupees-in-damages-claimed-86-defendants-05-23.html (English AI translation at https://ekantipur.com/news/2026/06/12/en/4-cases-in-3-courts-for-financial-crimes-278-billion-rupees-in-damages-claimed-86-defendants-05-23.html; file is the Wayback Machine capture of 17 July 2026).",
+        "source_type": null,
+        "withheld": {
+          "pdf": false,
+          "transcript": false
+        },
+        "court": null
+      },
+      "member_slugs": [
+        "deepak-bhatta-banking-offence-patan-hc-082-cb-0048",
+        "cib-463",
+        "himalayan-re-insurance-offence-kdc-082-c2-0088"
+      ]
+    },
+    {
+      "material_iri": "https://jawafdehi.org/material/court/kathmandudc.082-c2-0091",
+      "material": {
+        "display_name": "082-C2-0091",
+        "material_type": "court_case",
+        "date": null,
+        "date_ad": null,
+        "description": "नेपाल धितोपत्र बोर्ड खुुमल्टार ललितपुरको पत्र · नेपाल माईक्रो इन्स्योरेन्स लि. को लगानी समिति सदस्य सुजल मल्ल समेत ८१ जना",
+        "source_type": null,
+        "withheld": {
+          "pdf": false,
+          "transcript": false
+        },
+        "court": "kathmandudc"
+      },
+      "member_slugs": [
+        "cib-463"
+      ]
+    },
+    {
+      "material_iri": "https://jawafdehi.org/material/cib/news-463",
+      "material": {
+        "display_name": "CIB press release (news/463)",
+        "material_type": "press_release",
+        "date": null,
+        "date_ad": null,
+        "description": null,
+        "source_type": null,
+        "withheld": {
+          "pdf": true,
+          "transcript": false
+        },
+        "court": null
+      },
+      "member_slugs": [
+        "cib-463"
+      ]
+    },
+    {
+      "material_iri": "https://jawafdehi.org/material/news/20261119.08ac0700",
+      "material": {
+        "display_name": "Kantipur, 17 July 2026: Money laundering case filed against former Finance Minister Poudel",
+        "material_type": "news",
+        "date": "2083-04-01",
+        "date_ad": "2026-07-17",
+        "description": "News report on the supplementary money-laundering charge sheet filed at the Special Court on Thursday 16 July 2026 (2083-03-32) against former finance minister and CPN-UML vice-chair Bishnu Paudel, Deepak Bhatta and others: Rs 209 million claimed from Paudel plus confiscation of Rs 634,000 in his bank account; six individuals and 10 companies named; alleged facilitation of the Shriram Tobacco share transfer to Bhatta's company. Also recaps the five cases filed on 11 June 2026 (2083-02-28). Original (Nepali): https://ekantipur.com/news/2026/07/17/money-laundering-case-filed-against-former-finance-minister-poudel-42-34.html (English AI translation at the same address with /en/).",
+        "source_type": null,
+        "withheld": {
+          "pdf": false,
+          "transcript": false
+        },
+        "court": null
+      },
+      "member_slugs": [
+        "cib-463",
+        "himalayan-re-insurance-offence-kdc-082-c2-0088",
+        "bishnu-prasad-paudel-money-laundering-082-cr-0179"
+      ]
+    },
+    {
+      "material_iri": "https://jawafdehi.org/material/court/kathmandudc.082-c2-0088",
+      "material": {
+        "display_name": "082-C2-0088",
+        "material_type": "court_case",
+        "date": null,
+        "date_ad": null,
+        "description": "नेपाल बीमा प्राधिकरण कुपण्डोल ललितपुरको पत्र · दिपक कुमार श्रेष्ठ समेत ४२ जना",
+        "source_type": null,
+        "withheld": {
+          "pdf": false,
+          "transcript": false
+        },
+        "court": "kathmandudc"
+      },
+      "member_slugs": [
+        "himalayan-re-insurance-offence-kdc-082-c2-0088"
+      ]
+    },
+    {
+      "material_iri": "https://jawafdehi.org/material/court/special.082-cr-0179",
+      "material": {
+        "display_name": "082-CR-0179",
+        "material_type": "court_case",
+        "date": null,
+        "date_ad": null,
+        "description": "नेपाल सरकार · विष्णु प्रसाद पौडेल समेत २",
+        "source_type": null,
+        "withheld": {
+          "pdf": false,
+          "transcript": false
+        },
+        "court": "special"
+      },
+      "member_slugs": [
+        "bishnu-prasad-paudel-money-laundering-082-cr-0179"
+      ]
+    },
+    {
+      "material_iri": "https://jawafdehi.org/material/news/20261119.9577c46f",
+      "material": {
+        "display_name": "Republica, 16 July 2026: Former FinMin Poudel faces money laundering charges; Rs 209 million recovery sought",
+        "material_type": "news",
+        "date": "2083-03-32",
+        "date_ad": "2026-07-16",
+        "description": "News report on the supplementary money-laundering charge sheet filed at the Special Court on 16 July 2026 against former finance minister Bishnu Prasad Poudel, with Deepak Bhatt, Sulabh Agrawal, Subhi Agrawal and companies: recovery sought of Rs 209 million from Poudel, Rs 477.76 million from Bhatt, Rs 133.35 million from Subhi Agrawal and Rs 209 million from Himalayan Asset Management; Shriram Tobacco share transfer; asset confiscation. Original: https://myrepublica.nagariknetwork.com/news/former-finmin-poudel-faces-money-laundering-charges-rs-209-million-recovery-64-78.html (file is the Wayback Machine capture of 20 July 2026).",
+        "source_type": null,
+        "withheld": {
+          "pdf": false,
+          "transcript": false
+        },
+        "court": null
+      },
+      "member_slugs": [
+        "bishnu-prasad-paudel-money-laundering-082-cr-0179"
+      ]
+    },
+    {
+      "material_iri": "https://jawafdehi.org/material/news/20261119.513b0ef3",
+      "material": {
+        "display_name": "Onlinekhabar, 17 July 2026: Special Court orders release of Bishnu Poudel on regular date",
+        "material_type": "news",
+        "date": "2083-04-01",
+        "date_ad": "2026-07-17",
+        "description": "News report on the Special Court's detention-hearing order releasing former finance minister Bishnu Paudel on regular date (साधारण तारेख) in the supplementary money-laundering case, citing no evidence so far of his involvement or of benefit from Deepak Bhatta; bench of members Narayan Prasad Paudel, Dilli Ratna Shrestha and Bidur Koirala; Special Court Act 2059 section 7(c). Original: https://www.onlinekhabar.com/2026/07/1977654/special-court-orders-release-of-bishnu-poudel-on-regular-date.",
+        "source_type": null,
+        "withheld": {
+          "pdf": false,
+          "transcript": false
+        },
+        "court": null
+      },
+      "member_slugs": [
+        "bishnu-prasad-paudel-money-laundering-082-cr-0179"
+      ]
+    }
+  ],
+  "totals": {
+    "member_count": 5,
+    "court_case_count": 5,
+    "court_count": 3,
+    "bigo_max": {
+      "amount": 26632771059,
+      "member_slug": "case-082-cr-0154-deepak-bhatta"
+    },
+    "bigo_members_with_value": 5,
+    "accused_count": 8,
+    "status_counts": {
+      "ongoing": 5
+    },
+    "first_date": "2021-06-27"
+  },
+  "updated_at": "2026-11-26T00:00:00Z"
+}

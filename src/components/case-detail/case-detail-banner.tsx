@@ -29,6 +29,8 @@ interface CaseDetailBannerProps {
   homeLabel?: string;
   casesLabel?: string;
   actions?: ReactNode;
+  /** Shown right under the title (and its English title): the case-series banner. */
+  belowTitle?: ReactNode;
   shareAction?: {
     label: string;
     onClick: () => void;
@@ -73,6 +75,7 @@ export function CaseDetailBanner({
   homeLabel,
   casesLabel,
   actions,
+  belowTitle,
   shareAction,
 }: CaseDetailBannerProps) {
   const { t, i18n } = useTranslation();
@@ -226,6 +229,8 @@ export function CaseDetailBanner({
                 {caseData.title_en.trim()}
               </p>
             ) : null}
+
+            {belowTitle}
 
             {/* The short description: the one-line "what is this case" deck.
                 Authored content, rendered as-is; a placeholder with no letters

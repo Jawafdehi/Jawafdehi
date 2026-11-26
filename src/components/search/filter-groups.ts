@@ -67,6 +67,8 @@ export function filterGroupsFor(selectedType?: ArchiveSearchType) {
     // other record type (or "all") its buckets are either irrelevant or,
     // as originally reported, collapse to a single confusing value.
     ({ name }) => {
+      // A series is a handful of curated groupings with no facets of its own.
+      if (selectedType === "series") return false;
       if (name === "entity_type") return selectedType === "entity";
       // Court facets are intentionally absent from the all-records view:
       // applying one there hides unrelated entity/material/case results,

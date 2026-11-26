@@ -16,6 +16,7 @@ import {
   SquarePen,
 } from "@/components/icons";
 import { CaseDetailBanner } from "@/components/case-detail/case-detail-banner";
+import { CaseSeriesBanner } from "@/components/series/CaseSeriesBanner";
 import { CaseContactStrip } from "@/components/case-detail/case-contact-strip";
 import { CaseDisclaimerBanner } from "@/components/case-detail/case-disclaimer-banner";
 import { CaseOverviewSection } from "@/components/case-detail/case-overview-section";
@@ -488,6 +489,7 @@ const CaseDetail = () => {
       <CaseDetailBanner
         caseData={caseData}
         resolvedEntities={resolvedEntities}
+        belowTitle={<CaseSeriesBanner caseSlug={canonicalCaseSlug ?? ""} series={caseData.series} />}
         actions={
           <>
             {/* Staff-only "Edit case", shown at the top of the page for any

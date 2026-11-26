@@ -3179,5 +3179,115 @@
     "pdfPending": "PDF pending",
     "pendingExplain": "Jawafdehi holds the original; it will be published here once private details are removed.",
     "legend": "PDF and Text are copies with private details (phone, citizenship and account numbers) removed. Not yet public: Jawafdehi holds the original and will publish it here once private details are removed."
+  },
+  "series": {
+    "kicker": "Case series",
+    "caseCount": "{{n}} cases",
+    "share": "Share series",
+    "linkCopied": "Link copied",
+    "stats": {
+      "label": "Key numbers",
+      "members": "cases",
+      "courtCases": "court cases in {{courts}} courts",
+      "accused": "accused people/organisations",
+      "status": "status",
+      "largestBigo": "largest embezzled amount claimed",
+      "largestBigoMember": "largest embezzled amount claimed (case {{ordinal}})",
+      "bigoNote": "Embezzled amounts are not added up: the same money can be claimed in more than one case. Each case's amount is listed below."
+    },
+    "members": {
+      "heading": "Cases in this series",
+      "case": "Case {{ordinal}}",
+      "bigo": "Embezzled amount {{amount}}",
+      "courtCases": "Court cases"
+    },
+    "chart": {
+      "heading": "Court cases over time",
+      "groupBy": "Group rows",
+      "byCourt": "By court",
+      "byMember": "By case",
+      "ongoing": "Ongoing",
+      "decidedLegend": "Decided/closed",
+      "today": "Today",
+      "outOfCourt": "Proceedings outside court",
+      "outOfCourtShort": "Outside court",
+      "pending": "Pending",
+      "decided": "Decided",
+      "registered": "Registered {{date}}",
+      "started": "Started {{date}}",
+      "inSeries": "In this series:",
+      "plaintiff": "Plaintiff",
+      "defendant": "Defendant",
+      "openCourtCase": "Open court case",
+      "openCase": "Open case",
+      "close": "Close",
+      "label": "Court-case timeline chart: {{n}} court cases",
+      "howToRead": "Each line is one court case: from registration to the verdict, or to today (→) while it is pending. Click a line for details.",
+      "empty": "No court-case registration dates are available yet."
+    },
+    "accused": {
+      "heading": "Accused",
+      "inCases": "in {{n}} cases",
+      "note": "No allegation is proven; see the relevant case for each person's legal status."
+    },
+    "timeline": {
+      "heading": "Timeline",
+      "filter": "Filter events by case",
+      "all": "All ({{n}})",
+      "showAll": "Show all {{n}} events (older too)",
+      "showLatest": "Show only the latest {{n}}",
+      "empty": "No timeline events yet."
+    },
+    "sources": {
+      "heading": "Sources",
+      "showAll": "Show all {{n}} sources",
+      "showLess": "Show fewer",
+      "undated": "Undated"
+    },
+    "status": {
+      "ongoing": "ongoing",
+      "under_investigation": "under investigation",
+      "concluded": "concluded",
+      "closed": "closed",
+      "others": "other",
+      "withdrawn": "withdrawn",
+      "dormant": "dormant",
+      "unknown": "unknown"
+    },
+    "verdict": {
+      "CLAIM_UPHELD": "claim upheld",
+      "PARTIALLY_UPHELD": "partly upheld",
+      "CLAIM_DENIED": "claim denied",
+      "REVERSED": "reversed",
+      "PROCEDURAL": "closed on procedure",
+      "DECIDED": "decided"
+    },
+    "notFound": {
+      "title": "Case series not found",
+      "line": "The series may not be public yet, or the link may be mistyped. Search the cases instead."
+    },
+    "failed": {
+      "title": "The case series could not be loaded",
+      "line": "Something went wrong on our side. Please try again in a moment."
+    },
+    "searchCases": "Search the cases",
+    "partOf": "Part of {{title}} · {{ordinal}}/{{total}}",
+    "banner": {
+      "label": "Case series",
+      "text": "This is case {{ordinal}} of {{total}} in <anchor>{{title}}</anchor>.",
+      "prev": "Case {{ordinal}}",
+      "next": "Case {{ordinal}}",
+      "prevLabel": "Previous case {{ordinal}}: {{title}}",
+      "nextLabel": "Next case {{ordinal}}: {{title}}",
+      "all": "All cases and timeline"
+    },
+    "search": {
+      "tab": "Series",
+      "counts": "{{members}} cases · {{courtCases}} court cases",
+      "largestBigo": "Largest embezzled amount {{amount}}",
+      "accused": "{{n}} accused",
+      "memberCourtCases": "Court cases of the member cases",
+      "placeholder": "Search case series"
+    }
   }
 }

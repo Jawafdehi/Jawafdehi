@@ -152,7 +152,7 @@ export function hasSubjectGeography(type: ArchiveSearchType) {
 
 export function readRecordType(searchParams: URLSearchParams): ArchiveSearchType {
   const requestedType = searchParams.get("type");
-  return ["all", "entity", "material", "courtcase", "case"].includes(
+  return ["all", "entity", "material", "courtcase", "case", "series"].includes(
     requestedType || "",
   )
     ? (requestedType as ArchiveSearchType)
@@ -233,8 +233,10 @@ export function readParams(
     // as a filter: its source token and document kind, built by seriesScope.
     // Documents only, and an unknown slug scopes nothing rather than erroring.
     ...(selectedRecordType === "material" ? readSeriesScope(searchParams) : {}),
-    case_type: searchParams.getAll("case_type"),
-    tags: searchParams.getAll("tags"),
+    // A series carries none of these facets, so the series tab sends none: a
+    // stale value would empty it through a control it does not show.
+    case_type: selectedRecordType === "series" ? [] : searchParams.getAll("case_type"),
+    tags: selectedRecordType === "series" ? [] : searchParams.getAll("tags"),
     // Cases-only, gated like court_type: a value carried onto another tab would
     // narrow it through a control that tab does not show.
     case_origin: selectedRecordType === "case" ? searchParams.getAll("case_origin") : [],
