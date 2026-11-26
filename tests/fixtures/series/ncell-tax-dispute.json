@@ -1,0 +1,240 @@
+{
+  "slug": "ncell-tax-dispute",
+  "iri": "https://jawafdehi.org/series/ncell-tax-dispute",
+  "tag": null,
+  "title": {
+    "ne": "एनसेल कर विवाद",
+    "en": "Ncell tax dispute"
+  },
+  "summary": {
+    "ne": "हामीले एनसेलसँग सम्बन्धित यस कर विवादलाई तथ्य, अदालतका फैसला, सरकारी निर्णय र सार्वजनिक रूपमा उपलब्ध स्रोतहरूको आधारमा निष्पक्ष रूपमा दस्तावेजीकरण गर्ने जमर्को गरेका छौँ। यस पहलको उद्देश्य कुनै पक्षको समर्थन वा विरोध गर्नु नभई एनसेलसँग सम्बन्धित विवाद र निर्णयहरूको तथ्यमा आधारित, अनुसन्धानयोग्य तथा सन्दर्भ सामग्रीको रूपमा प्रयोग गर्न सकिने अभिलेख (fact-based archive) तयार गर्नु हो। यस कार्यले भविष्यमा अनुसन्धानकर्ता, सञ्चारकर्मी, विद्यार्थी, नीति–निर्माता तथा आम नागरिकलाई घटनाक्रम बुझ्न सहयोग पुर्‍याउने आशा हामीले राखेका छौँ।",
+    "en": null
+  },
+  "members": [
+    {
+      "ordinal": 1,
+      "note": {
+        "ne": "एनसेलको ८०% स्वामित्व रहेको रेनोल्ड्स होल्डिङ्सको सेयर खरिद भएपछि पुँजीगत लाभकरको दायित्व, करको वास्तविक जिम्मेवार पक्ष तथा निहित स्वामित्व (indirect transfer) को अवधारणा सम्बन्धी कानुनी प्रश्न रहेको मुद्दा।",
+        "en": null
+      },
+      "case": {
+        "slug": "case-ncell-capital-gains-tax-dispute-part1",
+        "title": "एनसेल (Ncell) कर विवादः भाग १",
+        "title_en": "",
+        "short_description": "सर्वोच्च अदालतले टेलियासोनेराले एनसेलको ८०% सेयर एक्जियाटालाई बिक्री गर्दा उत्पन्न भएको पुँजीगत लाभकर (Capital Gains Tax) तिर्ने दायित्व एनसेल र एक्जियाटामाथि रहने फैसला गर्दै कर दायित्व पूरा नभएसम्म लाभांश वितरण तथा सेयर हस्तान्तरणमा रोक लगाउने आदेश दिएको।",
+        "status": "others",
+        "case_type": "TAX_EVASION",
+        "bigo": 60710000000,
+        "proceedings_started_on": "2018-01-28",
+        "proceedings_decided_on": "2019-02-06",
+        "court_cases": [
+          "https://jawafdehi.org/courtcase/supreme/074-wo-0475"
+        ]
+      }
+    },
+    {
+      "ordinal": 2,
+      "note": {
+        "ne": "कर, ब्याज र अतिरिक्त शुल्कसहित गरिएको कर निर्धारणलाई लिएर कर प्रशासनको अधिकार, कर निर्धारण प्रक्रिया तथा आयकर ऐनको दफा १२०(क) अन्तर्गत लगाइएको अतिरिक्त शुल्कको वैधानिकतामाथि प्रश्न उठेको मुद्दा",
+        "en": null
+      },
+      "case": {
+        "slug": "case-ncell-capital-gains-tax-dispute-part2",
+        "title": "एनसेल (Ncell) कर विवादः भाग २",
+        "title_en": "",
+        "short_description": "मिति २०७२।१२।२९ मा टेलिया सोनेराले एक्जियटालाई अप्रत्यक्ष रुपमा एनसेलको सेयर बेचेकाले उक्त कारोबार बापत पूँजीगत लाभकर लाग्‍ने र उक्त पुँजीगत लाभकरको दायित्व एनसेल र एक्जियटाले नै वहन गर्नुपर्ने भनी सर्वोच्च अदालतको वृहत् पूर्ण इजलासले मिति २०७५।१०।२३ मा फैसला  गरेको थियो। त्यसपछि ठूला करदाता कार्यालयले कर, शुल्क र ब्याजसहित करिब रु. ३९ अर्ब कर निर्धारण गरेको थियो जसविरुद्ध प्राकृतिक न्यायको सिद्धान्त, सुनुवाइको अवसर तथा अतिरिक्त दण्ड शुल्कको वैधतासम्बन्धी प्रश्न उठाउँदै एनसेलले रिट दायर गरेको थियो। जसमा सर्वोच्च अदालतले कर, ब्याज र अधिकांश शुल्कलाई वैध ठहर गर्दै ५० प्रतिशत अतिरिक्त दण्ड शुल्क भने पर्याप्त आधार नदेखिएको कारण बदर गरेको थियो। यस फैसलाले एनसेललाई १८ अर्ब ३३ करोड रुपैयाँ राहत भएको थियो।",
+        "status": "others",
+        "case_type": "TAX_EVASION",
+        "bigo": 39060684815,
+        "proceedings_started_on": "2019-05-08",
+        "proceedings_decided_on": "2019-08-26",
+        "court_cases": [
+          "https://jawafdehi.org/courtcase/supreme/075-wf-0005"
+        ]
+      }
+    },
+    {
+      "ordinal": 3,
+      "note": {
+        "ne": "सर्वोच्च अदालतको पहिलो फैसलापछि एक्जिएटाले ICSID मा मध्यस्थता दायर गर्दै नेपालको कराधिकार, नेपाल–यु.के. द्विपक्षीय लगानी सम्झौताको व्याख्या तथा Fair and Equitable Treatment (FET) र indirect expropriation सम्बन्धी विषयलाई अन्तर्राष्ट्रिय विवादको केन्द्रमा ल्याएको मुद्दा",
+        "en": null
+      },
+      "case": {
+        "slug": "case-ncell-tax-dispute-icsid-arbitration-part3",
+        "title": "एनसेल (Ncell) कर  विवाद: भाग ३",
+        "title_en": "",
+        "short_description": "सर्वोच्च अदालतको कर तिर्नुपर्ने फैसलापछि Axiata ले सन् २०१९ मा ICSID (International Centre for the Settlement of Investment Disputes) मा नेपालविरुद्ध कर विवाद दायर गरेकोमा सन् 2023 मा न्यायाधिकरणले नेपालको कर असुलीलाई कानुनसम्मत ठहर गर्दै नेपालकै पक्षमा फैसला गरेको हो।",
+        "status": "others",
+        "case_type": "TAX_EVASION",
+        "bigo": 66000000000,
+        "proceedings_started_on": "2019-05-20",
+        "proceedings_decided_on": "2023-06-09",
+        "court_cases": []
+      }
+    }
+  ],
+  "court_cases": [
+    {
+      "iri": "https://jawafdehi.org/courtcase/supreme/074-wo-0475",
+      "court": "supreme",
+      "court_name": {
+        "ne": "सर्वोच्च अदालत",
+        "en": "Supreme Court"
+      },
+      "court_tier": 3,
+      "case_number": "074-WO-0475",
+      "member_slug": "case-ncell-capital-gains-tax-dispute-part1",
+      "case_type": "रिट निवेदन",
+      "registration_date_bs": "2074-10-14",
+      "registration_date_ad": "2018-01-28",
+      "case_status": null,
+      "verdict_type": "CLAIM_UPHELD",
+      "verdict_date_bs": "2075-10-23",
+      "verdict_date_ad": "2019-02-06",
+      "plaintiff": "द्वारिकानाथ ढुङेल समेत ५",
+      "defendant": "नेपाल सरकार ठूला करदाता कार्यालय हरिहरभवन ललितपुर समेत समेत ४",
+      "about": "एनसेलको ८०% स्वामित्व रहेको रेनोल्ड्स होल्डिङ्सको सेयर खरिद भएपछि पुँजीगत लाभकरको दायित्व, करको वास्तविक जिम्मेवार पक्ष तथा निहित स्वामित्व (indirect transfer) को अवधारणा सम्बन्धी कानुनी प्रश्न रहेको मुद्दा।"
+    },
+    {
+      "iri": "https://jawafdehi.org/courtcase/supreme/075-wf-0005",
+      "court": "supreme",
+      "court_name": {
+        "ne": "सर्वोच्च अदालत",
+        "en": "Supreme Court"
+      },
+      "court_tier": 3,
+      "case_number": "075-WF-0005",
+      "member_slug": "case-ncell-capital-gains-tax-dispute-part2",
+      "case_type": "रिट निवेदन",
+      "registration_date_bs": "2076-01-25",
+      "registration_date_ad": "2019-05-08",
+      "case_status": null,
+      "verdict_type": "PARTIALLY_UPHELD",
+      "verdict_date_bs": "2076-05-09",
+      "verdict_date_ad": "2019-08-26",
+      "plaintiff": "एनसेल प्राईभेट लिमिटेडको तर्फबाट अ.प्रा.रमेश घिमिरे",
+      "defendant": "ठूला करदाता कार्यालय हरिहरभवन ललितपुर समेत / ओम प्रकाश भट्‍टराई कर अधिकृत ठूला करदाता कार्यालय हरिहरभवन ललितपुर",
+      "about": "कर, ब्याज र अतिरिक्त शुल्कसहित गरिएको कर निर्धारणलाई लिएर कर प्रशासनको अधिकार, कर निर्धारण प्रक्रिया तथा आयकर ऐनको दफा १२०(क) अन्तर्गत लगाइएको अतिरिक्त शुल्कको वैधानिकतामाथि प्रश्न उठेको मुद्दा"
+    },
+    {
+      "iri": null,
+      "court": null,
+      "court_name": {
+        "ne": "अन्तर्राष्ट्रिय मध्यस्थता (ICSID)",
+        "en": "ICSID arbitration"
+      },
+      "court_tier": 4,
+      "case_number": "ICSID",
+      "member_slug": "case-ncell-tax-dispute-icsid-arbitration-part3",
+      "case_type": "मध्यस्थता",
+      "registration_date_bs": null,
+      "registration_date_ad": "2019-05-20",
+      "case_status": null,
+      "verdict_type": "DECIDED",
+      "verdict_date_bs": null,
+      "verdict_date_ad": "2023-06-09",
+      "plaintiff": "Axiata / Reynolds Holdings",
+      "defendant": "नेपाल सरकार",
+      "about": "सर्वोच्च अदालतको पहिलो फैसलापछि एक्जिएटाले ICSID मा मध्यस्थता दायर गर्दै नेपालको कराधिकार, नेपाल–यु.के. द्विपक्षीय लगानी सम्झौताको व्याख्या तथा Fair and Equitable Treatment (FET) र indirect expropriation सम्बन्धी विषयलाई अन्तर्राष्ट्रिय विवादको केन्द्रमा ल्याएको मुद्दा"
+    }
+  ],
+  "timeline": [
+    {
+      "date": "2004-04-13",
+      "title": "स्पाइस नेपाल स्थापना",
+      "date_bs": "2061-01-01",
+      "description": "Spice Nepal Pvt. Ltd. स्थापना; 'Mero Mobile' ब्रान्डमार्फत सेवा सुरु गर्ने प्रक्रियाको थालनी।",
+      "member_slug": "case-ncell-capital-gains-tax-dispute-part1"
+    },
+    {
+      "date": "2008-04-13",
+      "title": "टेलियासोनेराको प्रवेश",
+      "date_bs": "2065-01-01",
+      "description": "TeliaSonera समूहले Reynolds Holdings मार्फत एनसेलको ८०% स्वामित्व प्राप्त । Reynolds Holdings सेन्ट किट्स एण्ड नेभिस (Tax Haven) मा दर्ता कम्पनी थियो।",
+      "member_slug": "case-ncell-capital-gains-tax-dispute-part1"
+    },
+    {
+      "date": "2010-04-14",
+      "title": "नाम परिवर्तन",
+      "date_bs": "2067-01-01",
+      "description": "कम्पनीको नाम परिवर्तन गरी Ncell Pvt. Ltd. राखियो।",
+      "member_slug": "case-ncell-capital-gains-tax-dispute-part1"
+    }
+  ],
+  "accused": [],
+  "sources": [
+    {
+      "material_iri": "https://jawafdehi.org/material/court_order/20260610.419cbbef",
+      "material": {
+        "display_name": "द्वारिकानाथ ढुंगेलसमेत विरूद्ध  ठूला करदाता कार्यालय, नेकाप २०७६ नि नं १०१६३",
+        "material_type": "court_order",
+        "date": "2076-01-01",
+        "date_ad": null,
+        "description": null,
+        "source_type": "COURT_ORDER",
+        "withheld": {
+          "pdf": false,
+          "transcript": true
+        },
+        "court": null
+      },
+      "member_slugs": [
+        "case-ncell-capital-gains-tax-dispute-part1"
+      ]
+    },
+    {
+      "material_iri": "https://jawafdehi.org/material/official_report/20260610.53d6e67e",
+      "material": {
+        "display_name": "54th Annual Report of the Auditor General, 2073 (FY 2072/73)",
+        "material_type": "official_report",
+        "date": "2073-12-30",
+        "date_ad": "2017-04-12",
+        "description": null,
+        "source_type": "OAG_AUDIT_REPORT",
+        "withheld": {
+          "pdf": false,
+          "transcript": false
+        },
+        "court": null
+      },
+      "member_slugs": [
+        "case-ncell-capital-gains-tax-dispute-part1"
+      ]
+    },
+    {
+      "material_iri": "https://jawafdehi.org/material/news/20260610.55c0866d",
+      "material": {
+        "display_name": "एनसेलसँग तत्काल कर लिन सरकारलाई लेखा समितिको निर्देशन",
+        "material_type": "news",
+        "date": "2073-10-02",
+        "date_ad": null,
+        "description": null,
+        "source_type": "NEWS",
+        "withheld": {
+          "pdf": false,
+          "transcript": true
+        },
+        "court": null
+      },
+      "member_slugs": [
+        "case-ncell-capital-gains-tax-dispute-part1"
+      ]
+    }
+  ],
+  "totals": {
+    "member_count": 3,
+    "court_case_count": 3,
+    "court_count": 2,
+    "bigo_max": {
+      "amount": 66000000000,
+      "member_slug": "case-ncell-tax-dispute-icsid-arbitration-part3"
+    },
+    "bigo_members_with_value": 3,
+    "accused_count": 0,
+    "status_counts": {
+      "others": 3
+    },
+    "first_date": "2018-01-28"
+  },
+  "updated_at": "2026-11-26T00:00:00Z"
+}

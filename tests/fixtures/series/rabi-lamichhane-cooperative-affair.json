@@ -1,0 +1,777 @@
+{
+  "slug": "rabi-lamichhane-cooperative-affair",
+  "iri": "https://jawafdehi.org/series/rabi-lamichhane-cooperative-affair",
+  "tag": null,
+  "title": {
+    "ne": "रवि लामिछाने सहकारी ठगी प्रकरण",
+    "en": "Rabi Lamichhane cooperative fraud affair"
+  },
+  "summary": {
+    "ne": "सरकारी वकिलले राष्ट्रिय स्वतन्त्र पार्टीका सभापति रवि लामिछाने समेतविरुद्ध पाँच जिल्ला अदालतमा सहकारी ठगी मुद्दा चलाएका छन्। आरोपपत्रहरूले पाँच सहकारीको रकम गोर्खा मिडिया नेटवर्क (ग्यालेक्सी ४K) मा पुगेको दाबी गरेका छन्, जहाँ उनी प्रबन्ध निर्देशक थिए। कुनै अदालतले फैसला गरेको छैन; आरोप प्रमाणित भएको छैन। महान्यायाधिवक्ताले अभियोगपत्र संशोधन स्वीकृत गरेपछि सन् २०२६ मा संगठित अपराध र सम्पत्ति शुद्धीकरणका दाबी हटाइए; त्यो निर्णयविरुद्धका रिट सर्वोच्च अदालतको पूर्ण इजलासमा विचाराधीन छन्। उनी २०८२-०९-०४ (१९ डिसेम्बर २०२५) देखि धरौटीमा बाहिर छन्।",
+    "en": null
+  },
+  "members": [
+    {
+      "ordinal": 1,
+      "note": {
+        "ne": "Trial: Suryadarshan Savings & Credit Cooperative, Pokhara।",
+        "en": null
+      },
+      "case": {
+        "slug": "rabi-lamichhane-suryadarshan-kaski",
+        "title": "सूर्यदर्शन सहकारी ठगी मुद्दा, कास्की जिल्ला अदालत (081-C1-0435)",
+        "title_en": null,
+        "short_description": "Trial: Suryadarshan Savings & Credit Cooperative, Pokhara. 44 accused, Lamichhane no. 3 (as Gorkha Media MD). Claim: Rs 3.38 crore (cooperative offence) + Rs 27.9 crore (money laundering); organised-crime and money-laundering charges later dropped (2083-02-08, news).",
+        "status": "ongoing",
+        "case_type": "CORRUPTION",
+        "bigo": 33800000,
+        "proceedings_started_on": "2024-12-22",
+        "proceedings_decided_on": null,
+        "court_cases": [
+          "https://jawafdehi.org/courtcase/kaskidc/081-c1-0435",
+          "https://jawafdehi.org/courtcase/pokharahc/081-re-0327",
+          "https://jawafdehi.org/courtcase/pokharahc/081-re-0328"
+        ]
+      }
+    },
+    {
+      "ordinal": 2,
+      "note": {
+        "ne": "Trial: Swarnalaxmi Multipurpose Cooperative, Kathmandu।",
+        "en": null
+      },
+      "case": {
+        "slug": "rabi-lamichhane-swarnalaxmi-kathmandu",
+        "title": "स्वर्णलक्ष्मी सहकारी ठगी मुद्दा, काठमाडौं जिल्ला अदालत (081-C1-3905)",
+        "title_en": null,
+        "short_description": "Trial: Swarnalaxmi Multipurpose Cooperative, Kathmandu. 39 accused, \"organised fraud\". Charge sheet not in our archive; organised-crime charge dropped 2083-03-05 (news).",
+        "status": "ongoing",
+        "case_type": "CORRUPTION",
+        "bigo": null,
+        "proceedings_started_on": "2025-01-05",
+        "proceedings_decided_on": null,
+        "court_cases": [
+          "https://jawafdehi.org/courtcase/kathmandudc/081-c1-3905",
+          "https://jawafdehi.org/courtcase/patanhc/081-re-1729",
+          "https://jawafdehi.org/courtcase/patanhc/081-re-1730",
+          "https://jawafdehi.org/courtcase/patanhc/081-re-1784",
+          "https://jawafdehi.org/courtcase/patanhc/081-re-2422"
+        ]
+      }
+    },
+    {
+      "ordinal": 3,
+      "note": {
+        "ne": "Trial: Supreme Savings & Credit Cooperative, Butwal।",
+        "en": null
+      },
+      "case": {
+        "slug": "rabi-lamichhane-supreme-rupandehi",
+        "title": "सुप्रिम सहकारी ठगी मुद्दा, रुपन्देही जिल्ला अदालत (081-C1-0533)",
+        "title_en": null,
+        "short_description": "Trial: Supreme Savings & Credit Cooperative, Butwal. 22 accused; cooperative offence + organised crime. Claim Rs 10.99 crore, jointly with Chhabilal Joshi and Laxmi Prasad Paudel; organised crime dropped 2083-03-01 (news). At preliminary hearing.",
+        "status": "ongoing",
+        "case_type": "CORRUPTION",
+        "bigo": 109900000,
+        "proceedings_started_on": "2025-01-19",
+        "proceedings_decided_on": null,
+        "court_cases": [
+          "https://jawafdehi.org/courtcase/rupandehidc/081-c1-0533",
+          "https://jawafdehi.org/courtcase/butwalhc/081-re-0313",
+          "https://jawafdehi.org/courtcase/butwalhc/081-re-0367",
+          "https://jawafdehi.org/courtcase/butwalhc/081-re-0387",
+          "https://jawafdehi.org/courtcase/butwalhc/082-re-0156",
+          "https://jawafdehi.org/courtcase/butwalhc/082-re-0160",
+          "https://jawafdehi.org/courtcase/supreme/081-wh-0320",
+          "https://jawafdehi.org/courtcase/supreme/081-re-0342",
+          "https://jawafdehi.org/courtcase/supreme/081-re-0343"
+        ]
+      }
+    },
+    {
+      "ordinal": 4,
+      "note": {
+        "ne": "Trial: Sahara Chitwan Multipurpose Cooperative।",
+        "en": null
+      },
+      "case": {
+        "slug": "rabi-lamichhane-sahara-chitwan",
+        "title": "सहारा चितवन सहकारी ठगी मुद्दा, चितवन जिल्ला अदालत (081-C1-0572)",
+        "title_en": null,
+        "short_description": "Trial: Sahara Chitwan Multipurpose Cooperative. 32 accused, Lamichhane no. 1; fraud only (organised crime is against 12 others). Bail Rs 54 lakh.",
+        "status": "ongoing",
+        "case_type": "CORRUPTION",
+        "bigo": null,
+        "proceedings_started_on": "2025-02-04",
+        "proceedings_decided_on": null,
+        "court_cases": [
+          "https://jawafdehi.org/courtcase/chitwandc/081-c1-0572",
+          "https://jawafdehi.org/courtcase/hetaudahc/081-re-0154",
+          "https://jawafdehi.org/courtcase/hetaudahc/081-re-0165"
+        ]
+      }
+    },
+    {
+      "ordinal": 5,
+      "note": {
+        "ne": "Trial: Sano Paila Savings & Credit Cooperative, Birgunj।",
+        "en": null
+      },
+      "case": {
+        "slug": "rabi-lamichhane-sano-paila-parsa",
+        "title": "सानो पाइला सहकारी ठगी मुद्दा, पर्सा जिल्ला अदालत (081-C1-0583)",
+        "title_en": null,
+        "short_description": "Trial: Sano Paila Savings & Credit Cooperative, Birgunj. 29 accused, Lamichhane no. 2; cooperative offence + organised crime; claim Rs 11.57 crore.",
+        "status": "ongoing",
+        "case_type": "CORRUPTION",
+        "bigo": 115700000,
+        "proceedings_started_on": "2025-06-13",
+        "proceedings_decided_on": null,
+        "court_cases": [
+          "https://jawafdehi.org/courtcase/parsadc/081-c1-0583"
+        ]
+      }
+    },
+    {
+      "ordinal": 6,
+      "note": {
+        "ne": "Writ by Yubaraj Paudel against the Attorney General's decision to drop money-laundering/organised-crime charges।",
+        "en": null
+      },
+      "case": {
+        "slug": "rabi-lamichhane-ag-withdrawal-writs",
+        "title": "मुद्दा फिर्ता (अभियोग संशोधन) विरुद्धका रिट, सर्वोच्च अदालत",
+        "title_en": null,
+        "short_description": "Writ by Yubaraj Paudel against the Attorney General's decision to drop money-laundering/organised-crime charges. Sent to a full bench 2082-12-15; pending.",
+        "status": "ongoing",
+        "case_type": "CORRUPTION",
+        "bigo": null,
+        "proceedings_started_on": "2026-01-18",
+        "proceedings_decided_on": null,
+        "court_cases": [
+          "https://jawafdehi.org/courtcase/supreme/082-wo-0772",
+          "https://jawafdehi.org/courtcase/supreme/082-wo-0774",
+          "https://jawafdehi.org/courtcase/supreme/082-wo-0775"
+        ]
+      }
+    }
+  ],
+  "court_cases": [
+    {
+      "iri": "https://jawafdehi.org/courtcase/kaskidc/081-c1-0435",
+      "court": "kaskidc",
+      "court_name": {
+        "ne": "जिल्ला अदालत कास्की",
+        "en": "District Court Kaski"
+      },
+      "court_tier": 1,
+      "case_number": "081-C1-0435",
+      "member_slug": "rabi-lamichhane-suryadarshan-kaski",
+      "case_type": "सहकारी ठगी",
+      "registration_date_bs": "2081-09-07",
+      "registration_date_ad": "2024-12-22",
+      "case_status": "चालु",
+      "verdict_type": null,
+      "verdict_date_bs": null,
+      "verdict_date_ad": null,
+      "plaintiff": "गोविन्द अधिकारी समेतको को जाहेरीले नेपाल सरकार",
+      "defendant": "देव कुमार नेपाली समेत ४४ जना",
+      "about": "Trial: Suryadarshan Savings & Credit Cooperative, Pokhara. 44 accused, Lamichhane no. 3 (as Gorkha Media MD). Claim: Rs 3.38 crore (cooperative offence) + Rs 27.9 crore (money laundering); organised-crime and money-laundering charges later dropped (2083-02-08, news)."
+    },
+    {
+      "iri": "https://jawafdehi.org/courtcase/pokharahc/081-re-0327",
+      "court": "pokharahc",
+      "court_name": {
+        "ne": "उच्च अदालत पोखरा",
+        "en": "High Court Pokhara"
+      },
+      "court_tier": 2,
+      "case_number": "081-RE-0327",
+      "member_slug": "rabi-lamichhane-suryadarshan-kaski",
+      "case_type": "सहकारी ठगी,संगठित अपराध र सम्पत्ती शुद्दिकरण समेत",
+      "registration_date_bs": "2081-12-14",
+      "registration_date_ad": "2025-03-27",
+      "case_status": "चलिरहेको",
+      "verdict_type": null,
+      "verdict_date_bs": null,
+      "verdict_date_ad": null,
+      "plaintiff": "नेपाल सरकार",
+      "defendant": "छबिलाल जोशी समेत ७",
+      "about": "Government challenges Kaski court's bail order (Suryadarshan). Pending."
+    },
+    {
+      "iri": "https://jawafdehi.org/courtcase/pokharahc/081-re-0328",
+      "court": "pokharahc",
+      "court_name": {
+        "ne": "उच्च अदालत पोखरा",
+        "en": "High Court Pokhara"
+      },
+      "court_tier": 2,
+      "case_number": "081-RE-0328",
+      "member_slug": "rabi-lamichhane-suryadarshan-kaski",
+      "case_type": "सहकारी ठगी,संगठित अपराध र सम्पत्ती शुद्दिकरण समेत",
+      "registration_date_bs": "2081-12-14",
+      "registration_date_ad": "2025-03-27",
+      "case_status": "चलिरहेको",
+      "verdict_type": null,
+      "verdict_date_bs": null,
+      "verdict_date_ad": null,
+      "plaintiff": "रवि लामिछाने",
+      "defendant": "नेपाल सरकार",
+      "about": "Lamichhane challenges Kaski court's bail order (Suryadarshan). Pending."
+    },
+    {
+      "iri": "https://jawafdehi.org/courtcase/kathmandudc/081-c1-3905",
+      "court": "kathmandudc",
+      "court_name": {
+        "ne": "जिल्ला अदालत काठमाडौं",
+        "en": "District Court Kathmandu"
+      },
+      "court_tier": 1,
+      "case_number": "081-C1-3905",
+      "member_slug": "rabi-lamichhane-swarnalaxmi-kathmandu",
+      "case_type": "संगठित रुपमा ठगी गरेको।",
+      "registration_date_bs": "2081-09-21",
+      "registration_date_ad": "2025-01-05",
+      "case_status": "चालु",
+      "verdict_type": null,
+      "verdict_date_bs": null,
+      "verdict_date_ad": null,
+      "plaintiff": "सुमन खनाल समेत को जाहेरीले नेपाल सरकार",
+      "defendant": "स्‍वर्णलक्ष्मी वहुउदेश्यीय सहकारी संस्था लि का वर्तमान व्यवस्थापक नविन अछामी समेत ३९ जना",
+      "about": "Trial: Swarnalaxmi Multipurpose Cooperative, Kathmandu. 39 accused, \"organised fraud\". Charge sheet not in our archive; organised-crime charge dropped 2083-03-05 (news)."
+    },
+    {
+      "iri": "https://jawafdehi.org/courtcase/patanhc/081-re-1729",
+      "court": "patanhc",
+      "court_name": {
+        "ne": "उच्च अदालत पाटन",
+        "en": "High Court Patan"
+      },
+      "court_tier": 2,
+      "case_number": "081-RE-1729",
+      "member_slug": "rabi-lamichhane-swarnalaxmi-kathmandu",
+      "case_type": "प्रतिवेदन दर्ता",
+      "registration_date_bs": "2081-12-07",
+      "registration_date_ad": "2025-03-20",
+      "case_status": "फैसला (२०८२/०९/१७)",
+      "verdict_type": null,
+      "verdict_date_bs": "2082-09-17",
+      "verdict_date_ad": "2026-01-01",
+      "plaintiff": "नेपाल सरकार",
+      "defendant": "रवि लामिछाने",
+      "about": "Government challenges Kathmandu court's bail order for Lamichhane (Swarnalaxmi). Decided 2082-09-17: Kathmandu bail upheld."
+    },
+    {
+      "iri": "https://jawafdehi.org/courtcase/patanhc/081-re-1730",
+      "court": "patanhc",
+      "court_name": {
+        "ne": "उच्च अदालत पाटन",
+        "en": "High Court Patan"
+      },
+      "court_tier": 2,
+      "case_number": "081-RE-1730",
+      "member_slug": "rabi-lamichhane-swarnalaxmi-kathmandu",
+      "case_type": "प्रतिवेदन दर्ता",
+      "registration_date_bs": "2081-12-07",
+      "registration_date_ad": "2025-03-20",
+      "case_status": "फैसला (२०८२/०९/१७)",
+      "verdict_type": null,
+      "verdict_date_bs": "2082-09-17",
+      "verdict_date_ad": "2026-01-01",
+      "plaintiff": "छविलाल जोशी",
+      "defendant": "नेपाल सरकार",
+      "about": "Chhabilal Joshi challenges the Kathmandu bail order (Swarnalaxmi). Decided 2082-09-17."
+    },
+    {
+      "iri": "https://jawafdehi.org/courtcase/patanhc/081-re-1784",
+      "court": "patanhc",
+      "court_name": {
+        "ne": "उच्च अदालत पाटन",
+        "en": "High Court Patan"
+      },
+      "court_tier": 2,
+      "case_number": "081-RE-1784",
+      "member_slug": "rabi-lamichhane-swarnalaxmi-kathmandu",
+      "case_type": "प्रतिवेदन दर्ता",
+      "registration_date_bs": "2081-12-13",
+      "registration_date_ad": "2025-03-26",
+      "case_status": "फैसला (२०८२/०९/१७)",
+      "verdict_type": null,
+      "verdict_date_bs": "2082-09-17",
+      "verdict_date_ad": "2026-01-01",
+      "plaintiff": "रवि लामिछाने",
+      "defendant": "नेपाल सरकार",
+      "about": "Lamichhane challenges the Kathmandu bail amount (Swarnalaxmi). Decided 2082-09-17: bail order kept."
+    },
+    {
+      "iri": "https://jawafdehi.org/courtcase/patanhc/081-re-2422",
+      "court": "patanhc",
+      "court_name": {
+        "ne": "उच्च अदालत पाटन",
+        "en": "High Court Patan"
+      },
+      "court_tier": 2,
+      "case_number": "081-RE-2422",
+      "member_slug": "rabi-lamichhane-swarnalaxmi-kathmandu",
+      "case_type": "प्रतिवेदन दर्ता",
+      "registration_date_bs": "2082-03-12",
+      "registration_date_ad": "2025-06-26",
+      "case_status": "फैसला (२०८२/०९/१७)",
+      "verdict_type": null,
+      "verdict_date_bs": "2082-09-17",
+      "verdict_date_ad": "2026-01-01",
+      "plaintiff": "नेपाल सरकार",
+      "defendant": "माया राई",
+      "about": "Government challenges the Kathmandu bail order for co-accused Maya Rai. Decided 2082-09-17."
+    },
+    {
+      "iri": "https://jawafdehi.org/courtcase/rupandehidc/081-c1-0533",
+      "court": "rupandehidc",
+      "court_name": {
+        "ne": "जिल्ला अदालत रूपन्देही",
+        "en": "District Court Rupandehi"
+      },
+      "court_tier": 1,
+      "case_number": "081-C1-0533",
+      "member_slug": "rabi-lamichhane-supreme-rupandehi",
+      "case_type": "सहकारी ठगी",
+      "registration_date_bs": "2081-10-06",
+      "registration_date_ad": "2025-01-19",
+      "case_status": "चालु",
+      "verdict_type": null,
+      "verdict_date_bs": null,
+      "verdict_date_ad": null,
+      "plaintiff": "नारायण बहादुर पहराई समेत को जाहेरीले नेपाल सरकार",
+      "defendant": "रविना रिमाल समेत २२ जना",
+      "about": "Trial: Supreme Savings & Credit Cooperative, Butwal. 22 accused; cooperative offence + organised crime. Claim Rs 10.99 crore, jointly with Chhabilal Joshi and Laxmi Prasad Paudel; organised crime dropped 2083-03-01 (news). At preliminary hearing."
+    },
+    {
+      "iri": "https://jawafdehi.org/courtcase/butwalhc/081-re-0313",
+      "court": "butwalhc",
+      "court_name": {
+        "ne": "उच्च अदालत बुटवल",
+        "en": "High Court Butwal"
+      },
+      "court_tier": 2,
+      "case_number": "081-RE-0313",
+      "member_slug": "rabi-lamichhane-supreme-rupandehi",
+      "case_type": "प्रतिवेदन दर्ता",
+      "registration_date_bs": "2081-11-01",
+      "registration_date_ad": "2025-02-13",
+      "case_status": "फैसला (२०८१/१२/२२)",
+      "verdict_type": null,
+      "verdict_date_bs": "2081-12-22",
+      "verdict_date_ad": "2025-04-04",
+      "plaintiff": "छविलाल जोशी",
+      "defendant": "नारायण बहादुर पहराई समेतको जाहेरीले नेपाल सरकार",
+      "about": "Bail appeal (Chhabilal Joshi) against Rupandehi court's bail order. Decided 2081-12-22: High Court reversed bail, sent accused to custody for trial."
+    },
+    {
+      "iri": "https://jawafdehi.org/courtcase/butwalhc/081-re-0367",
+      "court": "butwalhc",
+      "court_name": {
+        "ne": "उच्च अदालत बुटवल",
+        "en": "High Court Butwal"
+      },
+      "court_tier": 2,
+      "case_number": "081-RE-0367",
+      "member_slug": "rabi-lamichhane-supreme-rupandehi",
+      "case_type": "प्रतिवेदन दर्ता",
+      "registration_date_bs": "2081-11-22",
+      "registration_date_ad": "2025-03-06",
+      "case_status": "फैसला (२०८१/१२/२२)",
+      "verdict_type": null,
+      "verdict_date_bs": "2081-12-22",
+      "verdict_date_ad": "2025-04-04",
+      "plaintiff": "नारायणबहादुर पहराई समेत जना ४४ को जाहेरीले नेपाल सरकार",
+      "defendant": "रवी लामिछाने",
+      "about": "Bail appeal by the government/complainants against Lamichhane's Rupandehi bail. Decided 2081-12-22: bail reversed, Lamichhane arrested that evening."
+    },
+    {
+      "iri": "https://jawafdehi.org/courtcase/butwalhc/081-re-0387",
+      "court": "butwalhc",
+      "court_name": {
+        "ne": "उच्च अदालत बुटवल",
+        "en": "High Court Butwal"
+      },
+      "court_tier": 2,
+      "case_number": "081-RE-0387",
+      "member_slug": "rabi-lamichhane-supreme-rupandehi",
+      "case_type": "प्रतिवेदन दर्ता",
+      "registration_date_bs": "2081-11-28",
+      "registration_date_ad": "2025-03-12",
+      "case_status": "फैसला (२०८१/१२/२२)",
+      "verdict_type": null,
+      "verdict_date_bs": "2081-12-22",
+      "verdict_date_ad": "2025-04-04",
+      "plaintiff": "रवि लामिछाने",
+      "defendant": "नारायण बहादुर पहराई समेतको जाहेरीले नेपाल सरकार",
+      "about": "Lamichhane's own petition on the Rupandehi bail order. Decided with the others on 2081-12-22 (custody)."
+    },
+    {
+      "iri": "https://jawafdehi.org/courtcase/butwalhc/082-re-0156",
+      "court": "butwalhc",
+      "court_name": {
+        "ne": "उच्च अदालत बुटवल",
+        "en": "High Court Butwal"
+      },
+      "court_tier": 2,
+      "case_number": "082-RE-0156",
+      "member_slug": "rabi-lamichhane-supreme-rupandehi",
+      "case_type": "प्रतिवेदन दर्ता",
+      "registration_date_bs": "2082-06-23",
+      "registration_date_ad": "2025-10-09",
+      "case_status": "फैसला (२०८२/०९/०३)",
+      "verdict_type": "REVERSED",
+      "verdict_date_bs": "2082-09-03",
+      "verdict_date_ad": "2025-12-18",
+      "plaintiff": "रवि लामिछाने",
+      "defendant": "नारायण पहराई समेतको जाहेरीले नेपाल सरकार",
+      "about": "Lamichhane seeks release from custody. Decided 2082-09-03: released on a Rs 2.75 crore bank guarantee; freed 19 Dec 2025."
+    },
+    {
+      "iri": "https://jawafdehi.org/courtcase/butwalhc/082-re-0160",
+      "court": "butwalhc",
+      "court_name": {
+        "ne": "उच्च अदालत बुटवल",
+        "en": "High Court Butwal"
+      },
+      "court_tier": 2,
+      "case_number": "082-RE-0160",
+      "member_slug": "rabi-lamichhane-supreme-rupandehi",
+      "case_type": "प्रतिवेदन दर्ता",
+      "registration_date_bs": "2082-06-29",
+      "registration_date_ad": "2025-10-15",
+      "case_status": "फैसला (२०८२/०९/०३)",
+      "verdict_type": "REVERSED",
+      "verdict_date_bs": "2082-09-03",
+      "verdict_date_ad": "2025-12-18",
+      "plaintiff": "छविलाल जोशी",
+      "defendant": "नारायण पहराई समेतको जाहेरीले नेपाल सरकार",
+      "about": "Chhabilal Joshi seeks release from custody; decided with 0156 on 2082-09-03."
+    },
+    {
+      "iri": "https://jawafdehi.org/courtcase/supreme/081-wh-0320",
+      "court": "supreme",
+      "court_name": {
+        "ne": "सर्वोच्च अदालत",
+        "en": "Supreme Court"
+      },
+      "court_tier": 3,
+      "case_number": "081-WH-0320",
+      "member_slug": "rabi-lamichhane-supreme-rupandehi",
+      "case_type": "रिट निवेदन",
+      "registration_date_bs": "2082-01-07",
+      "registration_date_ad": "2025-04-20",
+      "case_status": null,
+      "verdict_type": "CLAIM_DENIED",
+      "verdict_date_bs": "2082-02-09",
+      "verdict_date_ad": "2025-05-23",
+      "plaintiff": "काठमाण्डौ जिल्ला बुढानिलकण्ठ नगरपालिका वडा नं. ४ बस्ने रवि लामिछानेको हकमा निजको श्रीमती निकिता पौडेल",
+      "defendant": "नेपाल सरकार प्रधानमन्त्री तथा मन्त्रिपरिषद सचिवालय सिंहदरवार काठमाण्डौ समेत ६",
+      "about": "Habeas corpus filed for Lamichhane asking for release after the Butwal High Court custody order. Dismissed 2082-02-09 (23 May 2025)."
+    },
+    {
+      "iri": "https://jawafdehi.org/courtcase/supreme/081-re-0342",
+      "court": "supreme",
+      "court_name": {
+        "ne": "सर्वोच्च अदालत",
+        "en": "Supreme Court"
+      },
+      "court_tier": 3,
+      "case_number": "081-RE-0342",
+      "member_slug": "rabi-lamichhane-supreme-rupandehi",
+      "case_type": "प्रतिवेदन",
+      "registration_date_bs": "2082-01-07",
+      "registration_date_ad": "2025-04-20",
+      "case_status": null,
+      "verdict_type": "PROCEDURAL",
+      "verdict_date_bs": "2082-02-09",
+      "verdict_date_ad": "2025-05-23",
+      "plaintiff": "रवि लामिछाने",
+      "defendant": "नारायण बहादुर पहराई समेत जना ४४ को जाहेरीले नेपाल सरकार",
+      "about": "Lamichhane asks the Supreme Court to review Butwal High Court's custody order. Decided 2082-02-09 (procedural)."
+    },
+    {
+      "iri": "https://jawafdehi.org/courtcase/supreme/081-re-0343",
+      "court": "supreme",
+      "court_name": {
+        "ne": "सर्वोच्च अदालत",
+        "en": "Supreme Court"
+      },
+      "court_tier": 3,
+      "case_number": "081-RE-0343",
+      "member_slug": "rabi-lamichhane-supreme-rupandehi",
+      "case_type": "प्रतिवेदन",
+      "registration_date_bs": "2082-01-07",
+      "registration_date_ad": "2025-04-20",
+      "case_status": null,
+      "verdict_type": "PROCEDURAL",
+      "verdict_date_bs": "2082-02-09",
+      "verdict_date_ad": "2025-05-23",
+      "plaintiff": "छबिलाल जोशी",
+      "defendant": "नारायण बहादुर पहराई समेतको जाहेरीले नेपाल सरकार",
+      "about": "Chhabilal Joshi's matching review of the Butwal custody order. Decided 2082-02-09 (procedural)."
+    },
+    {
+      "iri": "https://jawafdehi.org/courtcase/chitwandc/081-c1-0572",
+      "court": "chitwandc",
+      "court_name": {
+        "ne": "जिल्ला अदालत चितवन",
+        "en": "District Court Chitwan"
+      },
+      "court_tier": 1,
+      "case_number": "081-C1-0572",
+      "member_slug": "rabi-lamichhane-sahara-chitwan",
+      "case_type": "ठगी र संगठित अपराध",
+      "registration_date_bs": "2081-10-22",
+      "registration_date_ad": "2025-02-04",
+      "case_status": "चालु",
+      "verdict_type": null,
+      "verdict_date_bs": null,
+      "verdict_date_ad": null,
+      "plaintiff": "केशब चौधरीको समेतको जाहेरीले बादी नेपाल सरकार को जाहेरीले नेपाल सरकार",
+      "defendant": "नविन आछामी समेत ३२ जना",
+      "about": "Trial: Sahara Chitwan Multipurpose Cooperative. 32 accused, Lamichhane no. 1; fraud only (organised crime is against 12 others). Bail Rs 54 lakh."
+    },
+    {
+      "iri": "https://jawafdehi.org/courtcase/hetaudahc/081-re-0154",
+      "court": "hetaudahc",
+      "court_name": {
+        "ne": "उच्च अदालत हेटौंडा",
+        "en": "High Court Hetauda"
+      },
+      "court_tier": 2,
+      "case_number": "081-RE-0154",
+      "member_slug": "rabi-lamichhane-sahara-chitwan",
+      "case_type": "ठगी र संगठित अपराध",
+      "registration_date_bs": "2082-01-16",
+      "registration_date_ad": "2025-04-29",
+      "case_status": "चलिरहेको",
+      "verdict_type": null,
+      "verdict_date_bs": null,
+      "verdict_date_ad": null,
+      "plaintiff": "केशव चौधरी समेतको जाहेरीले नेपाल सरकार",
+      "defendant": "बागमती प्रदेश काठमाण्डौं जिल्ला बुढानिलकण्ठ नगरपालिका वडा नं. ८ हात्तिगौंडा बस्ने लालचन्द्र लामिछानेको छोरा रवि लामिछाने",
+      "about": "Government challenges Chitwan court's Rs 54 lakh bail for Lamichhane (Sahara Chitwan). Pending."
+    },
+    {
+      "iri": "https://jawafdehi.org/courtcase/hetaudahc/081-re-0165",
+      "court": "hetaudahc",
+      "court_name": {
+        "ne": "उच्च अदालत हेटौंडा",
+        "en": "High Court Hetauda"
+      },
+      "court_tier": 2,
+      "case_number": "081-RE-0165",
+      "member_slug": "rabi-lamichhane-sahara-chitwan",
+      "case_type": "ठगी र संगठित अपराध",
+      "registration_date_bs": "2082-02-04",
+      "registration_date_ad": "2025-05-18",
+      "case_status": "चलिरहेको",
+      "verdict_type": null,
+      "verdict_date_bs": null,
+      "verdict_date_ad": null,
+      "plaintiff": "रवि लामिछाने",
+      "defendant": "केशव चौधरी समेतको जाहेरीले नेपाल सरकार",
+      "about": "Lamichhane challenges the Chitwan bail order (Sahara Chitwan). Pending."
+    },
+    {
+      "iri": "https://jawafdehi.org/courtcase/parsadc/081-c1-0583",
+      "court": "parsadc",
+      "court_name": {
+        "ne": "जिल्ला अदालत पर्सा",
+        "en": "District Court Parsa"
+      },
+      "court_tier": 1,
+      "case_number": "081-C1-0583",
+      "member_slug": "rabi-lamichhane-sano-paila-parsa",
+      "case_type": "सहकारी ठगी तथा संगठित अपराध",
+      "registration_date_bs": "2082-02-30",
+      "registration_date_ad": "2025-06-13",
+      "case_status": "चालु",
+      "verdict_type": null,
+      "verdict_date_bs": "**** ** **",
+      "verdict_date_ad": null,
+      "plaintiff": "बिशाल सहनी गोढी समेत को जाहेरीले नेपाल सरकार",
+      "defendant": "नवराज राउत समेत २९ जना",
+      "about": "Trial: Sano Paila Savings & Credit Cooperative, Birgunj. 29 accused, Lamichhane no. 2; cooperative offence + organised crime; claim Rs 11.57 crore."
+    },
+    {
+      "iri": "https://jawafdehi.org/courtcase/supreme/082-wo-0772",
+      "court": "supreme",
+      "court_name": {
+        "ne": "सर्वोच्च अदालत",
+        "en": "Supreme Court"
+      },
+      "court_tier": 3,
+      "case_number": "082-WO-0772",
+      "member_slug": "rabi-lamichhane-ag-withdrawal-writs",
+      "case_type": "उत्प्रेषण",
+      "registration_date_bs": "2082-10-04",
+      "registration_date_ad": "2026-01-18",
+      "case_status": null,
+      "verdict_type": null,
+      "verdict_date_bs": null,
+      "verdict_date_ad": null,
+      "plaintiff": "युवराज पौडेल",
+      "defendant": "श्री महान्यायाधिवक्ता महान्यायाधिवक्ताको कार्यालय रामशाहपथ काठमाडौँ समेत ७",
+      "about": "Writ by Yubaraj Paudel against the Attorney General's decision to drop money-laundering/organised-crime charges. Sent to a full bench 2082-12-15; pending."
+    },
+    {
+      "iri": "https://jawafdehi.org/courtcase/supreme/082-wo-0774",
+      "court": "supreme",
+      "court_name": {
+        "ne": "सर्वोच्च अदालत",
+        "en": "Supreme Court"
+      },
+      "court_tier": 3,
+      "case_number": "082-WO-0774",
+      "member_slug": "rabi-lamichhane-ag-withdrawal-writs",
+      "case_type": "उत्प्रेषण",
+      "registration_date_bs": "2082-10-04",
+      "registration_date_ad": "2026-01-18",
+      "case_status": null,
+      "verdict_type": null,
+      "verdict_date_bs": null,
+      "verdict_date_ad": null,
+      "plaintiff": "अधिवक्ता दिनेश त्रिपाठी",
+      "defendant": "नेपाल सरकार प्रधानमन्त्री तथा मन्त्रीपरिषद्को कार्यालय सिंहदरबार काठमाडौँ समेत १०",
+      "about": "Writ by Adv. Dinesh Tripathi against the AG's withdrawal of charges. Full bench; pending."
+    },
+    {
+      "iri": "https://jawafdehi.org/courtcase/supreme/082-wo-0775",
+      "court": "supreme",
+      "court_name": {
+        "ne": "सर्वोच्च अदालत",
+        "en": "Supreme Court"
+      },
+      "court_tier": 3,
+      "case_number": "082-WO-0775",
+      "member_slug": "rabi-lamichhane-ag-withdrawal-writs",
+      "case_type": "उत्प्रेषण",
+      "registration_date_bs": "2082-10-04",
+      "registration_date_ad": "2026-01-18",
+      "case_status": null,
+      "verdict_type": null,
+      "verdict_date_bs": null,
+      "verdict_date_ad": null,
+      "plaintiff": "अधिवक्ता आभास रेग्मी समेत जना ३",
+      "defendant": "प्रधानमन्त्री तथा मन्त्रिपरिषद्को कार्यालय सिंहदरबार काठमाडौँ समेत ६",
+      "about": "Writ by Adv. Abhas Regmi and 2 others against the AG's withdrawal of charges. Full bench; pending."
+    }
+  ],
+  "timeline": [
+    {
+      "date": "2019-01-01",
+      "title": "लामिछाने गोर्खा मिडिया नेटवर्कमा",
+      "date_bs": "2075-09-17",
+      "description": "रवि लामिछाने न्युज 24 नेपाल छाडी गोर्खा मिडिया नेटवर्क प्राइभेट लिमिटेडमा प्रबन्ध निर्देशकका रूपमा आबद्ध हुन्छन्; कम्पनीको शेयरधनी अभिलेखअनुसार उनले 1,80,000 'स्वेट शेयर' (15 प्रतिशत) पाउँछन्।",
+      "member_slug": null
+    },
+    {
+      "date": "2022-06-15",
+      "title": "लामिछानेले गोर्खा मिडियाबाट राजीनामा दिन्छन्",
+      "date_bs": "2079-03-01",
+      "description": "लामिछानेले राजीनामा दिन्छन् र कम्पनीको अभिलेखअनुसार आफ्नो शेयर जीबी राईलाई रु. 1 करोड 80 लाखमा हस्तान्तरण गर्छन्। लामिछानेले पछि शेयरको चेक भुक्तानी नभएको बताएका थिए (उनको 23 जनवरी 2024 को वक्तव्य; बैंकका पत्र स्रोतमा)।",
+      "member_slug": null
+    },
+    {
+      "date": "2022-07-01",
+      "title": "राष्ट्रिय स्वतन्त्र पार्टी स्थापना",
+      "date_bs": "2079-03-17",
+      "description": "लामिछानेले राष्ट्रिय स्वतन्त्र पार्टी स्थापना गर्छन् र संस्थापक सभापति बन्छन्।",
+      "member_slug": null
+    }
+  ],
+  "accused": [
+    {
+      "nes_id": "https://jawafdehi.org/entity/person/rabi-lamichhane-q14474324",
+      "name": {
+        "en": "Rabi Lamichhane",
+        "ne": "रवि लामिछाने"
+      },
+      "entity_type": "Person",
+      "member_slugs": []
+    },
+    {
+      "nes_id": "https://jawafdehi.org/entity/person/chhabilal-joshi-9acd38",
+      "name": {
+        "en": "Chhabilal Joshi",
+        "ne": "Chhabilal Joshi"
+      },
+      "entity_type": "Person",
+      "member_slugs": []
+    },
+    {
+      "nes_id": "https://jawafdehi.org/entity/person/gitendra-babu-rabi-gb-rai-f4fcd5",
+      "name": {
+        "en": "Gitendra Babu Rabi (GB Rai)",
+        "ne": "Gitendra Babu Rabi (GB Rai)"
+      },
+      "entity_type": "Person",
+      "member_slugs": []
+    },
+    {
+      "nes_id": "https://jawafdehi.org/entity/person/kumar-ramtel-19f85c",
+      "name": {
+        "en": "Kumar Ramtel",
+        "ne": "Kumar Ramtel"
+      },
+      "entity_type": "Person",
+      "member_slugs": []
+    },
+    {
+      "nes_id": "https://jawafdehi.org/entity/person/galaxy-media-network-pvt-ltd-f9670c",
+      "name": {
+        "en": "Galaxy Media Network Pvt. Ltd.",
+        "ne": "Galaxy Media Network Pvt. Ltd."
+      },
+      "entity_type": "Organization",
+      "member_slugs": []
+    }
+  ],
+  "sources": [
+    {
+      "material_iri": "https://jawafdehi.org/material/document/20260103.05991c18",
+      "material": {
+        "display_name": "Supreme Savings and Credit Cooperative Ltd, Butwal Photo",
+        "material_type": "document"
+      },
+      "member_slugs": []
+    },
+    {
+      "material_iri": "https://jawafdehi.org/material/document/20260103.b3ee8ba6",
+      "material": {
+        "display_name": "Shahara Chitwan Multipurpose Cooperative Ltd. Photo",
+        "material_type": "document"
+      },
+      "member_slugs": []
+    },
+    {
+      "material_iri": "https://jawafdehi.org/material/legal_corpus/20260103.2b72918b",
+      "material": {
+        "display_name": "Cooperatives Act, 2074 (2017)",
+        "material_type": "legal_corpus"
+      },
+      "member_slugs": []
+    }
+  ],
+  "totals": {
+    "member_count": 6,
+    "court_case_count": 24,
+    "court_count": 10,
+    "bigo_max": {
+      "amount": 115700000,
+      "member_slug": "rabi-lamichhane-sano-paila-parsa"
+    },
+    "bigo_members_with_value": 3,
+    "accused_count": 5,
+    "status_counts": {
+      "ongoing": 6
+    },
+    "first_date": "2024-12-22"
+  },
+  "updated_at": "2026-11-26T00:00:00Z"
+}

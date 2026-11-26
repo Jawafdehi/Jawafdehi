@@ -7,6 +7,8 @@
  * Served by the unified monolith under `/api` (see services/jds-api.ts).
  */
 
+import type { CaseSeriesRef } from "./series";
+
 // ============================================================================
 // Enums
 // ============================================================================
@@ -518,6 +520,9 @@ export interface CaseDetail extends Case {
   public_edit_history: CaseEditHistoryEntry[];
   bigo: number | null; // Embezzled/irregular amount in NPR (null if not applicable)
   court_cases: string[] | null;
+  /** The public case series containing this case (empty when none). Optional:
+   * absent until the API's case-series change deploys. */
+  series?: CaseSeriesRef[];
 }
 
 export type SourceLinkRole =

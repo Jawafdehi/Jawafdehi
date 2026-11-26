@@ -1,4 +1,5 @@
 import { useRef, type KeyboardEvent } from "react";
+import { useTranslation } from "react-i18next";
 
 import type { ArchiveSearchType } from "@/types/search";
 import { chipVariants } from "@/components/ui/chip";
@@ -6,13 +7,19 @@ import { chipVariants } from "@/components/ui/chip";
 type SearchTabsProps = {
   activeType: ArchiveSearchType;
   onChange: (type?: ArchiveSearchType) => void;
+  /** Offer the series tab. Off until the API reports a series count, so an API
+   * without the series index never gets a `type=series` request it rejects. */
+  showSeries?: boolean;
 };
 
-const tabs: Array<{
+const allTabs: Array<{
   type: ArchiveSearchType;
   label: string;
+  /** i18n key; tabs without one keep their fixed label. */
+  labelKey?: string;
 }> = [
   { type: "all", label: "All records" },
+  { type: "series", label: "Series", labelKey: "series.search.tab" },
   { type: "case", label: "Cases" },
   { type: "entity", label: "Entities" },
   { type: "material", label: "Materials" },
@@ -24,8 +31,10 @@ function typeParam(type: ArchiveSearchType) {
   return type === "all" ? undefined : type;
 }
 
-export function SearchTabs({ activeType, onChange }: Readonly<SearchTabsProps>) {
+export function SearchTabs({ activeType, onChange, showSeries = false }: Readonly<SearchTabsProps>) {
+  const { t } = useTranslation();
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const tabs = allTabs.filter((tab) => tab.type !== "series" || showSeries || activeType === "series");
 
   // Arrow/Home/End move the selection, i.e. the automatic-activation form of
   // the WAI-ARIA tabs pattern. These tabs already select on click, so matching
@@ -81,7 +90,7 @@ export function SearchTabs({ activeType, onChange }: Readonly<SearchTabsProps>) 
             tabIndex={isActive ? 0 : -1}
             type="button"
           >
-            {tab.label}
+            {tab.labelKey ? t(tab.labelKey, tab.label) : tab.label}
           </button>
         );
       })}

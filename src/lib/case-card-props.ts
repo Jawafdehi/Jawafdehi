@@ -81,6 +81,7 @@ export function caseCardPropsFromSearchResult(
     thumbnailUrl: card?.thumbnail_url || undefined,
     bannerUrl: card?.banner_url || undefined,
     bigo: card?.bigo,
+    series: card?.series,
     ...splitEntities<CaseSearchCardEntity>(card?.entities ?? [], language),
   };
 }
@@ -108,6 +109,7 @@ export function caseCardPropsFromCaseDetail(
     thumbnailUrl: detail.thumbnail_url || undefined,
     bannerUrl: detail.banner_url || undefined,
     bigo: detail.bigo,
+    series: detail.series,
     ...splitEntities(detail.entities || [], language),
   };
 }

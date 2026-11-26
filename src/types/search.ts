@@ -3,6 +3,7 @@
 // cases, and PUBLISHED Jawafdehi cases. Served by GET /api/search/.
 
 import type { CaseImage, CaseStage, CaseTrack } from "./jds";
+import type { CaseSeriesRef } from "./series";
 
 // The four indexed result domains. "all" is a UI-only sentinel (sent as "no type
 // filter"); it is never a value the backend returns on a result.
@@ -10,7 +11,10 @@ export type ArchiveSearchResultType =
   | "entity"
   | "material"
   | "courtcase"
-  | "case";
+  | "case"
+  // A case series (one affair's cases grouped). Served once the API's series
+  // index deploys; until then the API returns no such hits and no count.
+  | "series";
 
 export type ArchiveSearchType = "all" | ArchiveSearchResultType;
 
@@ -161,6 +165,9 @@ export interface CaseSearchCard {
   banner_url: string | null;
   timeline: Array<Record<string, unknown>>;
   entities: CaseSearchCardEntity[];
+  /** The public series this case belongs to. Optional: absent until the API's
+   * case-series change deploys and the case is reindexed. */
+  series?: CaseSeriesRef[];
 }
 
 // One side of a court case, as the search index stores it.
@@ -234,6 +241,10 @@ export interface ArchiveSearchResult {
   extra: SearchResultExtra;
   // Present for case hits after the jawafdehi-cases card-payload enrichment. Older
   // cached/indexed docs may omit it, so callers must keep a safe fallback.
+  //
+  // A "series" hit carries a DIFFERENT card shape (SeriesSearchCard in
+  // types/series.ts); read it only through `seriesCardOf` in lib/case-series.ts,
+  // which checks the type and the shape.
   card?: CaseSearchCard;
 }
 
@@ -243,6 +254,8 @@ export interface ArchiveSearchCounts {
   material: number;
   courtcase: number;
   case: number;
+  /** Absent until the API's series index deploys: the series tab hides until then. */
+  series: number;
 }
 
 // Corpus extent of a range-filterable field — the SCALE a range control needs,

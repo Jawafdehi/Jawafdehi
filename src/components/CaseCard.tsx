@@ -14,6 +14,8 @@ import { cn } from "@/lib/utils";
 import { formatBigo } from "@/utils/number";
 import { summarizeNames } from "@/utils/name-summary";
 import { casePath } from "@/lib/case-links";
+import { SeriesPartOfChips } from "@/components/series/SeriesPartOfChips";
+import type { CaseSeriesRef } from "@/types/series";
 
 interface CaseCardProps {
   id: string;
@@ -33,6 +35,9 @@ interface CaseCardProps {
   // बिगो — the embezzled/irregular amount in NPR. Most cases carry none, so the
   // row is omitted rather than rendered as "Rs 0" (see BigoRow).
   bigo?: number | null;
+  // The case series this case belongs to: a "<series>को भाग · n/N" chip each.
+  // Absent until the API's series change deploys.
+  series?: CaseSeriesRef[] | null;
   viewMode?: "grid" | "list";
   // When set, tags render as buttons that invoke this instead of plain badges —
   // the archive search uses it to toggle a tag as a URL refinement.
@@ -48,7 +53,7 @@ function getEntitySummary(entity: string, entityNames: string[] | undefined, t: 
   return summarizeNames({ names: entityNames ?? entity.split(",") }, { t, fallback: entity });
 }
 
-export const CaseCard = ({ id, slug, title, entity, entityNames, location, tags = [], entityIds, locationIds, image, thumbnailUrl, bannerUrl, bigo, viewMode = "grid", onTagClick }: CaseCardProps) => {
+export const CaseCard = ({ id, slug, title, entity, entityNames, location, tags = [], entityIds, locationIds, image, thumbnailUrl, bannerUrl, bigo, series, viewMode = "grid", onTagClick }: CaseCardProps) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const entitySummary = getEntitySummary(entity, entityNames, t);
@@ -158,6 +163,7 @@ export const CaseCard = ({ id, slug, title, entity, entityNames, location, tags 
                 title
               )}
             </h3>
+            <SeriesPartOfChips series={series} />
           </CardHeader>
 
           <CardContent className="flex flex-1 flex-col px-4 pb-0 pt-4 sm:px-5">

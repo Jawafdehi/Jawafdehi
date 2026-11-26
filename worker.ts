@@ -1507,7 +1507,7 @@ export default {
       }
     }
 
-    // Case and entity pages: slashless → slashed (301).
+    // Case, entity and series pages: slashless → slashed (301).
     //
     // Their canonical URL ends in a slash (CaseDetail's and EntityRecordProfile's
     // canonical, the sitemap, the legacy redirects above). While the build
@@ -1520,7 +1520,9 @@ export default {
     // alone. The Location is rebuilt from a single leading slash so that a
     // `//case/x` path cannot turn into a protocol-relative redirect off-site.
     if (
-      (matched?.path === '/case/:id' || matched?.path === '/entity/*') &&
+      (matched?.path === '/case/:id' ||
+        matched?.path === '/entity/*' ||
+        matched?.path === '/series/:slug') &&
       !path.endsWith('/') &&
       (request.method === 'GET' || request.method === 'HEAD')
     ) {

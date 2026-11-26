@@ -44,6 +44,8 @@ describe('slashless case and entity URLs 301 to the slashed canonical form', () 
     ['/entity/organization/np/tu', '/entity/organization/np/tu/'],
     ['/case/a-case?utm_source=fb&x=1', '/case/a-case/?utm_source=fb&x=1'],
     ['/entity/person/%E0%A4%B0%E0%A4%BE%E0%A4%AE', '/entity/person/%E0%A4%B0%E0%A4%BE%E0%A4%AE/'],
+    // A case series is canonical with a slash too (SeriesDetail's canonical).
+    ['/series/deepak-bhatta-affair', '/series/deepak-bhatta-affair/'],
   ])('%s → %s', async (from, to) => {
     const res = await get(from);
 

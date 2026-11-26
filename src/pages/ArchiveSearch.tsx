@@ -521,7 +521,11 @@ export default function ArchiveSearch() {
           on every click and every load, nudging the tabs after it.
         */}
         <div className="mt-10 flex items-center justify-between gap-6">
-          <SearchTabs activeType={selectedRecordType} onChange={updateRecordType} />
+          <SearchTabs
+            activeType={selectedRecordType}
+            onChange={updateRecordType}
+            showSeries={typeof displayData?.counts?.series === "number"}
+          />
           <div
             aria-hidden="true"
             className="hidden shrink-0 whitespace-nowrap text-[15px] tabular-nums text-muted-foreground sm:block"
@@ -558,10 +562,14 @@ export default function ArchiveSearch() {
               }}
               // Names what THIS tab searches ("Search cases", "Search
               // documents"), so the field says where the words will go.
-              placeholder={t(
-                `archiveSearch.placeholders.${selectedRecordType}`,
-                PLACEHOLDER_FALLBACK[selectedRecordType],
-              )}
+              placeholder={
+                selectedRecordType === "series"
+                  ? t("series.search.placeholder")
+                  : t(
+                      `archiveSearch.placeholders.${selectedRecordType}`,
+                      PLACEHOLDER_FALLBACK[selectedRecordType],
+                    )
+              }
               showSubmit={false}
               value={query}
             />
@@ -769,7 +777,7 @@ export default function ArchiveSearch() {
 const cardGridClass = "grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3";
 // Entity hits are compact avatar cards (see EntityResultCard), so a page of them
 // sits four across where the richer case cards need three.
-const PLACEHOLDER_FALLBACK: Record<ArchiveSearchType, string> = {
+const PLACEHOLDER_FALLBACK: Record<Exclude<ArchiveSearchType, "series">, string> = {
   all: "Search the archive",
   case: "Search cases",
   entity: "Search people, offices and places",
@@ -926,9 +934,10 @@ function TrackedSearchResult({
     sendSearchClick({ searchId, rank, result });
   };
   // `h-full` keeps card-grid cell heights consistent (inner card stretches to
-  // fill); list view needs no wrapper sizing.
+  // fill); list view needs no wrapper sizing. A series card spans the whole
+  // row: it stands for several of the case cards beside it.
   return (
-    <div className="h-full" onClick={handleClick}>
+    <div className={result.type === "series" ? "col-span-full" : "h-full"} onClick={handleClick}>
       {children}
     </div>
   );
