@@ -1113,6 +1113,7 @@
     "contributorInfo": "Contributor Information (optional)",
     "contributorInfoDesc": "Provide your contact details if you'd like us to follow up",
     "submitAnonymously": "Submit anonymously",
+    "anonymousNoReply": "We read every report, but without contact details we can't reply to you or ask follow-up questions. Keep your reference number.",
     "yourName": "Your Name",
     "yourNamePlaceholder": "Your full name",
     "yourEmail": "Your Email",
