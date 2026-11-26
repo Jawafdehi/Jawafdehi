@@ -23,11 +23,9 @@ export const OIDC_CLIENT_ID: string =
   import.meta.env.VITE_OIDC_CLIENT_ID || "383260434469224721";
 export const OIDC_AUDIENCE: string =
   import.meta.env.VITE_OIDC_AUDIENCE || "377760393168159088";
-// The Zitadel org and its Google IdP, for the straight-to-Google sign-in (see ./oidc).
+// The Zitadel org whose login policy has Google (see ./oidc for why there is no IdP hint).
 export const OIDC_ORG_ID: string =
   import.meta.env.VITE_OIDC_ORG_ID || "377588697018728812";
-export const OIDC_GOOGLE_IDP_ID: string =
-  import.meta.env.VITE_OIDC_GOOGLE_IDP_ID || "377591079031013740";
 
 // oidc-client-ts stores the signed-in user at
 // `${WebStorageStateStore prefix}user:${authority}:${client_id}`; the store in
