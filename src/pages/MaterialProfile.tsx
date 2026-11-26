@@ -61,6 +61,8 @@ import {
   MATERIAL_CARD_WIDTH,
 } from "@/lib/material-meta";
 import { ORIGINAL_DOCUMENT_REL } from "@/lib/original-document";
+import { LinkifiedText } from "@/components/LinkifiedText";
+import { decodedUrl } from "@/lib/linkify";
 
 // ─── value helpers (a material is schema.org JSON-LD, same family as entities) ──
 //
@@ -117,16 +119,6 @@ function isHttpUrl(s: string): boolean {
 function hostLabel(url: string): string {
   try {
     return new URL(url).hostname.replace(/^www\./, "");
-  } catch {
-    return url;
-  }
-}
-
-// Decoded URL for the hover tooltip — turns %E0%A5%A6… back into readable
-// Devanagari. Falls back to the raw URL on a malformed escape sequence.
-function decodedUrl(url: string): string {
-  try {
-    return decodeURIComponent(url);
   } catch {
     return url;
   }
@@ -280,7 +272,7 @@ export default function MaterialProfile() {
           // break-words: descriptions end in "Original page: https://…", one
           // unbreakable token that pushed phones 30px wider than the screen.
           <p className="mb-8 max-w-3xl break-words text-lg leading-8 text-primary/85">
-            {descText}
+            <LinkifiedText text={descText} />
           </p>
         ) : null}
         <dl className="divide-y divide-border/70 border-y border-border/70">
