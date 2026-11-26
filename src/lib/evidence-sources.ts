@@ -163,7 +163,7 @@ export const dateSortKey = (d: BsDate | null) =>
 
 // ─── origin (outlet, platform, court) ──────────────────────────────────────
 
-export type OriginKind = "outlet" | "platform" | "court" | "web";
+export type OriginKind = "outlet" | "platform" | "court" | "police" | "web";
 
 export interface EvidenceOrigin {
   kind: OriginKind;
@@ -260,6 +260,55 @@ export function courtOf(materialIri: string, title: string, court?: string | nul
   return null;
 }
 
+// ─── police ────────────────────────────────────────────────────────────────
+
+// District names, English → Nepali, from the district courts' official names
+// ("District Court Kathmandu" / "जिल्ला अदालत काठमाडौं").
+const DISTRICTS_NE: Record<string, string> = Object.fromEntries(
+  Object.values(COURT_NAMES)
+    .map((c) => [/^District Court (.+)$/.exec(c.en)?.[1], /^जिल्ला अदालत (.+)$/.exec(c.ne)?.[1]])
+    .filter((pair): pair is [string, string] => Boolean(pair[0] && pair[1]))
+    .map(([en, ne]) => [en.toLowerCase(), ne]),
+);
+
+const POLICE_RE =
+  /\bpolice\b|प्रहरी|\bCIB\b|central investigation bureau|केन्द्रीय अनुसन्धान ब्यूरो|arrest warrant|पक्राउ पुर्जी/i;
+
+/**
+ * The police office behind a document: arrest warrants, custody letters,
+ * police and CIB press releases, district police letters. Read from the
+ * archive's source bucket, then the description and title. Null when nothing
+ * points at the police.
+ */
+export function policeOffice(
+  materialType: string | null | undefined,
+  title: string,
+  description?: string | null,
+): { label: string; labelNe: string } | null {
+  const text = `${title}\n${description ?? ""}`;
+  if (materialType?.toLowerCase() !== "nepal_police" && !POLICE_RE.test(text)) return null;
+
+  if (/\bCIB\b|central investigation bureau|केन्द्रीय अनुसन्धान ब्यूरो/i.test(text)) {
+    return { label: "Central Investigation Bureau", labelNe: "केन्द्रीय अनुसन्धान ब्यूरो" };
+  }
+  // The office's own Nepali name, when the document quotes it.
+  const ne = /जिल्ला प्रहरी (?:कार्यालय|परिसर),?\s*([\u0900-\u097F]+)/.exec(text);
+  if (ne) {
+    const kind = ne[0].includes("परिसर") ? "परिसर" : "कार्यालय";
+    return { label: `District Police ${kind === "परिसर" ? "Range" : "Office"}`, labelNe: `जिल्ला प्रहरी ${kind}, ${ne[1]}` };
+  }
+  // "District Police Kathmandu", "District Police, Rupandehi", "District Police Office Jhapa",
+  // or failing that a warrant "in Kathmandu".
+  const district =
+    /district police(?: office| range)?,?\s+([A-Z][a-z]+)/i.exec(text)?.[1] ??
+    (/arrest warrant/i.test(text) ? /\bin\s+([A-Z][a-z]+)/.exec(title)?.[1] : undefined);
+  const districtNe = district ? DISTRICTS_NE[district.toLowerCase()] : undefined;
+  if (district && districtNe) {
+    return { label: `District Police Office, ${district}`, labelNe: `जिल्ला प्रहरी कार्यालय, ${districtNe}` };
+  }
+  return { label: "Nepal Police", labelNe: "नेपाल प्रहरी" };
+}
+
 /**
  * Where a source came from: a court for court records, else the outlet or
  * platform named by its source-page URL, a URL in its description, or the
@@ -272,11 +321,22 @@ export function evidenceOrigin(args: {
   links: SourceLink[];
   description?: string | null;
   court?: string | null;
+  materialType?: string | null;
 }): EvidenceOrigin | null {
   const { group, materialIri, title, links, description } = args;
 
+  // A court the archive itself records wins; then the police (a warrant is
+  // filed among court records but issued by the police); then a court named
+  // only in the title.
+  const recordedCourt = group === "court" ? courtOf(materialIri, "", args.court) : null;
+  const titledCourt = group === "court" && !recordedCourt ? courtOf(materialIri, title) : null;
+  const isWarrant = /arrest warrant|पक्राउ पुर्जी/i.test(title);
+  const police =
+    recordedCourt || (titledCourt && !isWarrant) ? null : policeOffice(args.materialType, title, description);
+  if (police) return { kind: "police", ...police };
+
   if (group === "court") {
-    const court = courtOf(materialIri, title, args.court);
+    const court = recordedCourt ?? titledCourt;
     if (court) {
       return {
         kind: "court",
@@ -455,6 +515,7 @@ export function buildEvidenceRow(entry: EvidenceEntry, index: number): EvidenceR
     links: material?.urls ?? [],
     description: description || note,
     court: material?.court,
+    materialType: material?.material_type,
   });
 
   const details = [stripSourceLine(description, origin), noteIsDate ? "" : stripSourceLine(note, origin)]

@@ -160,6 +160,44 @@ describe("origin", () => {
     });
   });
 
+  it("gives police documents a police chip with the issuing office", () => {
+    const base = { materialIri: "https://jawafdehi.org/material/court_order/20260103.ab", links: [] };
+    expect(
+      evidenceOrigin({
+        ...base,
+        group: "court",
+        title: "Rabi Lamichhane Arrest Warrant in Kathmandu (2081 Chaitra 22)",
+        description: "District Police Kathmandu (जिल्ला प्रहरी परिसर, काठमाडौं) and Kathmandu Valley Police Office",
+      }),
+    ).toMatchObject({ kind: "police", labelNe: "जिल्ला प्रहरी परिसर, काठमाडौं" });
+    expect(
+      evidenceOrigin({
+        ...base,
+        group: "document",
+        title: "Rabi Lamichhane Arrest Warrant in Rupandehi",
+        description: "District Police, Rupandehi issue arrest warrant for Rabi Lamichhane.",
+      }),
+    ).toMatchObject({ kind: "police", label: "District Police Office, Rupandehi", labelNe: "जिल्ला प्रहरी कार्यालय, रूपन्देही" });
+    expect(
+      evidenceOrigin({ ...base, group: "document", title: "CIB press release on cooperative fraud arrests" }),
+    ).toMatchObject({ kind: "police", labelNe: "केन्द्रीय अनुसन्धान ब्यूरो" });
+    expect(
+      evidenceOrigin({ ...base, group: "charge", title: "Press release", materialType: "nepal_police" }),
+    ).toMatchObject({ kind: "police", labelNe: "नेपाल प्रहरी" });
+  });
+
+  it("keeps a court's own order as a court, even when it mentions the police", () => {
+    expect(
+      evidenceOrigin({
+        group: "court",
+        materialIri: "https://jawafdehi.org/material/court_order/20260103.ab",
+        title: "Rupandehi District Court order 081-C1-0533",
+        links: [],
+        description: "Orders the District Police to release Lamichhane on bail.",
+      }),
+    ).toMatchObject({ kind: "court", labelNe: "जिल्ला अदालत रूपन्देही" });
+  });
+
   it("names the outlet from a URL in the description, with its logo and link", () => {
     const origin = evidenceOrigin({
       group: "news",

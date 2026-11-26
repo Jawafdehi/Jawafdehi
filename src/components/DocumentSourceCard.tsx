@@ -1,4 +1,4 @@
-import { Archive, ExternalLink, FileText, Files, Globe, Landmark, Lock, Scale } from "@/components/icons";
+import { Archive, ExternalLink, FileText, Files, Globe, Landmark, Lock, Scale, User } from "@/components/icons";
 import type { ComponentType } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
@@ -54,7 +54,7 @@ function OriginChip({ origin }: Readonly<{ origin: EvidenceOrigin }>) {
   const { t, i18n } = useTranslation();
   const ne = (i18n.language ?? "ne").startsWith("ne");
   const label = ne && origin.labelNe ? origin.labelNe : origin.label;
-  const Glyph = origin.kind === "court" ? Scale : origin.kind === "web" ? Globe : Landmark;
+  const Glyph = origin.kind === "court" ? Scale : origin.kind === "police" ? User : origin.kind === "web" ? Globe : Landmark;
   const className =
     "inline-flex max-w-full items-center gap-1.5 rounded-full bg-muted py-0.5 pl-1 pr-2.5 text-[12.5px] leading-5 text-primary";
 
@@ -72,8 +72,14 @@ function OriginChip({ origin }: Readonly<{ origin: EvidenceOrigin }>) {
           )}
         />
       ) : (
-        <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-white">
-          <Glyph className="h-3 w-3" aria-hidden="true" />
+        <span
+          className={cn(
+            "inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full",
+            // Police: a filled officer on the site's blue, close to Nepal Police blue.
+            origin.kind === "police" ? "bg-tone-blue text-white" : "bg-white",
+          )}
+        >
+          <Glyph className={cn("h-3 w-3", origin.kind === "police" && "fill-current")} aria-hidden="true" />
         </span>
       )}
       <span className="truncate">{label}</span>
