@@ -4,6 +4,7 @@ import type { ComponentType } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { DocumentPreviewDialog, type PreviewDocument } from "@/components/DocumentPreviewDialog";
+import { LinkifiedText } from "@/components/LinkifiedText";
 import { SourceTypeBadge } from "@/components/SourceTypeBadge";
 import { Button } from "@/components/ui/button";
 import { materialTail } from "@/services/datalake-api";
@@ -358,13 +359,13 @@ export function DocumentSourceCard({
 
             {byline && (
               <p className="mt-1 break-words text-sm leading-6 text-muted-foreground">
-                {byline}
+                <LinkifiedText text={byline} />
               </p>
             )}
 
             {mainDescription && (
               <p className={`break-words text-base leading-7 text-primary/85 ${byline ? "mt-2.5" : "mt-2"}`}>
-                {mainDescription}
+                <LinkifiedText text={mainDescription} />
               </p>
             )}
 
