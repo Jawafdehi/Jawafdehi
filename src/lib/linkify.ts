@@ -79,6 +79,11 @@ export function decodedUrl(url: string): string {
   }
 }
 
+/** The http(s) URLs in a piece of text, trimmed the same way the links are. */
+export function extractUrls(text: string): string[] {
+  return linkifyText(text).flatMap((s) => (s.kind === "link" ? [s.href] : []));
+}
+
 export function linkifyText(text: string): TextSegment[] {
   const segments: TextSegment[] = [];
   let last = 0;

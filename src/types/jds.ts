@@ -202,6 +202,19 @@ export interface EvidenceMaterial {
   display_name: string | null;
   material_type: string | null;
   urls: SourceLink[];
+  // Added by the API with the case-sources redesign; absent on older payloads.
+  /** Bikram Sambat date "YYYY-MM-DD" (or partial), when the archive records one. */
+  date?: string | null;
+  /** AD date "YYYY-MM-DD", when that is what the archive records. */
+  date_ad?: string | null;
+  /** The material's own description (publisher, case numbers, judges…). */
+  description?: string | null;
+  /** The archive's classification, e.g. NEWS, COURT_ORDER, COURT_FILING_OTHER. */
+  source_type?: string | null;
+  /** Originals we hold but have not published yet, pending redaction. */
+  withheld?: { pdf: boolean; transcript: boolean } | null;
+  /** Court identifier ("supreme", "patanhc") for court records. */
+  court?: string | null;
 }
 
 /**

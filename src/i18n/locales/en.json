@@ -3143,5 +3143,41 @@
     "unavailable": "Case information unavailable.",
     "viewOnJawafdehi": "View on Jawafdehi",
     "provider": "via Jawafdehi"
+  },
+  "caseSources": {
+    "count_one": "{{n}} source",
+    "count_other": "{{n}} sources",
+    "readable": "{{n}} readable",
+    "pendingCount": "{{n}} not yet public",
+    "all": "All",
+    "filterLabel": "Filter sources by type",
+    "orderLabel": "Order",
+    "view": {
+      "type": "By type",
+      "date": "By date"
+    },
+    "group": {
+      "court": "Court orders & rulings",
+      "charge": "Charge sheets & press releases",
+      "document": "Documents & reports",
+      "news": "News",
+      "social": "Social media",
+      "law": "Law"
+    },
+    "action": {
+      "pdf": "PDF",
+      "text": "Text",
+      "source": "Original",
+      "file": "File",
+      "archive": "Archived copy"
+    },
+    "undated": "Undated",
+    "showRest": "Show {{n}} more",
+    "originalAt": "Original publication on {{name}}",
+    "redactedCopy": "Copy with private details removed",
+    "pending": "Not yet public",
+    "pdfPending": "PDF pending",
+    "pendingExplain": "Jawafdehi holds the original; it will be published here once private details are removed.",
+    "legend": "PDF and Text are copies with private details (phone, citizenship and account numbers) removed. Not yet public: Jawafdehi holds the original and will publish it here once private details are removed."
   }
 }

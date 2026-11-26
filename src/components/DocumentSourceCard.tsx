@@ -1,497 +1,221 @@
-import { Archive, Download, ExternalLink, FileText, Files, Link as LinkIcon } from "@/components/icons";
-import { useState } from "react";
+import { Archive, ExternalLink, FileText, Files, Globe, Landmark, Lock, Scale, User } from "@/components/icons";
 import type { ComponentType } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
-import { DocumentPreviewDialog, type PreviewDocument } from "@/components/DocumentPreviewDialog";
+import type { PreviewDocument } from "@/components/DocumentPreviewDialog";
 import { LinkifiedText } from "@/components/LinkifiedText";
-import { SourceTypeBadge } from "@/components/SourceTypeBadge";
-import { Button } from "@/components/ui/button";
-import { materialTail } from "@/services/datalake-api";
-import { withholdUnredacted } from "@/lib/material-links";
-import type {
-  EvidenceMaterial,
-  SourceLink,
-  SourceLinkRole,
-} from "@/types/jds";
+import {
+  formatBsDate,
+  type EvidenceAction,
+  type EvidenceOrigin,
+  type EvidenceRow,
+} from "@/lib/evidence-sources";
 import { ORIGINAL_DOCUMENT_REL } from "@/lib/original-document";
+import { cn } from "@/lib/utils";
+import { materialTail } from "@/services/datalake-api";
 import { canPreviewDocument } from "@/utils/document-preview-url";
 
 interface DocumentSourceCardProps {
-  /**
-   * The resolved material embedded on the case-detail evidence entry
-   * (`{display_name, material_type, urls}`), or null when not yet available.
-   */
-  material: EvidenceMaterial | null;
-  /** The material @id IRI; used for a stable fallback title/key. */
-  materialIri: string;
-  itemNumber: number;
-  evidenceDescription?: string;
+  row: EvidenceRow;
+  /** Show the group as a tag: the by-date view mixes groups in one list. */
+  showGroup?: boolean;
+  onPreview: (document: PreviewDocument) => void;
 }
 
-// URL scheme validation - only allow http/https
-const isAllowedScheme = (u: string) => /^https?:\/\//i.test(u.trim());
+const FOCUS = "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
+const PILL = cn(
+  "inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full bg-muted px-3 text-[13px] text-primary transition-colors hover:bg-primary/[0.08] active:scale-[0.97]",
+  FOCUS,
+);
+const GHOST_PILL = cn(
+  "inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-[13px] text-muted-foreground transition-colors hover:bg-muted hover:text-primary",
+  FOCUS,
+);
+const PENDING_PILL =
+  "inline-flex h-8 shrink-0 cursor-help items-center gap-1.5 rounded-full border border-dashed border-border px-2.5 text-[12.5px] text-muted-foreground";
 
-const KNOWN_ROLES: SourceLinkRole[] = [
-  "RAW",
-  "PERMALINK",
-  "MARKDOWN",
-  "SOURCE_PAGE",
-  "ALTERNATE",
-];
-
-// web.archive.org / archive.org snapshot URLs are permalinks by nature. Some
-// records mis-tag these as RAW (importer bug), so we override the stated role
-// from the URL itself to keep the UI correct regardless of bad data.
-const isArchiveUrl = (link: string) =>
-  /^https?:\/\/(web\.)?archive\.org\//i.test(link.trim());
-
-const getFileExtension = (link: string) => {
-  try {
-    const pathname = new URL(link).pathname;
-    const lastSegment = pathname.split("/").pop() ?? "";
-    return lastSegment.includes(".") ? lastSegment.split(".").pop()?.toLowerCase() ?? "" : "";
-  } catch {
-    return "";
-  }
+const ACTION_ICON: Record<EvidenceAction["kind"], ComponentType<{ className?: string }>> = {
+  pdf: FileText,
+  text: Files,
+  source: ExternalLink,
+  file: Files,
+  archive: Archive,
 };
 
-const normalizeRole = (
-  role: string | null | undefined,
-  link: string,
-): SourceLinkRole => {
-  if (isArchiveUrl(link)) return "PERMALINK";
-  return role && (KNOWN_ROLES as string[]).includes(role) ? (role as SourceLinkRole) : "RAW";
-};
-
-/**
- * Build a clean, role-tagged list of links from a material's `urls` field.
- *
- * `urls` is the canonical source of links: each entry is a `{link, role}` dict
- * with an explicit role (RAW/MARKDOWN/PERMALINK). Invalid or non-http(s)
- * entries are dropped.
- */
-const resolveLinks = (material: EvidenceMaterial | null): SourceLink[] => {
-  if (!material || !Array.isArray(material.urls)) return [];
-
-  const valid = material.urls.filter(
-    (u): u is SourceLink => Boolean(u?.link) && isAllowedScheme(u.link),
-  );
-  // Staff-only originals never render, whatever the payload carries. Uses the
-  // raw roles (REDACTED_* would otherwise be normalised to RAW first).
-  return withholdUnredacted(valid, (u) => u.link, (u) => u.role).map((u) => ({
-    link: u.link.trim(),
-    role: normalizeRole(u.role, u.link),
-  }));
-};
-
-/**
- * Split links into prominent primary links, de-emphasized secondary links
- * (markdown text version(s) + alternate-format renderings), and so on.
- *
- * The backend over-tags the markdown text version's S3 URL: the same URL often
- * appears BOTH as MARKDOWN and again as RAW/PERMALINK. Any non-markdown link
- * pointing at a markdown URL is therefore the text version itself, not a separate
- * source — collapse it into the text version (rendered once, as small text). The
- * remaining links are then deduped by URL so a link tagged twice (e.g.
- * RAW + PERMALINK on the same href) renders a single button.
- *
- * ALTERNATE links (an alternate file format of the RAW document, e.g. a .doc
- * next to the canonical .pdf) are split out into their own small secondary row,
- * since they are redundant content the reader rarely needs.
- */
-const partitionLinks = (links: SourceLink[]) => {
-  const markdownHrefs = new Set<string>();
-  const markdownLinks = links.filter((l) => {
-    if (l.role !== "MARKDOWN" || markdownHrefs.has(l.link)) return false;
-    markdownHrefs.add(l.link);
-    return true;
-  });
-
-  const rawLinks: SourceLink[] = [];
-  const sourcePageLinks: SourceLink[] = [];
-  const permalinkLinks: SourceLink[] = [];
-  const alternateLinks: SourceLink[] = [];
-  const seen = new Set<string>();
-  for (const l of links) {
-    if (l.role === "MARKDOWN" || markdownHrefs.has(l.link)) continue;
-    if (seen.has(l.link)) continue;
-    seen.add(l.link);
-    if (l.role === "ALTERNATE") {
-      alternateLinks.push(l);
-    } else if (l.role === "SOURCE_PAGE") {
-      sourcePageLinks.push(l);
-    } else if (l.role === "PERMALINK") {
-      permalinkLinks.push(l);
-    } else {
-      rawLinks.push(l);
-    }
-  }
-
-  return { rawLinks, sourcePageLinks, permalinkLinks, alternateLinks, markdownLinks };
-};
-
-type SourceAction = {
-  href: string;
-  icon: ComponentType<{ className?: string }>;
-  label: string;
-  previewType?: PreviewDocument["type"];
-};
-
-const getPreviewType = (link: SourceLink): PreviewDocument["type"] | undefined => {
-  // The viewer can only load files from our own buckets; anything on a
-  // publisher's server is linked to directly (see canPreviewDocument).
-  if (!canPreviewDocument(link.link)) return undefined;
-
-  const extension = getFileExtension(link.link);
-
-  if (extension === "pdf") return "pdf";
-  if (link.role === "MARKDOWN" || extension === "md" || extension === "markdown") {
-    return "markdown";
-  }
-
+const previewTypeOf = (action: EvidenceAction): PreviewDocument["type"] | undefined => {
+  // The viewer can only load files from our own buckets.
+  if (!canPreviewDocument(action.href)) return undefined;
+  if (action.kind === "pdf") return "pdf";
+  if (action.kind === "text") return "markdown";
   return undefined;
 };
 
-const isDownloadOnlyFile = (link: SourceLink) => {
-  const extension = getFileExtension(link.link);
+function OriginChip({ origin }: Readonly<{ origin: EvidenceOrigin }>) {
+  const { t, i18n } = useTranslation();
+  const ne = (i18n.language ?? "ne").startsWith("ne");
+  const label = ne && origin.labelNe ? origin.labelNe : origin.label;
+  const Glyph = origin.kind === "court" ? Scale : origin.kind === "police" ? User : origin.kind === "web" ? Globe : Landmark;
+  const className =
+    "inline-flex max-w-full items-center gap-1.5 rounded-full bg-muted py-0.5 pl-1 pr-2.5 text-[12.5px] leading-5 text-primary";
 
-  return extension === "doc" || extension === "docx";
-};
-
-const getPrimaryActionLabel = (link: SourceLink, t: (key: string) => string) => {
-  const previewType = getPreviewType(link);
-
-  if (previewType === "pdf") return t("documentSource.role.previewPdf");
-  if (previewType === "markdown") return t("documentSource.role.previewMarkdown");
-
-  return t("documentSource.role.raw");
-};
-
-const getFileActionLabelKey = (link: SourceLink) => {
-  const extension = getFileExtension(link.link);
-
-  if (extension === "pdf") return "documentSource.role.pdf";
-  if (extension === "docx") return "documentSource.role.downloadDocx";
-  if (extension === "doc") return "documentSource.role.downloadDoc";
-  if (extension === "md" || extension === "markdown") return "documentSource.role.markdownFile";
-
-  return "documentSource.role.openFile";
-};
-
-export function DocumentSourceCard({
-  material,
-  materialIri,
-  evidenceDescription,
-}: DocumentSourceCardProps) {
-  const { t } = useTranslation();
-  const [previewDocument, setPreviewDocument] = useState<PreviewDocument | null>(null);
-  const links = resolveLinks(material);
-  const printLinks = links.filter(
-    (link, index, allLinks) => allLinks.findIndex((candidate) => candidate.link === link.link) === index,
+  const body = (
+    <>
+      {origin.logo ? (
+        <img
+          src={origin.logo}
+          alt=""
+          width={16}
+          height={16}
+          className="h-4 w-4 shrink-0 rounded-full bg-white object-contain"
+        />
+      ) : (
+        <span
+          className={cn(
+            "inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full",
+            // Police: a filled officer on the site's blue, close to Nepal Police blue.
+            origin.kind === "police" ? "bg-tone-blue text-white" : "bg-white",
+          )}
+        >
+          <Glyph className={cn("h-3 w-3", origin.kind === "police" && "fill-current")} aria-hidden="true" />
+        </span>
+      )}
+      <span className="truncate">{label}</span>
+      {origin.account ? <span className="truncate text-muted-foreground">· {origin.account}</span> : null}
+    </>
   );
-  const { rawLinks, sourcePageLinks, permalinkLinks, alternateLinks, markdownLinks } = partitionLinks(links);
 
-  // The material shape carries no free-text description ("cases own no
-  // documents"), so the per-case evidence note is the only description channel:
-  // short notes render as a byline, long ones as the main paragraph.
-  const hasEvidenceDesc = Boolean(evidenceDescription?.trim() && evidenceDescription.trim() !== ".");
-
-  let mainDescription = "";
-  let byline = "";
-
-  if (hasEvidenceDesc) {
-    const evDesc = evidenceDescription!.trim();
-    if (evDesc.length < 120) {
-      byline = evDesc;
-    } else {
-      mainDescription = evDesc;
-    }
+  if (origin.href) {
+    return (
+      <a
+        href={origin.href}
+        target="_blank"
+        rel={ORIGINAL_DOCUMENT_REL}
+        title={origin.href}
+        aria-label={`${t("caseSources.originalAt", { name: label })} ${t("documentSource.opensInNewTab")}`}
+        className={cn(className, "transition-colors hover:bg-primary/[0.08]", FOCUS)}
+      >
+        {body}
+      </a>
+    );
   }
+  return <span className={className}>{body}</span>;
+}
 
-  const visibleOriginalLink = sourcePageLinks[0] ?? rawLinks.find((link) => !isDownloadOnlyFile(link)) ?? null;
-  const visiblePreviewLink = sourcePageLinks[0] ? rawLinks.find((link) => getPreviewType(link)) ?? null : null;
-  const visiblePermalinkLink = permalinkLinks[0] ?? null;
-  const visibleActions: SourceAction[] = [];
-  const menuActions: SourceAction[] = [];
-
-  if (visibleOriginalLink) {
-    const previewType = getPreviewType(visibleOriginalLink);
-
-    visibleActions.push({
-      href: visibleOriginalLink.link,
-      icon: previewType ? FileText : ExternalLink,
-      label: getPrimaryActionLabel(visibleOriginalLink, t),
-      previewType,
-    });
-  }
-
-  if (visiblePreviewLink && visiblePreviewLink.link !== visibleOriginalLink?.link) {
-    visibleActions.push({
-      href: visiblePreviewLink.link,
-      icon: FileText,
-      label: getPrimaryActionLabel(visiblePreviewLink, t),
-      previewType: getPreviewType(visiblePreviewLink),
-    });
-  }
-
-  const visibleActionHrefs = new Set(visibleActions.map((action) => action.href));
-
-  sourcePageLinks.slice(1).forEach((link, index) => {
-    if (visibleActionHrefs.has(link.link)) return;
-
-    const previewType = getPreviewType(link);
-
-    menuActions.push({
-      href: link.link,
-      icon: previewType ? FileText : ExternalLink,
-      label: t("documentSource.role.rawN", { n: index + 2 }),
-      previewType,
-    });
-  });
-
-  rawLinks.forEach((link, index) => {
-    if (visibleActionHrefs.has(link.link)) return;
-
-    const labelKey = getFileActionLabelKey(link);
-
-    menuActions.push({
-      href: link.link,
-      icon: labelKey.includes("download") ? Download : Files,
-      label: rawLinks.length > 1 ? t(`${labelKey}N`, { n: index + 1, defaultValue: t(labelKey) }) : t(labelKey),
-      previewType: getPreviewType(link),
-    });
-  });
-
-  permalinkLinks.forEach((link, index) => {
-    if (visiblePermalinkLink?.link === link.link) return;
-
-    menuActions.push({
-      href: link.link,
-      icon: Archive,
-      label:
-        permalinkLinks.length > 1
-          ? t("documentSource.role.permalinkN", { n: index + 1 })
-          : t("documentSource.role.permalink"),
-    });
-  });
-
-  markdownLinks.forEach((link, index) => {
-    menuActions.push({
-      href: link.link,
-      icon: FileText,
-      label:
-        markdownLinks.length > 1
-          ? t("documentSource.role.markdownN", { n: index + 1 })
-          : t("documentSource.role.markdown"),
-      previewType: getPreviewType(link),
-    });
-  });
-
-  alternateLinks.forEach((link, index) => {
-    const labelKey = getFileActionLabelKey(link);
-
-    menuActions.push({
-      href: link.link,
-      icon: labelKey.includes("download") ? Download : Files,
-      label:
-        alternateLinks.length > 1
-          ? t(`${labelKey}N`, { n: index + 1, defaultValue: t(labelKey) })
-          : t(labelKey),
-      previewType: getPreviewType(link),
-    });
-  });
-
-  const openPreview = (action: SourceAction) => {
-    if (!action.previewType) return;
-
-    setPreviewDocument({
-      title: action.label,
-      type: action.previewType,
-      url: action.href,
-    });
-  };
+/**
+ * One source on a case page: date, title, where it came from, and its readable
+ * copies, or a plain statement that a copy is still to be published.
+ */
+export function DocumentSourceCard({ row, showGroup = false, onPreview }: Readonly<DocumentSourceCardProps>) {
+  const { t, i18n } = useTranslation();
+  const language = i18n.language ?? "ne";
+  const title = row.title || t("documentSource.fallbackTitle", { id: row.materialIri });
+  const details = row.details.join(" · ");
 
   return (
-    <>
+    <li className="border-b border-border/70 last:border-b-0">
       <article className="hidden print:block">
-        <h3 className="print-source-title">{material?.display_name || t("documentSource.fallbackTitle", { id: materialIri })}</h3>
-        {evidenceDescription?.trim() ? <p>{evidenceDescription.trim()}</p> : null}
-        {printLinks.length ? (
+        <h3 className="print-source-title">{title}</h3>
+        {details ? <p>{details}</p> : null}
+        {row.actions.length ? (
           <ul>
-            {printLinks.map((link) => (
-              <li key={link.link}>
-                <a href={link.link} rel={ORIGINAL_DOCUMENT_REL}>{link.link}</a>
+            {row.actions.map((a) => (
+              <li key={a.href}>
+                <a href={a.href} rel={ORIGINAL_DOCUMENT_REL}>{a.href}</a>
               </li>
             ))}
           </ul>
         ) : null}
       </article>
 
-      <article className="print:hidden border-b border-border/70 py-6 md:py-8 first:pt-0 last:pb-0 last:border-b-0">
-        <div className="flex min-w-0 items-start gap-3">
+      <article className="grid grid-cols-1 gap-x-4 gap-y-1 py-3 print:hidden md:grid-cols-[6.5rem_minmax(0,1fr)_auto] md:items-start md:py-3.5">
+        <div
+          className={cn(
+            "text-[13px] leading-6 tabular-nums md:pt-px",
+            row.date ? "text-muted-foreground" : "text-muted-foreground/60",
+          )}
+        >
+          {row.date ? formatBsDate(row.date, language) : t("caseSources.undated")}
+        </div>
 
-          <div className="min-w-0 flex-1">
-            <div className="min-w-0">
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                  <h3 className="break-words text-lg leading-snug text-primary md:text-xl">
-                    {materialIri ? (
-                      <Link
-                        to={`/material/${materialTail(materialIri)}`}
-                        className="rounded-sm underline-offset-4 transition-colors hover:text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                      >
-                        {material?.display_name || t("documentSource.fallbackTitle", { id: materialIri })}
-                      </Link>
-                    ) : (
-                      material?.display_name || t("documentSource.fallbackTitle", { id: materialIri })
-                    )}
-                  </h3>
-                  {/* The site's grey tag pill: the document's kind is a label, and the
-                      rainbow of category tones competed with the title. */}
-                  <SourceTypeBadge
-                    sourceType={material?.material_type}
-                    className="h-auto border-transparent bg-muted px-3 py-1 text-sm font-normal text-primary shadow-none ring-0"
-                  />
-                </div>
-              </div>
+        <div className="min-w-0">
+          <h3 className="text-[15.5px] leading-6 text-primary">
+            {row.materialIri ? (
+              <Link
+                to={`/material/${materialTail(row.materialIri)}`}
+                title={title}
+                className={cn("line-clamp-2 break-words rounded-sm underline-offset-4 hover:underline", FOCUS)}
+              >
+                {title}
+              </Link>
+            ) : (
+              <span className="line-clamp-2 break-words">{title}</span>
+            )}
+          </h3>
+
+          {showGroup || row.origin || details ? (
+            <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-[13px] leading-5 text-muted-foreground">
+              {showGroup ? (
+                <span className="rounded-full bg-muted px-2 py-0.5 text-[11.5px] text-primary">
+                  {t(`caseSources.group.${row.group}`)}
+                </span>
+              ) : null}
+              {row.origin ? <OriginChip origin={row.origin} /> : null}
+              {details ? (
+                <span className="line-clamp-2 min-w-0 break-words md:line-clamp-1" title={details}>
+                  <LinkifiedText text={details} />
+                </span>
+              ) : null}
             </div>
+          ) : null}
+        </div>
 
-            {byline && (
-              <p className="mt-1 break-words text-sm leading-6 text-muted-foreground">
-                <LinkifiedText text={byline} />
-              </p>
-            )}
+        <div className="mt-2 flex flex-wrap items-center gap-1.5 md:mt-0 md:flex-nowrap md:justify-end">
+          {row.actions.map((action) => {
+            const Icon = ACTION_ICON[action.kind];
+            const previewType = previewTypeOf(action);
+            const className = action.kind === "archive" || action.kind === "file" ? GHOST_PILL : PILL;
+            const label = t(`caseSources.action.${action.kind}`);
+            const hint = action.redacted ? t("caseSources.redactedCopy") : undefined;
 
-            {mainDescription && (
-              <p className={`break-words text-base leading-7 text-primary/85 ${byline ? "mt-2.5" : "mt-2"}`}>
-                <LinkifiedText text={mainDescription} />
-              </p>
-            )}
+            if (previewType) {
+              return (
+                <button
+                  key={action.href}
+                  type="button"
+                  className={className}
+                  title={hint}
+                  aria-label={t("documentPreview.previewAria", { title: `${label}: ${title}` })}
+                  onClick={() => onPreview({ title, type: previewType, url: action.href })}
+                >
+                  <Icon className="h-4 w-4" aria-hidden="true" />
+                  {label}
+                </button>
+              );
+            }
+            return (
+              <a
+                key={action.href}
+                href={action.href}
+                target="_blank"
+                rel={ORIGINAL_DOCUMENT_REL}
+                className={className}
+                title={hint}
+                aria-label={`${label}: ${title} ${t("documentSource.opensInNewTab")}`}
+              >
+                <Icon className="h-4 w-4" aria-hidden="true" />
+                {label}
+              </a>
+            );
+          })}
 
-            {(visibleActions.length > 0 || menuActions.length > 0) && (
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                {visibleActions.map((action) => {
-                  const Icon = action.icon;
-                  const ariaLabel = action.previewType
-                    ? t("documentPreview.previewAria", { title: action.label })
-                    : `${action.label} ${t("documentSource.opensInNewTab")}`;
-
-                  if (action.previewType) {
-                    return (
-                      <Button
-                        key={`${action.label}-${action.href}`}
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="h-10 rounded-full border-0 bg-muted px-4 text-sm font-normal text-primary shadow-none hover:bg-primary/[0.08] hover:text-primary active:scale-[0.97]"
-                        aria-label={ariaLabel}
-                        onClick={() => openPreview(action)}
-                      >
-                        <Icon className="h-4 w-4" aria-hidden="true" />
-                        {action.label}
-                      </Button>
-                    );
-                  }
-
-                  return (
-                    <Button
-                      key={`${action.label}-${action.href}`}
-                      asChild
-                      variant="outline"
-                      size="sm"
-                      className="h-10 rounded-full border-0 bg-muted px-4 text-sm font-normal text-primary shadow-none hover:bg-primary/[0.08] hover:text-primary active:scale-[0.97]"
-                    >
-                      <a
-                        href={action.href}
-                        target="_blank"
-                        rel={ORIGINAL_DOCUMENT_REL}
-                        aria-label={ariaLabel}
-                      >
-                        <Icon className="h-4 w-4" aria-hidden="true" />
-                        {action.label}
-                      </a>
-                    </Button>
-                  );
-                })}
-
-                {visiblePermalinkLink && (
-                  <Button
-                    asChild
-                    variant="ghost"
-                    size="sm"
-                    className="h-10 rounded-full px-3 text-sm font-normal text-muted-foreground hover:bg-muted hover:text-primary"
-                  >
-                    <a
-                      href={visiblePermalinkLink.link}
-                      target="_blank"
-                      rel={ORIGINAL_DOCUMENT_REL}
-                      aria-label={`${t("documentSource.role.permalink")} ${t("documentSource.opensInNewTab")}`}
-                    >
-                      <LinkIcon className="h-4 w-4" aria-hidden="true" />
-                      {t("documentSource.role.permalinkShort")}
-                    </a>
-                  </Button>
-                )}
-
-                {menuActions.map((action) => {
-                  const Icon = action.icon;
-                  const ariaLabel = action.previewType
-                    ? t("documentPreview.previewAria", { title: action.label })
-                    : `${action.label} ${t("documentSource.opensInNewTab")}`;
-
-                  if (action.previewType) {
-                    return (
-                      <Button
-                        key={`${action.label}-${action.href}`}
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="h-10 rounded-full px-3 text-sm font-normal text-muted-foreground hover:bg-muted hover:text-primary"
-                        aria-label={ariaLabel}
-                        onClick={() => openPreview(action)}
-                      >
-                        <Icon className="h-4 w-4" aria-hidden="true" />
-                        {action.label}
-                      </Button>
-                    );
-                  }
-
-                  return (
-                    <Button
-                      key={`${action.label}-${action.href}`}
-                      asChild
-                      variant="ghost"
-                      size="sm"
-                      className="h-10 rounded-full px-3 text-sm font-normal text-muted-foreground hover:bg-muted hover:text-primary"
-                    >
-                      <a
-                        href={action.href}
-                        target="_blank"
-                        rel={ORIGINAL_DOCUMENT_REL}
-                        aria-label={ariaLabel}
-                      >
-                        <Icon className="h-4 w-4" aria-hidden="true" />
-                        {action.label}
-                      </a>
-                    </Button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+          {row.withheld !== "none" ? (
+            <span className={PENDING_PILL} title={t("caseSources.pendingExplain")}>
+              <Lock className="h-3.5 w-3.5" aria-hidden="true" />
+              {row.withheld === "all" ? t("caseSources.pending") : t("caseSources.pdfPending")}
+            </span>
+          ) : null}
         </div>
       </article>
-
-      <DocumentPreviewDialog
-        document={previewDocument}
-        open={Boolean(previewDocument)}
-        onOpenChange={(open) => {
-          if (!open) {
-            setPreviewDocument(null);
-          }
-        }}
-      />
-    </>
+    </li>
   );
 }
