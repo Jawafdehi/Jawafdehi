@@ -31,6 +31,14 @@ describe("linkifyText", () => {
     ]);
   });
 
+  it("does not swallow a Nepali danda ending the sentence", () => {
+    expect(linkifyText("स्रोत: https://ekantipur.com/news/article.html।")).toEqual([
+      { kind: "text", text: "स्रोत: " },
+      expect.objectContaining({ href: "https://ekantipur.com/news/article.html", label: "Kantipur" }),
+      { kind: "text", text: "।" },
+    ]);
+  });
+
   it("keeps balanced brackets that belong to the URL", () => {
     const url = "https://en.wikipedia.org/wiki/Rabi_Lamichhane_(politician)";
     expect(linkifyText(url)).toEqual([

@@ -11,10 +11,11 @@ export type TextSegment =
   | { kind: "text"; text: string }
   | { kind: "link"; href: string; label: string; title: string };
 
-// A URL runs to the next whitespace. Trailing sentence punctuation and an
-// unbalanced closing bracket ("… (https://x.com/a/1)") are trimmed off below.
+// A URL runs to the next whitespace. Trailing sentence punctuation (including
+// the Devanagari danda । and ॥) and an unbalanced closing bracket
+// ("… (https://x.com/a/1)") are trimmed off below.
 const URL_RE = /https?:\/\/[^\s<>"]+/gi;
-const TRAILING_PUNCT = /[.,;:!?'"’”]+$/;
+const TRAILING_PUNCT = /[.,;:!?'"’”।॥]+$/;
 
 // News outlets and platforms that show up as sources, by host (sans www./m.).
 // Anything not listed is labelled with its host name.
