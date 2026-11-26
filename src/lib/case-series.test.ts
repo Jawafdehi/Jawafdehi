@@ -159,6 +159,13 @@ describe("chart rows", () => {
     expect(group.rows[0].end).toBe(TODAY);
     expect(group.rows[1].end).toBe(Date.UTC(2026, 7, 1));
     expect(group.rows[1].decided).toBe(true);
+    expect(group.rows[1].verdictDateKnown).toBe(true);
+  });
+
+  it("never draws today as the verdict date of a case decided on an unrecorded date", () => {
+    const decided: SeriesCourtCase = { ...DEEPAK.court_cases[0], verdict_type: "CLAIM_DENIED", verdict_date_ad: null };
+    const [group] = buildChartGroups([decided], DEEPAK.members, "court", TODAY);
+    expect(group.rows[0]).toMatchObject({ decided: true, verdictDateKnown: false, end: group.rows[0].start });
   });
 
   it("leaves out rows it cannot place on the time axis", () => {

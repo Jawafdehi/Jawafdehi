@@ -182,9 +182,15 @@ export interface ChartRow {
   courtCase: SeriesCourtCase;
   member: SeriesMember | undefined;
   start: number;
-  /** The verdict date, or today while the case is pending. */
+  /**
+   * The verdict date; today while the case is pending; and the start itself
+   * for a case decided on an unrecorded date, so the chart never presents
+   * today as its verdict date.
+   */
   end: number;
   decided: boolean;
+  /** False for a decided case whose verdict date is not recorded. */
+  verdictDateKnown: boolean;
 }
 
 export interface ChartGroup {
@@ -220,12 +226,15 @@ export function buildChartGroups(
     const start = parseAdDate(courtCase.registration_date_ad);
     if (start == null) continue;
     const verdict = parseAdDate(courtCase.verdict_date_ad);
+    const decided = isCourtCaseDecided(courtCase);
+    const pendingEnd = decided ? start : today;
     rows.push({
       courtCase,
       member: bySlug.get(courtCase.member_slug),
       start,
-      end: Math.max(verdict ?? today, start),
-      decided: isCourtCaseDecided(courtCase),
+      end: Math.max(verdict ?? pendingEnd, start),
+      decided,
+      verdictDateKnown: verdict != null,
     });
   }
 

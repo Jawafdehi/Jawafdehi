@@ -56,6 +56,8 @@ const POPUP_WIDTH = 380;
 
 type Popup = { row: ChartRow; left: number; top: number; fromKeyboard: boolean };
 
+type Anchor = { clientX: number; clientY: number; trigger: SVGGElement };
+
 export interface SeriesTimelineChartProps {
   courtCases: readonly SeriesCourtCase[];
   members: readonly SeriesMember[];
@@ -81,6 +83,8 @@ export function SeriesTimelineChart({ courtCases, members, today: todayProp }: R
   const scrollRef = useRef<HTMLDivElement>(null);
   const popupRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
+  // The row that opened the popup, so a keyboard user gets focus back on it.
+  const triggerRef = useRef<SVGGElement | null>(null);
 
   const today = todayProp ?? utcToday();
   const groups = useMemo(
@@ -100,7 +104,12 @@ export function SeriesTimelineChart({ courtCases, members, today: todayProp }: R
     return () => observer.disconnect();
   }, []);
 
-  const close = useCallback(() => setPopup(null), []);
+  // Closing with ✕ or Escape returns focus to the row that opened the popup;
+  // a press outside leaves focus where the reader put it.
+  const close = useCallback(() => {
+    setPopup(null);
+    triggerRef.current?.focus();
+  }, []);
 
   // Close on a press outside the popup, and on Escape.
   useEffect(() => {
@@ -112,7 +121,7 @@ export function SeriesTimelineChart({ courtCases, members, today: todayProp }: R
       setPopup(null);
     };
     const onKey = (event: globalThis.KeyboardEvent) => {
-      if (event.key === "Escape") setPopup(null);
+      if (event.key === "Escape") close();
     };
     document.addEventListener("mousedown", onPointer);
     document.addEventListener("keydown", onKey);
@@ -120,7 +129,7 @@ export function SeriesTimelineChart({ courtCases, members, today: todayProp }: R
       document.removeEventListener("mousedown", onPointer);
       document.removeEventListener("keydown", onKey);
     };
-  }, [popup]);
+  }, [popup, close]);
 
   useEffect(() => {
     if (popup?.fromKeyboard) closeRef.current?.focus();
@@ -134,7 +143,8 @@ export function SeriesTimelineChart({ courtCases, members, today: todayProp }: R
   const ticks = bsQuarterTicks(lo, hi, quarterStep(spanYears));
   const todayX = x(today);
 
-  const openAt = (row: ChartRow, anchor: { clientX: number; clientY: number }, fromKeyboard: boolean) => {
+  const openAt = (row: ChartRow, anchor: Anchor, fromKeyboard: boolean) => {
+    triggerRef.current = anchor.trigger;
     const box = wrapRef.current?.getBoundingClientRect();
     const wrapWidth = box?.width || width;
     const left = Math.max(8, Math.min(anchor.clientX - (box?.left ?? 0) + 12, wrapWidth - POPUP_WIDTH - 8));
@@ -144,13 +154,13 @@ export function SeriesTimelineChart({ courtCases, members, today: todayProp }: R
 
   const onRowClick = (row: ChartRow) => (event: MouseEvent<SVGGElement>) => {
     event.stopPropagation();
-    openAt(row, event, false);
+    openAt(row, { clientX: event.clientX, clientY: event.clientY, trigger: event.currentTarget }, false);
   };
   const onRowKey = (row: ChartRow) => (event: KeyboardEvent<SVGGElement>) => {
     if (event.key !== "Enter" && event.key !== " ") return;
     event.preventDefault();
     const rect = event.currentTarget.getBoundingClientRect();
-    openAt(row, { clientX: rect.left + 8, clientY: rect.bottom - 8 }, true);
+    openAt(row, { clientX: rect.left + 8, clientY: rect.bottom - 8, trigger: event.currentTarget }, true);
   };
 
   const groupLabel = (group: ChartGroup) => {
@@ -290,7 +300,7 @@ export function SeriesTimelineChart({ courtCases, members, today: todayProp }: R
                         />
                         <rect fill={colour} height={8} opacity={row.decided ? 0.9 : 0.6} rx={4} width={x2 - x1} x={x1} y={y + 1} />
                         <circle cx={x1} cy={y + 5} fill={colour} r={5} stroke="hsl(var(--surface))" strokeWidth={1.5} />
-                        {row.decided ? (
+                        {row.decided && !row.verdictDateKnown ? null : row.decided ? (
                           <rect fill={colour} height={14} width={4} x={x2 - 2} y={y - 2} />
                         ) : (
                           <path d={`M${x2},${y - 1} L${x2 + 9},${y + 5} L${x2},${y + 11} Z`} fill={colour} />

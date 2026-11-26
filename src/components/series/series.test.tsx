@@ -151,6 +151,26 @@ describe("SeriesTimelineChart", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
+  it("moves focus into a popup opened from the keyboard and back to its row on Escape", () => {
+    wrap(<SeriesTimelineChart courtCases={DEEPAK.court_cases} members={DEEPAK.members} today={TODAY} />);
+    const row = chartRows()[1];
+    row.focus();
+    fireEvent.keyDown(row, { key: "Enter" });
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "बन्द गर्नुहोस्" }));
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(document.activeElement).toBe(row);
+  });
+
+  it("draws no arrow for a case decided on an unrecorded date", () => {
+    const decided = [{ ...DEEPAK.court_cases[0], verdict_type: "CLAIM_DENIED", verdict_date_ad: null }];
+    wrap(<SeriesTimelineChart courtCases={decided} members={DEEPAK.members} today={TODAY} />);
+    const [row] = chartRows();
+    expect(row.querySelector("path")).toBeNull();
+    fireEvent.click(row);
+    expect(within(screen.getByRole("dialog")).getByText(/दाबी नपुगेको/)).toBeTruthy();
+  });
+
   it("regroups the rows by member case on the toggle", () => {
     const { container } = wrap(
       <SeriesTimelineChart courtCases={DEEPAK.court_cases} members={DEEPAK.members} today={TODAY} />,
