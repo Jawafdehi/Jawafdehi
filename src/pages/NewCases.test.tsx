@@ -151,6 +151,18 @@ describe("/new-cases", () => {
     wrap();
     await screen.findByRole("link", { name: "English title 1" });
     expect(screen.queryByRole("button", { name: "Show older weeks" })).toBeNull();
+    // Every page sat inside the window, so it asked for one case from before it.
+    expect(getCases).toHaveBeenCalledWith(
+      expect.objectContaining({ ordering: "-case_publish_date", published_before: "2026-10-01", page_size: 1 }),
+    );
+  });
+
+  it("offers older weeks when the API filtered them out but they exist", async () => {
+    getCases.mockImplementation((params: { published_before?: string }) =>
+      Promise.resolve(page([makeCase(params.published_before ? 9 : 1, params.published_before ?? "2026-11-24")])),
+    );
+    wrap();
+    expect(await screen.findByRole("button", { name: "Show older weeks" })).toBeTruthy();
   });
 
   it("links the feeds and the newsletter, and advertises the feeds in the head", async () => {

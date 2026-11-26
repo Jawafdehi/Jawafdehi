@@ -12,6 +12,7 @@ import {
   formatWeekAD,
   formatWeekBS,
   groupCasesByWeek,
+  hasCaseBefore,
   nepalToday,
   nextPageNumber,
   publishDate,
@@ -108,32 +109,48 @@ describe("fetchPublishedSince", () => {
     results,
   });
 
-  it("stops at the first page that is entirely older than the cutoff", async () => {
-    const pages: Record<number, PaginatedCaseList> = {
-      1: page([item(3, "2026-11-26"), item(1, "2026-11-24")], 2),
-      2: page([item(7, "2026-11-21"), item(2, "2026-10-01")], 3),
-      3: page([item(5, "2026-09-01"), item(8, null)], 4),
-      4: page([item(6, "2026-08-25")], null),
-    };
-    const fetchPage = vi.fn((n: number) => Promise.resolve(pages[n]));
-    const result = await fetchPublishedSince(fetchPage, "2026-11-20");
-    expect(fetchPage.mock.calls.map(([n]) => n)).toEqual([1, 2, 3]);
-    expect(result.cases.map((c) => c.id)).toEqual([3, 1, 7]);
-    expect(result.hasOlder).toBe(true);
-  });
-
-  it("keeps paging past an all-old page when the API ignored the ordering", async () => {
-    // Creation-date order: page 1 is out of publish-date order, so page 2 being
-    // all old proves nothing about page 3.
+  it("follows next to the end, past pages of old cases (creation-date order)", async () => {
+    // An API that ignores the params: page 2 is all old, page 3 still has a
+    // case published this week.
     const pages: Record<number, PaginatedCaseList> = {
       1: page([item(1, "2026-10-01"), item(2, "2026-11-24")], 2),
-      2: page([item(3, "2026-09-01")], 3),
+      2: page([item(3, "2026-09-01"), item(9, null)], 3),
       3: page([item(4, "2026-11-25")], null),
     };
     const fetchPage = vi.fn((n: number) => Promise.resolve(pages[n]));
     const result = await fetchPublishedSince(fetchPage, "2026-11-20");
-    expect(fetchPage).toHaveBeenCalledTimes(3);
+    expect(fetchPage.mock.calls.map(([n]) => n)).toEqual([1, 2, 3]);
     expect(result.cases.map((c) => c.id)).toEqual([4, 2]);
+    expect(result.hasOlder).toBe(true);
+  });
+
+  it("asks the probe about older cases when the API filtered them all out", async () => {
+    const fetchPage = vi.fn(() => Promise.resolve(page([item(1, "2026-11-26"), item(2, "2026-11-21")], null)));
+    const probe = vi.fn(() => Promise.resolve(true));
+    const result = await fetchPublishedSince(fetchPage, "2026-11-20", 10, probe);
+    expect(probe).toHaveBeenCalledOnce();
+    expect(result.hasOlder).toBe(true);
+
+    expect((await fetchPublishedSince(fetchPage, "2026-11-20", 10, () => Promise.resolve(false))).hasOlder).toBe(false);
+    // A failing probe offers the button rather than failing the page.
+    expect(
+      (await fetchPublishedSince(fetchPage, "2026-11-20", 10, () => Promise.reject(new Error("429")))).hasOlder,
+    ).toBe(true);
+  });
+
+  it("skips the probe when the pages already showed older cases", async () => {
+    const fetchPage = vi.fn(() => Promise.resolve(page([item(1, "2026-11-26"), item(2, "2026-01-01")], null)));
+    const probe = vi.fn(() => Promise.resolve(false));
+    expect((await fetchPublishedSince(fetchPage, "2026-11-20", 10, probe)).hasOlder).toBe(true);
+    expect(probe).not.toHaveBeenCalled();
+  });
+
+  it("reads a probe response by publish date, not by its presence", () => {
+    expect(hasCaseBefore(page([item(1, "2026-11-19")], null), "2026-11-20")).toBe(true);
+    // An API that ignored published_before hands back a current case.
+    expect(hasCaseBefore(page([item(1, "2026-11-24")], null), "2026-11-20")).toBe(false);
+    expect(hasCaseBefore(page([item(1, null)], null), "2026-11-20")).toBe(false);
+    expect(hasCaseBefore(page([], null), "2026-11-20")).toBe(false);
   });
 
   it("works when the API ignores the ordering: sorts and filters itself", async () => {

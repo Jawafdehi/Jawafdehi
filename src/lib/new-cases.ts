@@ -157,54 +157,56 @@ export function nextPageNumber(next: string | null | undefined): number | null {
  * Collect the cases published on or after `cutoff`.
  *
  * Asks the API for `ordering=-case_publish_date&published_after=<cutoff>`, but
- * does not rely on either: an API that ignores them (orders by creation date
- * and returns everything) still gives the right answer, because the result is
- * filtered and sorted here. Paging stops once a whole page is older than the
- * cutoff (only while the results really are newest-published first), or after
- * `maxPages`, whichever comes first.
+ * does not rely on either: the result is filtered and sorted here, so an API
+ * that ignores them (and orders by creation date) still gives the right cases
+ * from the pages it was walked through.
+ *
+ * Paging follows `next` to the end or to `maxPages`. There is deliberately no
+ * "this page is all older, stop" shortcut: an API that honours the filter never
+ * returns such a page, and one that ignores it orders by creation date, where a
+ * page of old cases says nothing about the next one.
+ *
+ * Whether older cases exist: an unfiltered response shows it directly. A
+ * filtered one never contains them, so `probeOlder` (when given) asks.
  */
 export async function fetchPublishedSince(
   fetchPage: CasePageFetcher,
   cutoff: string,
   maxPages: number = MAX_PAGES,
+  probeOlder?: () => Promise<boolean>,
 ): Promise<PublishedSinceResult> {
   const seen = new Map<number, Case>();
   let sawOlder = false;
   let page: number | null = 1;
   let pagesRead = 0;
-  // Whether everything so far came back newest-published first. An API that
-  // predates the ordering param sorts by creation date instead, and there a
-  // page of old cases says nothing about the next page.
-  let ordered = true;
-  let previous: string | null | undefined;
 
   while (page !== null && pagesRead < maxPages) {
     const response = await fetchPage(page);
     pagesRead += 1;
-    const results = response.results ?? [];
-    let pageHasCurrent = false;
-    for (const item of results) {
+    for (const item of response.results ?? []) {
       const day = publishDate(item.case_publish_date);
-      // Undated cases sort last ("" is below every date).
-      if (previous !== undefined && (day ?? "") > (previous ?? "")) ordered = false;
-      previous = day;
-      if (day && day >= cutoff) {
-        pageHasCurrent = true;
-        seen.set(item.id, item);
-      } else {
-        sawOlder = true;
-      }
+      if (day && day >= cutoff) seen.set(item.id, item);
+      else sawOlder = true;
     }
     page = nextPageNumber(response.next);
-    // A page with nothing new enough: when the API orders by publish date,
-    // everything after it is older too. When it doesn't, only the cap stops us.
-    if (ordered && results.length > 0 && !pageHasCurrent) break;
   }
 
-  return {
-    cases: sortByPublishDateDesc([...seen.values()]),
-    hasOlder: sawOlder || page !== null,
-  };
+  let hasOlder = sawOlder || page !== null;
+  if (!hasOlder && probeOlder) {
+    // A failed probe must not fail the page: offer the button and let the
+    // next load find out.
+    hasOlder = await probeOlder().catch(() => true);
+  }
+
+  return { cases: sortByPublishDateDesc([...seen.values()]), hasOlder };
+}
+
+/** Whether a probe response holds a case published before `cutoff`. */
+export function hasCaseBefore(response: PaginatedCaseList, cutoff: string): boolean {
+  return (response.results ?? []).some((item) => {
+    const day = publishDate(item.case_publish_date);
+    return day !== null && day < cutoff;
+  });
 }
 
 // ---------------------------------------------------------------------------
