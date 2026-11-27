@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import deepak from "../../tests/fixtures/series/deepak-bhatta-affair.json";
 import ncell from "../../tests/fixtures/series/ncell-tax-dispute.json";
 import rabi from "../../tests/fixtures/series/rabi-lamichhane-cooperative-affair.json";
+import { withBigoTotal } from "../../tests/support/series-bigo";
 import {
   aboutLead,
   barLabelLayout,
@@ -22,6 +23,8 @@ import {
   parseAdDate,
   pickSeriesText,
   quarterStep,
+  bigoOverlapTargetOrdinal,
+  seriesBigoTotal,
   seriesCardOf,
   seriesNeighbours,
   seriesPath,
@@ -295,5 +298,45 @@ describe("paths and search cards", () => {
     expect(seriesCardOf(hit)?.slug).toBe("s");
     expect(seriesCardOf({ ...hit, type: "case" })).toBeNull();
     expect(seriesCardOf({ ...hit, card: { slug: "s" } } as unknown as ArchiveSearchResult)).toBeNull();
+  });
+});
+
+describe("seriesBigoTotal", () => {
+  it("is null on an API without bigo_total, so the page keeps the largest claim", () => {
+    expect(seriesBigoTotal(DEEPAK.totals, DEEPAK.members)).toBeNull();
+    expect(seriesBigoTotal(undefined)).toBeNull();
+    expect(seriesBigoTotal({ ...DEEPAK.totals, bigo_total: null })).toBeNull();
+  });
+
+  it("sums the distinct claims: 0154 + 0179, with three claims inside case 1", () => {
+    const series = withBigoTotal(DEEPAK);
+    expect(seriesBigoTotal(series.totals, series.members)).toEqual({
+      amount: 26_841_771_059,
+      summed: 2,
+      overlapping: 3,
+      targetOrdinal: 1,
+    });
+    expect(formatSeriesMoney(26_841_771_059, "ne")).toBe("रु. २६.८४ अर्ब");
+  });
+
+  it("names no target when the overlaps point at different or hidden members", () => {
+    const series = withBigoTotal(DEEPAK);
+    const members = series.members.map((m, i) =>
+      i === 3 ? { ...m, bigo_overlaps: { member_slug: null, reason: { ne: "क", en: null } } } : m,
+    );
+    expect(seriesBigoTotal(series.totals, members)?.targetOrdinal).toBeNull();
+    // Without the members (a search card) there is no target either.
+    expect(seriesBigoTotal(series.totals)?.targetOrdinal).toBeNull();
+  });
+});
+
+describe("bigoOverlapTargetOrdinal", () => {
+  it("is the target member's ordinal, null for a hidden target, undefined for none", () => {
+    const { members } = withBigoTotal(DEEPAK);
+    expect(bigoOverlapTargetOrdinal(members[1], members)).toBe(1);
+    expect(bigoOverlapTargetOrdinal(members[0], members)).toBeUndefined();
+    expect(bigoOverlapTargetOrdinal(members[4], members)).toBeUndefined();
+    const hidden = { ...members[1], bigo_overlaps: { member_slug: "not-public", reason: { ne: "क", en: null } } };
+    expect(bigoOverlapTargetOrdinal(hidden, members)).toBeNull();
   });
 });

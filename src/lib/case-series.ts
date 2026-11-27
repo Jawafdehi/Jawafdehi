@@ -42,11 +42,56 @@ export function localDigits(value: number | string, language: string): string {
  * A बिगो amount in lakh / crore / arab units, or an em dash when there is
  * none. The units and digits come from the site's one money formatter
  * (`formatBigo`), so a series figure reads exactly like the same figure on
- * the case page. Never sum member amounts with this: members' claims overlap.
+ * the case page. Never sum member amounts yourself: members' claims can
+ * overlap, and only the API's `totals.bigo_total` knows which ones do.
  */
 export function formatSeriesMoney(amount: number | null | undefined, language: string): string {
   if (amount == null || !Number.isFinite(amount) || amount <= 0) return "—";
   return formatBigo(amount, language);
+}
+
+/**
+ * The distinct-claims बिगो total, or null when the API does not send one (an
+ * older API, or no member summed): the page then shows the largest claim.
+ * `targetOrdinal` is the member the overlapping claims fall inside when they
+ * all point at the same visible member, else null.
+ */
+export interface SeriesBigoTotal {
+  amount: number;
+  summed: number;
+  overlapping: number;
+  targetOrdinal: number | null;
+}
+
+export function seriesBigoTotal(
+  totals: SeriesDetail["totals"] | null | undefined,
+  members: readonly SeriesMember[] = [],
+): SeriesBigoTotal | null {
+  const amount = totals?.bigo_total;
+  if (typeof amount !== "number" || !Number.isFinite(amount) || amount <= 0) return null;
+  const targets = new Set(members.map((member) => bigoOverlapTargetOrdinal(member, members)).filter((n) => n !== undefined));
+  const [only] = [...targets];
+  return {
+    amount,
+    summed: totals?.bigo_total_members ?? 0,
+    overlapping: totals?.bigo_overlapping_members ?? 0,
+    targetOrdinal: targets.size === 1 && typeof only === "number" ? only : null,
+  };
+}
+
+/**
+ * For a member marked `bigo_overlaps`: the display ordinal of the member whose
+ * claim includes it, or null when that member is not on the page. `undefined`
+ * when the member overlaps nothing.
+ */
+export function bigoOverlapTargetOrdinal(
+  member: SeriesMember,
+  members: readonly SeriesMember[],
+): number | null | undefined {
+  const overlap = member.bigo_overlaps;
+  if (!overlap) return undefined;
+  const target = overlap.member_slug ? members.find((m) => m.case.slug === overlap.member_slug) : undefined;
+  return target ? target.ordinal : null;
 }
 
 /** "082-CR-0154" from a court-case IRI, or null when it is not one. */
