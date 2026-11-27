@@ -49,6 +49,9 @@ export function SeriesListCard({ card }: Readonly<{ card: SeriesListingCard }>) 
     <Card
       className="group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-2xl border-2 border-primary bg-surface transition-colors duration-200 hover:border-primary/80"
       data-testid="series-list-card"
+      // A click on the card body opens the series. Clicks on its links are left
+      // to the links and still bubble, so the search page's result-click
+      // tracking (TrackedSearchResult) sees them.
       onClick={(event) => {
         if (!(event.target as HTMLElement).closest("a")) navigate(href);
       }}
@@ -93,7 +96,6 @@ export function SeriesListCard({ card }: Readonly<{ card: SeriesListingCard }>) 
             <h3 className="line-clamp-2 text-[17px] font-semibold leading-6 text-primary">
               <Link
                 className="rounded-sm outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                onClick={(event) => event.stopPropagation()}
                 to={href}
               >
                 {title}
@@ -138,7 +140,7 @@ export function SeriesListCard({ card }: Readonly<{ card: SeriesListingCard }>) 
 
           <CardFooter className="mt-auto px-4 pb-4 pt-4 sm:px-5 sm:pb-5">
             <Button asChild className="w-full" variant="primary">
-              <Link onClick={(event) => event.stopPropagation()} to={href}>
+              <Link to={href}>
                 {t("series.listCard.view")}
               </Link>
             </Button>

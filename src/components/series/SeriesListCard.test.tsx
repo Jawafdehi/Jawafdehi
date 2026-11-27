@@ -1,5 +1,5 @@
-import { afterEach, beforeAll, describe, expect, it } from "vitest";
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import type { ReactNode } from "react";
 
@@ -170,6 +170,18 @@ describe("<SeriesListCard>", () => {
   it("says how many members matched a filter", () => {
     wrap(<SeriesListCard card={seriesListingCardOf(seriesListingResult({ matched_member_count: 1 }))!} />);
     expect(screen.getByText("यो छनोटमा १")).toBeTruthy();
+  });
+
+  it("lets link clicks bubble, so the search page's result-click tracking sees them", () => {
+    const seen = vi.fn();
+    wrap(
+      <div onClick={seen}>
+        <SeriesListCard card={seriesListingCardOf(seriesListingResult())!} />
+      </div>,
+    );
+    fireEvent.click(screen.getByRole("link", { name: "एनसेल कर विवाद" }));
+    fireEvent.click(screen.getByRole("link", { name: "शृङ्खला हेर्नुहोस्" }));
+    expect(seen).toHaveBeenCalledTimes(2);
   });
 
   it("renders in English", async () => {
