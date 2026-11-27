@@ -95,7 +95,6 @@ const branch = (slug: string, name: Bilingual, tint: number, children: ArchiveNo
 const W = {
   annualReports: { ne: "वार्षिक प्रतिवेदन", en: "Annual reports" },
   pressReleases: { ne: "प्रेस विज्ञप्ति", en: "Press releases" },
-  pressReleasesUploads: { ne: "प्रेस विज्ञप्ति (मुद्दासँग अपलोड गरिएका)", en: "Press releases (case uploads)" },
   chargeSheets: { ne: "अभियोगपत्र", en: "Charge sheets" },
   chargeSheetsUploads: { ne: "अभियोगपत्र (मुद्दासँग अपलोड गरिएका)", en: "Charge sheets (case uploads)" },
   reports: { ne: "प्रतिवेदन", en: "Reports" },
@@ -232,7 +231,6 @@ export const ARCHIVE_SHELVES: readonly ArchiveNode[] = [
   // Government bodies
   branch("ciaa", { ne: "अख्तियार दुरुपयोग अनुसन्धान आयोग", en: "Commission for the Investigation of Abuse of Authority" }, 1, [
     curated("ciaa-press-releases", W.pressReleases),
-    leaf("ciaa-press-releases-uploads", "press_release", W.pressReleasesUploads),
     curated("ciaa-annual-reports", W.annualReports),
   ]),
   branch("attorney-general", { ne: "महान्यायाधिवक्ताको कार्यालय", en: "Office of the Attorney General" }, 5, [
