@@ -13,6 +13,7 @@ import { AccountabilityGap } from "@/components/data-quality/AccountabilityGap";
 import { EntityBreakdown } from "@/components/data-quality/EntityBreakdown";
 import { EvidenceBackbone } from "@/components/data-quality/EvidenceBackbone";
 import { SourcesSummary } from "@/components/data-quality/SourcesSummary";
+import { SourceDocuments } from "@/components/data-quality/SourceDocuments";
 import { DataHonesty } from "@/components/data-quality/DataHonesty";
 import { DataPipeline } from "@/components/data-quality/DataPipeline";
 import { UseThisData } from "@/components/data-quality/UseThisData";
@@ -77,6 +78,11 @@ const DataQuality = () => {
           {/* Where the evidence comes from: a summary of the one source list on
               /materials#sources, from the same /api/document-sources/ catalogue. */}
           <SourcesSummary />
+
+          {/* How far those documents are redacted (or withheld) and readable,
+              from the precomputed /api/statistics/source-documents/ snapshot.
+              Renders nothing until the API serves it. */}
+          <SourceDocuments />
 
           {/* Court cases: the judicial record base + court x year heatmap. */}
           <EvidenceBackbone ngm={data?.ngm} />

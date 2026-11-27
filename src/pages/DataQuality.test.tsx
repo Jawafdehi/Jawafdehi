@@ -25,6 +25,7 @@ vi.mock("@/components/data-quality/AccountabilityGap", () => ({ AccountabilityGa
 vi.mock("@/components/data-quality/EntityBreakdown", () => ({ EntityBreakdown: stub("entities") }));
 vi.mock("@/components/data-quality/EvidenceBackbone", () => ({ EvidenceBackbone: stub("courtCases") }));
 vi.mock("@/components/data-quality/SourcesSummary", () => ({ SourcesSummary: stub("materialsBySource") }));
+vi.mock("@/components/data-quality/SourceDocuments", () => ({ SourceDocuments: stub("sourceDocuments") }));
 vi.mock("@/components/data-quality/DataHonesty", () => ({ DataHonesty: stub("honesty") }));
 vi.mock("@/components/data-quality/DataPipeline", () => ({ DataPipeline: stub("methodology") }));
 vi.mock("@/components/data-quality/UseThisData", () => ({ UseThisData: stub("useData") }));
@@ -41,6 +42,7 @@ describe("DataQuality page", () => {
 
     expect(screen.getAllByTestId("dq-section").map((s) => s.textContent)).toEqual([
       "materialsBySource",
+      "sourceDocuments",
       "courtCases",
       "corruptionCases",
       "honesty",
