@@ -72,18 +72,17 @@ export function SeriesListCard({ card }: Readonly<{ card: SeriesListingCard }>) 
           {!isPlaceholder && (
             <div className="absolute inset-0 bg-gradient-to-t from-foreground/30 via-foreground/5 to-white/10" />
           )}
-          {/* The member count rides on the image: it is what makes this one
-              card "several cases". */}
-          <span className="absolute bottom-3 left-3 rounded-full bg-primary px-3 py-1 text-[13px] font-medium text-primary-foreground shadow">
-            {t("series.caseCount", { n: localDigits(card.member_count, language) })}
-          </span>
         </div>
 
         <div className="flex min-w-0 flex-1 flex-col bg-surface">
           <CardHeader className="space-y-2 px-4 pb-0 pt-4 sm:px-5 sm:pt-5">
             <div className="flex flex-wrap gap-1.5">
-              <span className="rounded-full bg-muted px-2.5 py-0.5 text-[12.5px] font-medium text-primary">
+              <span className="rounded-full bg-primary px-2.5 py-0.5 text-[12.5px] font-medium text-primary-foreground">
                 {t("series.kicker")}
+              </span>
+              {/* The member count is what makes this one card "several cases". */}
+              <span className="rounded-full bg-muted px-2.5 py-0.5 text-[12.5px] font-medium text-primary">
+                {t("series.caseCount", { n: localDigits(card.member_count, language) })}
               </span>
               {filtered ? (
                 <span className="rounded-full border border-border px-2.5 py-0.5 text-[12.5px] text-muted-foreground">
