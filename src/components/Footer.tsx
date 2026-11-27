@@ -81,6 +81,7 @@ export const Footer = () => {
 
   const platformLinks: FooterLink[] = [
     { label: t("footer.searchCases"), to: "/search/?type=case" },
+    { label: t("footer.newCases"), to: "/new-cases/" },
     { label: t("footer.searchEntities"), to: "/search/?type=entity" },
     { label: t("nav.ourProcess"), to: "/our-process/" },
     { label: t("nav.ourCommitment"), to: "/commitment/" },

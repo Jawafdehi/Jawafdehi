@@ -196,7 +196,8 @@
       "pressKit": "Logos, brand colours, typography and boilerplate for journalists writing about Jawafdehi.",
       "mcp": "Connect Claude, ChatGPT and other AI tools to the Jawafdehi archive over the Model Context Protocol.",
       "whatsNew": "See the latest changes to the archive, the MCP and the API.",
-      "likhit": "Convert Nepali PDFs and Word files to clean Markdown with Jawafdehi's open-source document converter."
+      "likhit": "Convert Nepali PDFs and Word files to clean Markdown with Jawafdehi's open-source document converter.",
+      "newCases": "Cases newly published on Jawafdehi, week by week."
     },
     "hintMove": "to move",
     "hintOpen": "to open",
@@ -239,7 +240,8 @@
     "pressKit": "Press Kit",
     "mcp": "Jawafdehi MCP",
     "whatsNew": "Product updates",
-    "likhit": "likhit"
+    "likhit": "likhit",
+    "newCases": "New cases"
   },
   "home": {
     "bento": {
@@ -3309,5 +3311,38 @@
       "view": "View series",
       "thumbnailAlt": "{{title}}: series image"
     }
+  },
+  "newCases": {
+    "meta": {
+      "title": "New cases",
+      "description": "Corruption cases newly published on Jawafdehi, week by week, with RSS and Atom feeds."
+    },
+    "eyebrow": "Every week",
+    "title": "New cases",
+    "description": "Cases recently published on Jawafdehi, grouped by week (Friday to Thursday), newest first.",
+    "subscribe": {
+      "label": "Get new cases as they are published:",
+      "email": "Email newsletter",
+      "rss": "RSS feed",
+      "atom": "Atom feed"
+    },
+    "feeds": {
+      "rssTitle": "Jawafdehi: new cases (RSS)",
+      "atomTitle": "Jawafdehi: new cases (Atom)"
+    },
+    "week": {
+      "thisWeek": "This week",
+      "lastWeek": "Last week",
+      "count_one": "{{formatted}} case",
+      "count_other": "{{formatted}} cases",
+      "none": "No new cases were published this week.",
+      "showAll_one": "Show all {{formatted}} case",
+      "showAll_other": "Show all {{formatted}} cases"
+    },
+    "showOlder": "Show older weeks",
+    "loadingOlder": "Loading…",
+    "loading": "Loading new cases",
+    "errorTitle": "New cases didn't load",
+    "error": "We couldn't load the cases right now. Please try again later."
   }
 }
