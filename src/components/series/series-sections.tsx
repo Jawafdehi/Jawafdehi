@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
@@ -15,6 +15,8 @@ import {
   memberCourtCaseNumbers,
   membersBySlug,
   pickSeriesText,
+  seriesBigoTotal,
+  bigoOverlapTargetOrdinal,
   statusCountEntries,
   timelineView,
   TIMELINE_LATEST,
@@ -40,7 +42,11 @@ function useMemberNumber(members: readonly SeriesMember[]) {
   };
 }
 
-/** The key-numbers grid: members, court cases + courts, accused, status, largest बिगो. */
+/**
+ * The key-numbers grid: members, court cases + courts, accused, status, and the
+ * total बिगो of distinct claims — or, from an API without `bigo_total`, the
+ * largest member claim.
+ */
 export function SeriesKeyNumbers({ series }: Readonly<{ series: SeriesDetail }>) {
   const { t, i18n } = useTranslation();
   const language = i18n.language;
@@ -51,7 +57,36 @@ export function SeriesKeyNumbers({ series }: Readonly<{ series: SeriesDetail }>)
     .join(", ");
   const top = totals.bigo_max;
   const topMember = top ? memberNumber(top.member_slug) : "";
-  const stats: Array<{ value: string; label: string }> = [
+  const total = seriesBigoTotal(totals, series.members);
+  const bigoStat: { value: string; label: string; sub?: string } = total
+    ? {
+        value: formatSeriesMoney(total.amount, language),
+        label: t("series.stats.bigoTotal"),
+        sub: [
+          t("series.stats.bigoTotalSummed", { count: total.summed, n: localDigits(total.summed, language) }),
+          total.overlapping > 0
+            ? total.targetOrdinal != null
+              ? t("series.stats.bigoTotalOverlap", {
+                  count: total.overlapping,
+                  n: localDigits(total.overlapping, language),
+                  target: localDigits(total.targetOrdinal, language),
+                })
+              : t("series.stats.bigoTotalOverlapElsewhere", {
+                  count: total.overlapping,
+                  n: localDigits(total.overlapping, language),
+                })
+            : "",
+        ]
+          .filter(Boolean)
+          .join("; "),
+      }
+    : {
+        value: formatSeriesMoney(top?.amount, language),
+        label: topMember
+          ? t("series.stats.largestBigoMember", { ordinal: topMember })
+          : t("series.stats.largestBigo"),
+      };
+  const stats: Array<{ value: string; label: string; sub?: string }> = [
     { value: localDigits(totals.member_count, language), label: t("series.stats.members") },
     {
       value: localDigits(totals.court_case_count, language),
@@ -62,24 +97,24 @@ export function SeriesKeyNumbers({ series }: Readonly<{ series: SeriesDetail }>)
       label: t("series.stats.accused"),
     },
     { value: status || "—", label: t("series.stats.status") },
-    {
-      value: formatSeriesMoney(top?.amount, language),
-      label: topMember
-        ? t("series.stats.largestBigoMember", { ordinal: topMember })
-        : t("series.stats.largestBigo"),
-    },
+    bigoStat,
   ];
   return (
     <section aria-label={t("series.stats.label")} className="mt-8">
       <dl className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-5">
         {stats.map((stat) => (
-          <div className="flex flex-col-reverse rounded-xl bg-muted px-3.5 py-3" key={stat.label}>
-            <dt className="text-[13px] leading-5 text-muted-foreground">{stat.label}</dt>
-            <dd className="text-xl font-semibold leading-snug text-primary">{stat.value}</dd>
+          <div className="flex flex-col rounded-xl bg-muted px-3.5 py-3" key={stat.label}>
+            <dt className="order-2 text-[13px] leading-5 text-muted-foreground">{stat.label}</dt>
+            <dd className="order-1 text-xl font-semibold leading-snug text-primary">{stat.value}</dd>
+            {stat.sub ? (
+              <dd className="order-3 mt-0.5 text-[12.5px] leading-[18px] text-muted-foreground">{stat.sub}</dd>
+            ) : null}
           </div>
         ))}
       </dl>
-      <p className="mt-2 text-[13px] text-muted-foreground">{t("series.stats.bigoNote")}</p>
+      <p className="mt-2 text-[13px] text-muted-foreground">
+        {t(total ? "series.stats.bigoTotalNote" : "series.stats.bigoNote")}
+      </p>
     </section>
   );
 }
@@ -113,13 +148,14 @@ export function SeriesMemberList({ members }: Readonly<{ members: readonly Serie
                   {member.case.title}
                 </Link>
                 {note ? <p className="mt-1 text-[15px] leading-6 text-muted-foreground">{note}</p> : null}
-                <div className="mt-2 flex flex-wrap items-center gap-2 text-[13px] text-muted-foreground">
+                <div className="relative mt-2 flex flex-wrap items-center gap-2 text-[13px] text-muted-foreground">
                   <span className={getCaseBadgeClassName("status", member.case.status, "shadow-none")}>
                     {t(caseStatusLabelKey(member.case.status))}
                   </span>
                   {member.case.bigo != null && member.case.bigo > 0 ? (
                     <span>{t("series.members.bigo", { amount: formatSeriesMoney(member.case.bigo, language) })}</span>
                   ) : null}
+                  {member.bigo_overlaps ? <BigoOverlapChip member={member} members={ordered} /> : null}
                   {numbers.length > 0 ? (
                     <span aria-label={t("series.members.courtCases")} className="flex flex-wrap gap-1.5">
                       {numbers.map((number) => (
@@ -136,6 +172,75 @@ export function SeriesMemberList({ members }: Readonly<{ members: readonly Serie
         })}
       </ol>
     </section>
+  );
+}
+
+/**
+ * The muted "within case N's claim" chip on an overlapping member. Its reason
+ * shows on hover and keyboard focus, a press (a tap on touch) toggles it,
+ * Escape closes it until the pointer or focus leaves, and it prints inline.
+ * Visibility is one piece of state, not CSS hover/focus, so a dismissal is
+ * never overridden by the chip still being hovered or focused. The reason
+ * stays in the DOM (hidden until shown) so `aria-describedby` always resolves.
+ */
+function BigoOverlapChip({ member, members }: Readonly<{ member: SeriesMember; members: readonly SeriesMember[] }>) {
+  const { t, i18n } = useTranslation();
+  const language = i18n.language;
+  const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
+  // null: follow hover/focus; true/false: pinned open/closed by a press or Escape.
+  const [pinned, setPinned] = useState<boolean | null>(null);
+  const visible = pinned ?? (hovered || focused);
+  const reasonId = useId();
+  const target = bigoOverlapTargetOrdinal(member, members);
+  const reason = pickSeriesText(member.bigo_overlaps?.reason, language);
+  const label =
+    typeof target === "number"
+      ? t("series.members.overlap", { ordinal: localDigits(target, language) })
+      : t("series.members.overlapElsewhere");
+  const chip = "inline-flex items-center rounded-full border border-dashed border-border bg-muted px-2.5 py-0.5 text-[12.5px] text-muted-foreground";
+  if (!reason) return <span className={chip}>{label}</span>;
+  return (
+    // Anchored to the chip from `sm` up; on a phone to the whole chip row, so a
+    // chip that wraps to the right edge can't push its reason off screen.
+    <span
+      className="inline-flex sm:relative print:flex-col print:items-start"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => {
+        setHovered(false);
+        if (!focused) setPinned(null);
+      }}
+    >
+      <button
+        aria-describedby={reasonId}
+        aria-expanded={visible}
+        className={cn(chip, "cursor-help hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring")}
+        onBlur={() => {
+          setFocused(false);
+          setPinned(null);
+        }}
+        onClick={() => setPinned(pinned !== true)}
+        onFocus={() => setFocused(true)}
+        onKeyDown={(event) => {
+          if (event.key === "Escape") setPinned(false);
+        }}
+        type="button"
+      >
+        {label}
+      </button>
+      <span
+        className={cn(
+          "absolute left-0 right-0 top-full z-20 mt-1.5 rounded-lg sm:right-auto sm:w-max sm:max-w-[22rem] bg-primary-surface px-2.5 py-1.5 text-[13px] leading-5 text-primary-foreground",
+          visible ? "block" : "hidden",
+          "print:static print:mt-1 print:block print:max-w-none print:bg-transparent print:p-0 print:text-muted-foreground",
+        )}
+        id={reasonId}
+        role="tooltip"
+      >
+        <span className="sr-only">{t("series.members.overlapReason")}: </span>
+        {reason}
+      </span>
+    </span>
   );
 }
 

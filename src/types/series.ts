@@ -26,10 +26,22 @@ export interface SeriesMemberCase {
   court_cases: string[];
 }
 
+/**
+ * Set when a member's बिगो claim is already inside another member's (e.g. a
+ * predicate offence counted in the money-laundering बिगो). `member_slug` is
+ * that member's case slug, or null when that case is not public. Added after
+ * the first series release, so absent on an older API.
+ */
+export interface SeriesBigoOverlap {
+  member_slug: string | null;
+  reason: SeriesText;
+}
+
 export interface SeriesMember {
   ordinal: number;
   note: SeriesText;
   case: SeriesMemberCase;
+  bigo_overlaps?: SeriesBigoOverlap | null;
 }
 
 /**
@@ -95,6 +107,16 @@ export interface SeriesTotals {
   court_count: number;
   bigo_max: { amount: number; member_slug: string } | null;
   bigo_members_with_value?: number;
+  /**
+   * Sum of DISTINCT claims: every member's बिगो except members marked
+   * `bigo_overlaps`. Null when nothing is summed; absent on an older API (then
+   * the page shows `bigo_max` instead).
+   */
+  bigo_total?: number | null;
+  /** How many members `bigo_total` sums. */
+  bigo_total_members?: number;
+  /** How many members are left out as overlapping another member's claim. */
+  bigo_overlapping_members?: number;
   accused_count: number;
   status_counts: Record<string, number>;
   first_date?: string | null;

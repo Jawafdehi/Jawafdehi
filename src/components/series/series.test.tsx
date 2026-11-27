@@ -8,6 +8,7 @@ import type { ReactNode } from "react";
 import "../../../tests/support/resize-observer";
 import deepak from "../../../tests/fixtures/series/deepak-bhatta-affair.json";
 import ncell from "../../../tests/fixtures/series/ncell-tax-dispute.json";
+import { OVERLAP_REASONS, withBigoTotal } from "../../../tests/support/series-bigo";
 import i18n from "@/i18n/config";
 import { CaseSeriesBanner } from "@/components/series/CaseSeriesBanner";
 import { SeriesPartOfChips } from "@/components/series/SeriesPartOfChips";
@@ -79,6 +80,51 @@ describe("series page", () => {
     expect(screen.getByText("रु. २६.६३ अर्ब")).toBeTruthy();
     expect(screen.getByText("सबैभन्दा ठूलो बिगो दाबी (मुद्दा १)")).toBeTruthy();
     expect(screen.getByText(/बिगो जोडिएको छैन/)).toBeTruthy();
+  });
+
+  it("shows the total of distinct claims, the overlap chips and their reasons", async () => {
+    vi.mocked(getSeries).mockResolvedValue(withBigoTotal(DEEPAK));
+    renderPage();
+    await screen.findByRole("heading", { level: 1, name: "दीपक भट्ट प्रकरण" });
+    const stats = screen.getByRole("region", { name: "मुख्य तथ्याङ्क" });
+    expect(within(stats).getByText("रु. २६.८४ अर्ब")).toBeTruthy();
+    expect(within(stats).getByText("जम्मा बिगो (छुट्टाछुट्टै दाबी)")).toBeTruthy();
+    expect(within(stats).getByText("२ मुद्दाको; ३ मुद्दाको दाबी मुद्दा १ भित्र पर्छ")).toBeTruthy();
+    expect(within(stats).queryByText(/सबैभन्दा ठूलो बिगो/)).toBeNull();
+    expect(screen.getByText(/दोहोरो नगनियोस्/)).toBeTruthy();
+    expect(screen.queryByText(/बिगो जोडिएको छैन/)).toBeNull();
+
+    const chips = screen.getAllByRole("button", { name: "मुद्दा १ को दाबीभित्र" });
+    expect(chips).toHaveLength(3);
+    // Each overlapping member keeps its own बिगो.
+    expect(screen.getByText("बिगो रु. ४२.१५ करोड")).toBeTruthy();
+    // The reason is the chip's description (hover/focus), and a tap toggles it.
+    const banking = chips[0];
+    const tip = document.getElementById(banking.getAttribute("aria-describedby")!)!;
+    expect(tip.getAttribute("role")).toBe("tooltip");
+    expect(tip.textContent).toContain(OVERLAP_REASONS["deepak-bhatta-banking-offence-patan-hc-082-cb-0048"]);
+    expect(tip.className).toContain("print:block");
+    const shown = () => !tip.className.split(" ").includes("hidden");
+    expect(shown()).toBe(false);
+    // Hover shows it; leaving hides it.
+    fireEvent.mouseEnter(banking.parentElement!);
+    expect(shown()).toBe(true);
+    fireEvent.mouseLeave(banking.parentElement!);
+    expect(shown()).toBe(false);
+    // Keyboard focus shows it; Escape hides it although focus stays.
+    fireEvent.focus(banking);
+    expect(shown()).toBe(true);
+    fireEvent.keyDown(banking, { key: "Escape" });
+    expect(shown()).toBe(false);
+    expect(banking.getAttribute("aria-expanded")).toBe("false");
+    fireEvent.blur(banking);
+    // A tap (focus + click) shows it; a second tap hides it while focus stays.
+    fireEvent.focus(banking);
+    fireEvent.click(banking);
+    expect(shown()).toBe(true);
+    expect(banking.getAttribute("aria-expanded")).toBe("true");
+    fireEvent.click(banking);
+    expect(shown()).toBe(false);
   });
 
   it("links each accused to the entity page with the number of cases naming them", async () => {
@@ -234,6 +280,17 @@ describe("SeriesResultCard", () => {
     const members = within(screen.getByRole("list", { name: "सदस्य मुद्दाहरूका अदालती मुद्दा" })).getAllByRole("listitem");
     expect(members).toHaveLength(5);
     expect(members[0].textContent).toBe("१. 082-CR-0154");
+  });
+
+  it("shows the total of distinct claims when the card's totals carry one", () => {
+    const series = withBigoTotal(DEEPAK);
+    wrap(
+      <SeriesResultCard
+        result={hit({ slug: series.slug, title: series.title, summary: series.summary, totals: series.totals, members: [] })}
+      />,
+    );
+    expect(screen.getByText("जम्मा बिगो (छुट्टाछुट्टै दाबी) रु. २६.८४ अर्ब")).toBeTruthy();
+    expect(screen.queryByText(/सबैभन्दा ठूलो बिगो/)).toBeNull();
   });
 
   it("falls back to the hit's own title when the index has no card yet", () => {

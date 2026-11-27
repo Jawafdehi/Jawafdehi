@@ -7,6 +7,7 @@ import {
   formatSeriesMoney,
   localDigits,
   pickSeriesText,
+  seriesBigoTotal,
   seriesCardOf,
   seriesPath,
   seriesSlugFromUrl,
@@ -19,7 +20,7 @@ const stripTags = (value: string) => value.replace(/<[^>]*>/g, "");
 
 /**
  * A series hit on /search: a bordered card that stands for all its member
- * cases — kicker, title, summary, status / largest बिगो / accused, and one
+ * cases — kicker, title, summary, status / total (or largest) बिगो / accused, and one
  * chip per member listing its court-case numbers. Falls back to the hit's own
  * title and snippet when the index document carries no card yet.
  */
@@ -36,6 +37,7 @@ export function SeriesResultCard({ result }: Readonly<{ result: ArchiveSearchRes
   const summary =
     (card ? pickSeriesText(card.summary, language) : "") || stripTags(pickSeriesText(result.snippet, language));
   const totals = card?.totals;
+  const bigoTotal = seriesBigoTotal(totals);
   const status = statusCountEntries(totals?.status_counts)
     .map(([key, n]) => `${localDigits(n, language)} ${t(caseStatusLabelKey(key))}`)
     .join(", ");
@@ -72,7 +74,9 @@ export function SeriesResultCard({ result }: Readonly<{ result: ArchiveSearchRes
           {status ? (
             <span className={getCaseBadgeClassName("status", topStatus, "shadow-none")}>{status}</span>
           ) : null}
-          {totals.bigo_max ? (
+          {bigoTotal ? (
+            <span>{t("series.search.bigoTotal", { amount: formatSeriesMoney(bigoTotal.amount, language) })}</span>
+          ) : totals.bigo_max ? (
             <span>
               {t("series.search.largestBigo", { amount: formatSeriesMoney(totals.bigo_max.amount, language) })}
             </span>

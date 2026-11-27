@@ -3193,13 +3193,24 @@
       "status": "status",
       "largestBigo": "largest embezzled amount claimed",
       "largestBigoMember": "largest embezzled amount claimed (case {{ordinal}})",
-      "bigoNote": "Embezzled amounts are not added up: the same money can be claimed in more than one case. Each case's amount is listed below."
+      "bigoNote": "Embezzled amounts are not added up: the same money can be claimed in more than one case. Each case's amount is listed below.",
+      "bigoTotal": "total embezzled amount (distinct claims)",
+      "bigoTotalSummed_one": "of {{n}} case",
+      "bigoTotalSummed_other": "of {{n}} cases",
+      "bigoTotalOverlap_one": "{{n}} case's claim falls within case {{target}}",
+      "bigoTotalOverlap_other": "{{n}} cases' claims fall within case {{target}}",
+      "bigoTotalOverlapElsewhere_one": "{{n}} case's claim falls within another case",
+      "bigoTotalOverlapElsewhere_other": "{{n}} cases' claims fall within another case",
+      "bigoTotalNote": "So that no money is counted twice, a claim that already sits inside another case's claim is left out of the total: a money-laundering charge sheet, for example, includes the proceeds of the underlying offences in its own claim. Each case's own amount is listed below."
     },
     "members": {
       "heading": "Cases in this series",
       "case": "Case {{ordinal}}",
       "bigo": "Embezzled amount {{amount}}",
-      "courtCases": "Court cases"
+      "courtCases": "Court cases",
+      "overlap": "Within case {{ordinal}}'s claim",
+      "overlapElsewhere": "Within another case's claim",
+      "overlapReason": "Why it is left out of the total"
     },
     "chart": {
       "heading": "Court cases over time",
@@ -3287,7 +3298,8 @@
       "largestBigo": "Largest embezzled amount {{amount}}",
       "accused": "{{n}} accused",
       "memberCourtCases": "Court cases of the member cases",
-      "placeholder": "Search case series"
+      "placeholder": "Search case series",
+      "bigoTotal": "Total embezzled amount (distinct claims) {{amount}}"
     }
   }
 }
