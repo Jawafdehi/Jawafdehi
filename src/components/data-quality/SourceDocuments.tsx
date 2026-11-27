@@ -201,12 +201,12 @@ function TextPanel({ block, language }: Readonly<{ block: SourceDocBlock; langua
         })}
       </p>
       <p className="mt-3 text-4xl font-semibold tabular-nums text-foreground">
-        {fmtPct(pct)}
+        {fmtPct(pct, withText)}
       </p>
       <div className="mt-3">
         <StackedBar
           label={t("dataQuality.sourceDocs.text.barLabel", {
-            pct: fmtPct(pct),
+            pct: fmtPct(pct, withText),
           })}
           parts={[{ key: "with", pct, className: "bg-accent" }]}
         />
@@ -263,7 +263,7 @@ function GroupTable({ block, language }: Readonly<{ block: SourceDocBlock; langu
               {(
                 [
                   ["total", n(row.total)],
-                  ["withText", row.total ? fmtPct(sharePct(row.with_text, row.total)) : "—"],
+                  ["withText", row.total ? fmtPct(sharePct(row.with_text, row.total), row.with_text) : "—"],
                   ["redacted", n(row.redacted_pdf)],
                   ["withheld", n(row.withheld)],
                 ] as const
@@ -306,7 +306,7 @@ function GroupTable({ block, language }: Readonly<{ block: SourceDocBlock; langu
                 </th>
                 <td className="px-3 py-2 text-end tabular-nums">{n(row.total)}</td>
                 <td className="px-3 py-2 text-end tabular-nums">
-                  {row.total ? fmtPct(sharePct(row.with_text, row.total)) : "—"}
+                  {row.total ? fmtPct(sharePct(row.with_text, row.total), row.with_text) : "—"}
                 </td>
                 <td className="px-3 py-2 text-end tabular-nums">{n(row.redacted_pdf)}</td>
                 <td className="ps-3 py-2 text-end tabular-nums">{n(row.withheld)}</td>

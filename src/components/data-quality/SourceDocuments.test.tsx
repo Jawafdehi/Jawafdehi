@@ -88,6 +88,24 @@ describe("SourceDocuments", () => {
     expect(within(table).getAllByRole("row")).toHaveLength(5); // header + 4 groups
   });
 
+  it("never shows a non-empty readable-text share as 0%", async () => {
+    const tiny = stats();
+    tiny.scopes.published_cases = {
+      ...tiny.scopes.published_cases,
+      total: 100_000,
+      text: { ...tiny.scopes.published_cases.text, with_text: 5, without_text: 99_995 },
+      by_group: [{ group: "charge_sheet", total: 100_000, with_text: 5, redacted_pdf: 0, withheld: 0 }],
+    };
+    getSourceDocumentStats.mockResolvedValue(tiny);
+    renderSection();
+    const summary = await screen.findByText(/text.summary/);
+    const panel = summary.parentElement!;
+    expect(panel.textContent).toContain("<0.1%");
+    expect(panel.textContent).not.toMatch(/(^|[^.\d<])0%/);
+    const row = within(screen.getByRole("table")).getByRole("row", { name: /group.charge_sheet/ });
+    expect(row.textContent).toContain("<0.1%");
+  });
+
   it("explains what redacted, withheld and readable text mean, and why", async () => {
     getSourceDocumentStats.mockResolvedValue(stats());
     renderSection();

@@ -97,12 +97,20 @@ function isBlock(value: unknown): value is SourceDocBlock {
   const text = b.text as Record<string, unknown> | undefined;
   return (
     isCount(b.total) &&
+    (b.cases === null || isCount(b.cases)) &&
     hasCounts(b.pdf, PDF_STATES) &&
     hasCounts(b.transcript, TRANSCRIPT_STATES) &&
     !!text &&
     isCount(text.with_text) &&
     isCount(text.without_text) &&
-    Array.isArray(b.by_group)
+    Array.isArray(b.by_group) &&
+    b.by_group.every(
+      (row: unknown) =>
+        !!row &&
+        typeof row === "object" &&
+        typeof (row as Record<string, unknown>).group === "string" &&
+        hasCounts(row, ["total", "with_text", "redacted_pdf", "withheld"]),
+    )
   );
 }
 

@@ -33,6 +33,11 @@ describe("parseSourceDocStats", () => {
         },
       },
     ],
+    [
+      "an incomplete group row",
+      { ...stats(), scopes: { ...stats().scopes, archive: block({ by_group: [{ group: "court_order" }] as never }) } },
+    ],
+    ["a bad cases count", { ...stats(), scopes: { ...stats().scopes, archive: block({ cases: -2 }) } }],
   ])("rejects %s, so the section hides instead of drawing zeros", (_label, value) => {
     expect(parseSourceDocStats(value)).toBeNull();
   });
