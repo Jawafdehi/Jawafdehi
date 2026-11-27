@@ -84,7 +84,8 @@ const DataQuality = lazy(() => import("./pages/DataQuality"));
 const AuthorProfile = lazy(() => import("./pages/AuthorProfile"));
 const MaterialProfile = lazy(() => import("./pages/MaterialProfile"));
 const CourtCaseProfile = lazy(() => import("./pages/CourtCaseProfile"));
-// /series/:slug is client-rendered (not pre-rendered, not edge-rendered), so lazy.
+// /series/:slug is edge-rendered, not pre-rendered, so lazy is free: the
+// Worker's renderToReadableStream waits for the chunk, as for /material/*.
 const SeriesDetail = lazy(() => import("./pages/SeriesDetail"));
 const UpdatePreview = lazy(() => import("./pages/UpdatePreview"));
 const EmbedCaseCard = lazy(() => import("./pages/EmbedCaseCard"));

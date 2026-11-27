@@ -9,15 +9,19 @@
 // tests/ssr/worker.edge-cache.test.ts are the shared reference.
 
 /** The record pages the Worker renders on request. */
-export type EdgeKind = 'case' | 'entity' | 'material' | 'courtcase';
+export type EdgeKind = 'case' | 'entity' | 'material' | 'courtcase' | 'series';
 
-export const EDGE_KINDS: readonly EdgeKind[] = ['case', 'entity', 'material', 'courtcase'];
+// Same order as the API's `case_events.edge_cache.KINDS`, `series` last.
+export const EDGE_KINDS: readonly EdgeKind[] = ['case', 'entity', 'material', 'courtcase', 'series'];
 
 const KIND_BY_ROUTE: Record<string, EdgeKind> = {
   '/case/:id': 'case',
   '/entity/*': 'entity',
   '/material/*': 'material',
   '/courtcase/*': 'courtcase',
+  // A case series (`/series/<slug>/`). The API purges `series:<hash>` when the
+  // series, its membership or any member case changes.
+  '/series/:slug': 'series',
 };
 
 /**
@@ -52,7 +56,7 @@ export function edgeKindForRoute(routePath: string | undefined): EdgeKind | null
  * or trailing slash. `matchRoute` already hands params back decoded.
  */
 export function routeTail(kind: EdgeKind, params: Record<string, string | undefined>): string {
-  const raw = kind === 'case' ? params.id : params['*'];
+  const raw = kind === 'case' ? params.id : kind === 'series' ? params.slug : params['*'];
   return (raw ?? '').replace(/^\/+|\/+$/g, '');
 }
 
@@ -81,8 +85,10 @@ export async function pageTags(kind: EdgeKind, tails: readonly string[]): Promis
   return [...recordTags, `type:${kind}`, 'ssr:all'];
 }
 
-// `sitemap` tags the proxied API sitemaps (worker/sitemap.ts).
-const TAG_RE = /^(?:(?:case|entity|material|courtcase):[0-9a-f]{32}|type:(?:case|entity|material|courtcase)|ssr:all|sitemap)$/;
+// `sitemap` tags the proxied API sitemaps (worker/sitemap.ts). Built from
+// EDGE_KINDS, so a purge naming any page kind this Worker renders is accepted.
+const KIND_ALT = EDGE_KINDS.join('|');
+const TAG_RE = new RegExp(`^(?:(?:${KIND_ALT}):[0-9a-f]{32}|type:(?:${KIND_ALT})|ssr:all|sitemap)$`);
 
 /** Cloudflare's per-call purge limit is 100 tags. */
 export const MAX_PURGE_TAGS = 100;

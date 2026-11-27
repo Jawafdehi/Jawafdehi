@@ -98,6 +98,59 @@ describe('edge SSR record pages', () => {
     expect(res.headers.get('Cache-Tag')).toBe('material:f87cc8b46c00a4d3ba9f89394670386e,type:material,ssr:all');
   });
 
+  it('renders a case series and tags it with the series contract', async () => {
+    const render = vi.spyOn(bundle, 'render').mockResolvedValue(renderResult());
+    const env = makeEnv();
+    const edgePages = new (EdgePages as unknown as new (ctx: unknown, env: unknown) => EdgePages)({ cache: {} }, env);
+
+    const res = await edgePages.fetch(new Request('https://jawafdehi.org/series/deepak-bhatta-affair/'));
+
+    expect(res.status).toBe(200);
+    expect(res.headers.get('X-Edge-SSR')).toBe('render');
+    // The same vector the API's edge-purge consumer sends for this series.
+    expect(res.headers.get('Cache-Tag')).toBe('series:857533fe762abc4c45d4742b25551304,type:series,ssr:all');
+    expect(render.mock.calls[0][0]).toBe('/series/deepak-bhatta-affair');
+  });
+
+  it('serves a rendered series through the gateway like a case', async () => {
+    vi.spyOn(bundle, 'render').mockResolvedValue(renderResult());
+    const env = makeEnv();
+    const { ctx, fetch } = makeCtx(env);
+
+    const res = await worker.fetch(new Request('https://jawafdehi.org/series/deepak-bhatta-affair/'), env, ctx);
+
+    expect(res.status).toBe(200);
+    expect(await res.text()).toContain('<h1>Server-rendered record</h1>');
+    expect(res.headers.get('Cache-Tag')).toBeNull();
+    expect((fetch.mock.calls[0][0] as Request).url).toBe('https://jawafdehi.org/series/deepak-bhatta-affair');
+  });
+
+  it('404s a series the API does not serve', async () => {
+    vi.spyOn(bundle, 'render').mockResolvedValue(renderResult([{ reason: 'Not found', status: 404 }]));
+    const env = makeEnv();
+    const { ctx } = makeCtx(env);
+
+    const res = await worker.fetch(new Request('https://jawafdehi.org/series/no-such-series/'), env, ctx);
+
+    expect(res.status).toBe(404);
+    expect(res.headers.get('X-Robots-Tag')).toBe('noindex');
+  });
+
+  it('falls back to the client-rendered shell when a series render fails', async () => {
+    vi.spyOn(bundle, 'render').mockResolvedValue(renderResult([{ reason: 'Request failed', status: 502 }]));
+    const env = makeEnv();
+    const { ctx } = makeCtx(env);
+
+    const res = await worker.fetch(new Request('https://jawafdehi.org/series/deepak-bhatta-affair/'), env, ctx);
+
+    // The SPA shell (the browser renders the series itself), as a temporary
+    // 503 a crawler will retry, never cached.
+    expect(res.status).toBe(503);
+    expect(await res.text()).toBe(INDEX_HTML);
+    expect(res.headers.get('X-Edge-SSR')).toBe('fallback-error');
+    expect(res.headers.get('Cache-Control')).toBe('no-store');
+  });
+
   it('answers 5xx from EdgePages on a timeout, so the cache can serve its stale copy', async () => {
     vi.spyOn(bundle, 'render').mockResolvedValue(renderResult([{ reason: 'timeout of 4000ms exceeded' }]));
     const edgePages = new (EdgePages as unknown as new (ctx: unknown, env: unknown) => EdgePages)({}, makeEnv());

@@ -18,7 +18,7 @@ run_worker_first = ["/search", "/search/*"]
 # --- Edge SSR (JAW-80) -------------------------------------------------------
 #
 # Workers Cache sits in front of the EdgePages entrypoint ONLY: record pages
-# (/case, /entity, /material, /courtcase) rendered on request are cached there
+# (/case, /entity, /material, /courtcase, /series) rendered on request are cached there
 # for an hour, served stale while they re-render, and purged by tag when the
 # API says a case changed. The default entrypoint stays uncached so redirects,
 # 404s and per-route headers run on every request exactly as before, and static

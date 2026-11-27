@@ -22,6 +22,9 @@ describe('pageTag', () => {
     ['entity', 'person/राम-बहादुर', 'entity:945aa0edee340691aa91cd8b797f9e1f'],
     ['material', 'ag/10', 'material:f87cc8b46c00a4d3ba9f89394670386e'],
     ['courtcase', 'achhamdc/078-c1-0053', 'courtcase:b4f78eb6b8d6f5d8e71c688818beac9c'],
+    // Case series: the API pins the same two (case_events/tests/test_edge_cache.py).
+    ['series', 'deepak-bhatta-affair', 'series:857533fe762abc4c45d4742b25551304'],
+    ['series', 'example-slug', 'series:a69ea22d5904e06b2c6db9ff5a51bfb6'],
   ] as const)('%s %s', async (kind, tail, expected) => {
     expect(await pageTag(kind, tail)).toBe(expected);
   });
@@ -36,11 +39,13 @@ describe('pageTag', () => {
 });
 
 describe('routes', () => {
-  it('maps exactly the four record routes', () => {
+  it('maps exactly the five record routes', () => {
     expect(edgeKindForRoute('/case/:id')).toBe('case');
     expect(edgeKindForRoute('/entity/*')).toBe('entity');
     expect(edgeKindForRoute('/material/*')).toBe('material');
     expect(edgeKindForRoute('/courtcase/*')).toBe('courtcase');
+    expect(edgeKindForRoute('/series/:slug')).toBe('series');
+    expect(edgeKindForRoute('/author/:slug')).toBeNull();
     expect(edgeKindForRoute('/updates/:slug')).toBeNull();
     expect(edgeKindForRoute(undefined)).toBeNull();
   });
@@ -48,6 +53,7 @@ describe('routes', () => {
   it('takes the tail from the right param, without slashes', () => {
     expect(routeTail('case', { id: 'some-slug' })).toBe('some-slug');
     expect(routeTail('material', { '*': 'ag/10/' })).toBe('ag/10');
+    expect(routeTail('series', { slug: 'deepak-bhatta-affair' })).toBe('deepak-bhatta-affair');
   });
 });
 
@@ -65,6 +71,11 @@ describe('edge freshness', () => {
 describe('parsePurgeBody', () => {
   it('accepts page, type and global tags', () => {
     const tags = ['case:4c2559534418c558d0d56287f2eb70d6', 'type:material', 'ssr:all'];
+    expect(parsePurgeBody(JSON.stringify({ tags }))).toEqual({ ok: true, tags });
+  });
+
+  it('accepts the series page and type tags the API sends', () => {
+    const tags = ['series:857533fe762abc4c45d4742b25551304', 'type:series'];
     expect(parsePurgeBody(JSON.stringify({ tags }))).toEqual({ ok: true, tags });
   });
 

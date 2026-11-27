@@ -79,6 +79,12 @@ describe('withCanonicalSlashes', () => {
     );
   });
 
+  it('slashes series locs, which the API lists from its series section', () => {
+    expect(
+      withCanonicalSlashes('<url><loc>https://jawafdehi.org/series/deepak-bhatta-affair</loc></url>'),
+    ).toBe('<url><loc>https://jawafdehi.org/series/deepak-bhatta-affair/</loc></url>');
+  });
+
   it('leaves sitemap index children alone', () => {
     expect(withCanonicalSlashes(API_INDEX)).toBe(API_INDEX);
   });
