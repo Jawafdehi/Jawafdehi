@@ -274,5 +274,10 @@ export function readParams(
         : "newest",
     page: Number.isFinite(page) && page > 0 ? page : 1,
     page_size: archiveSearchPageSize,
+    // The /cases browse (Cases tab, no query text): a case series shows as ONE
+    // card in place of its member cases. A typed query keeps the members
+    // findable one by one, so search never collapses; the API applies it only
+    // to a case-only browse anyway.
+    collapse_series: selectedRecordType === "case" && !q ? true : undefined,
   };
 }

@@ -21,15 +21,23 @@ export const FEATURED_CASE_COUNT = FEATURED_CASE_GRID_COUNT;
  * `sort: "featured"` orders by the editorial `weight` on Case, then newest by
  * case date: the home page is the curated shelf. The archive search is where
  * cases browse newest first (see readParams in pages/ArchiveSearch.tsx).
+ *
+ * `collapse_series`: a case series fills ONE cell of the grid in place of its
+ * member cases (the API returns a `type: "series"` result for it). An API that
+ * predates the param ignores it and returns plain cases, which render as before.
  */
 export function featuredCasesQuery() {
   return {
-    queryKey: ["home-featured-cases", { page_size: FEATURED_CASE_COUNT }] as const,
+    queryKey: [
+      "home-featured-cases",
+      { page_size: FEATURED_CASE_COUNT, collapse_series: true },
+    ] as const,
     queryFn: (): Promise<ArchiveSearchResponse> =>
       searchArchive({
         type: "case",
         sort: "featured",
         page_size: FEATURED_CASE_COUNT,
+        collapse_series: true,
       }),
   };
 }

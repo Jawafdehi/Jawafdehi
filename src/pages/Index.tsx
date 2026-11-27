@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button";
-import { CaseCard } from "@/components/CaseCard";
 import { Hero } from "@/components/home/hero";
 import { ArchiveBento } from "@/components/home/archive-bento";
 import { ArchiveFigures } from "@/components/home/archive-figures";
@@ -19,7 +18,7 @@ import {
 } from "@/queries/home";
 import { formatBigo, formatCompactCount, formatCount } from "@/utils/number";
 import { useMemo } from "react";
-import { caseCardPropsFromSearchResult } from "@/lib/case-card-props";
+import { FeaturedCaseGrid } from "@/components/home/featured-case-grid";
 import { useTranslation } from "react-i18next";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_NAME_NEPALI, SITE_URL } from "@/utils/seo";
 
@@ -56,12 +55,10 @@ const Index = () => {
     staleTime: 5 * 60 * 1000,
   });
 
-  const featuredCases = useMemo(() => {
-    if (!casesData?.results) return [];
-    return casesData.results
-      .slice(0, FEATURED_CASE_COUNT)
-      .map((result) => caseCardPropsFromSearchResult(result, currentLang));
-  }, [casesData, currentLang]);
+  const featuredCases = useMemo(
+    () => casesData?.results?.slice(0, FEATURED_CASE_COUNT) ?? [],
+    [casesData],
+  );
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -159,13 +156,7 @@ const Index = () => {
                 {/* Every case gets the same card: no lead or spotlight. Order
                     comes from the newest-first order from the search
                     source. */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {featuredCases.map((caseItem, index) => (
-                    <Reveal key={caseItem.id} className="h-full" delayMs={(index % 3) * 90}>
-                      <CaseCard {...caseItem} />
-                    </Reveal>
-                  ))}
-                </div>
+                <FeaturedCaseGrid language={currentLang} results={featuredCases} />
               </>
             ) : (
               <>

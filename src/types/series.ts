@@ -6,6 +6,8 @@
 // it (case detail, case search cards), so the frontend keeps working against
 // an API that has not deployed the series change yet.
 
+import type { CaseImage } from "@/types/jds";
+
 export interface SeriesText {
   ne: string | null;
   en: string | null;
@@ -152,4 +154,20 @@ export interface SeriesSearchCard {
   summary: SeriesText;
   totals: SeriesTotals;
   members: Array<{ ordinal: number; slug: string; court_case_numbers: string[] }>;
+}
+
+/**
+ * The `card` of a collapsed-listing item (`GET /api/search/?type=case&
+ * collapse_series=1`): the search card plus what the listing grid shows. One
+ * of these stands in for all of its member cases on the homepage and /cases.
+ */
+export interface SeriesListingCard extends SeriesSearchCard {
+  member_count: number;
+  /** How many members matched the listing's filters (all of them when unfiltered). */
+  matched_member_count: number;
+  /** The newest member's proceedings start, AD "YYYY-MM-DD", or null. */
+  latest_date: string | null;
+  /** The first member's card image, or null. */
+  thumbnail: CaseImage | null;
+  thumbnail_url: string | null;
 }

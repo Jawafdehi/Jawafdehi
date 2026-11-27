@@ -12,8 +12,10 @@ import type {
   CaseSeriesRef,
   SeriesCourtCase,
   SeriesDetail,
+  SeriesListingCard,
   SeriesMember,
   SeriesSearchCard,
+  SeriesTotals,
   SeriesText,
   SeriesTimelineEvent,
 } from "@/types/series";
@@ -524,3 +526,48 @@ export function seriesSlugFromUrl(url: string | null | undefined): string | null
     return null;
   }
 }
+
+// ---------------------------------------------------------------------------
+// Collapsed listings (homepage grid, /cases)
+// ---------------------------------------------------------------------------
+
+/**
+ * The listing card of a collapsed-listing series item, or null. Only the
+ * collapse (`collapse_series=1`) sends `member_count` on the card, so a plain
+ * series SEARCH hit (no such key) stays a search card and renders as before.
+ */
+export function seriesListingCardOf(
+  result: Pick<ArchiveSearchResult, "type" | "card">,
+): SeriesListingCard | null {
+  const base = seriesCardOf(result);
+  if (!base) return null;
+  const card = result.card as unknown as Partial<SeriesListingCard>;
+  if (typeof card.member_count !== "number") return null;
+  return {
+    ...base,
+    member_count: card.member_count,
+    matched_member_count:
+      typeof card.matched_member_count === "number" ? card.matched_member_count : card.member_count,
+    latest_date: card.latest_date ?? null,
+    thumbnail: card.thumbnail ?? null,
+    thumbnail_url: card.thumbnail_url ?? null,
+  };
+}
+
+/**
+ * The one बिगो figure a series card shows: the total over distinct claims when
+ * the API sends one, else the largest single claim. Null when neither exists.
+ * Never a client-side sum: members' claims can overlap.
+ */
+export function seriesHeadlineBigo(
+  totals: Pick<SeriesTotals, "bigo_max" | "bigo_total"> | null | undefined,
+): { kind: "total" | "largest"; amount: number } | null {
+  if (!totals) return null;
+  if (typeof totals.bigo_total === "number" && totals.bigo_total > 0) {
+    return { kind: "total", amount: totals.bigo_total };
+  }
+  const largest = totals.bigo_max?.amount;
+  if (typeof largest === "number" && largest > 0) return { kind: "largest", amount: largest };
+  return null;
+}
+

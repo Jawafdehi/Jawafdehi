@@ -53,6 +53,7 @@ import type {
   ArchiveSearchType,
 } from "@/types/search";
 import { describeBigoRange } from "@/lib/bigo-range";
+import { seriesListingCardOf } from "@/lib/case-series";
 import { archiveSeriesBySlug } from "@/data/archive-folders";
 import {
   describeDateRange,
@@ -176,7 +177,11 @@ export default function ArchiveSearch() {
   const showFilters = isInitialLoading || Boolean(displayData);
   // "2,836 results", grouped the way the rest of the page writes numbers. The
   // locale strings carry the plural; the digits are swapped for the grouped form.
-  const resultCount = displayData?.count || 0;
+  // With the series collapse on, `count` counts cards (a series is one) and
+  // drives the pager; the label says how many CASES matched (`case_count`), so
+  // collapsing never shrinks it. An API without the collapse sends no
+  // `case_count`, and `count` is already the case count there.
+  const resultCount = displayData?.case_count ?? displayData?.count ?? 0;
   const resultCountLabel =
     isInitialLoading || isRefreshing || showError
       ? null
@@ -937,7 +942,10 @@ function TrackedSearchResult({
   // fill); list view needs no wrapper sizing. A series card spans the whole
   // row: it stands for several of the case cards beside it.
   return (
-    <div className={result.type === "series" ? "col-span-full" : "h-full"} onClick={handleClick}>
+    <div
+      className={result.type === "series" && !seriesListingCardOf(result) ? "col-span-full" : "h-full"}
+      onClick={handleClick}
+    >
       {children}
     </div>
   );
