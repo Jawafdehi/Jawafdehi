@@ -1,0 +1,56 @@
+.success-tick {
+  --tick-ease: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.success-tick__disc {
+  transform-origin: center;
+  animation: success-tick-disc 420ms var(--tick-ease) both;
+}
+
+.success-tick__ring {
+  stroke-dasharray: 151;
+  stroke-dashoffset: 151;
+  animation: success-tick-draw 560ms var(--tick-ease) 120ms forwards;
+}
+
+.success-tick__check {
+  stroke-dasharray: 36;
+  stroke-dashoffset: 36;
+  animation: success-tick-draw 320ms var(--tick-ease) 560ms forwards;
+}
+
+.success-tick__mark {
+  transform-origin: center;
+  animation: success-tick-pop 360ms var(--tick-ease) 820ms both;
+}
+
+@keyframes success-tick-disc {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+}
+
+@keyframes success-tick-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes success-tick-pop {
+  50% {
+    transform: scale(1.06);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .success-tick__disc,
+  .success-tick__mark {
+    animation: none;
+  }
+  .success-tick__ring,
+  .success-tick__check {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+}

@@ -1,6 +1,6 @@
 import { ArrowUpRight, Github, Mail } from "@/components/icons";
 import { useTranslation } from "react-i18next";
-import { FaDiscord } from "react-icons/fa";
+import { FaWhatsapp } from "react-icons/fa";
 
 import { FeedbackForm } from "@/components/FeedbackForm";
 import { Seo } from "@/components/Seo";
@@ -12,7 +12,7 @@ import { SITE_NAME, SITE_URL } from "@/utils/seo";
 
 const OTHER_WAYS = [
   { key: "email", href: "mailto:report@jawafdehi.org", Icon: Mail, external: false },
-  { key: "discord", href: JAWAFDEHI_SOCIALS.discord, Icon: FaDiscord, external: true },
+  { key: "whatsapp", href: JAWAFDEHI_SOCIALS.whatsapp, Icon: FaWhatsapp, external: true },
   { key: "github", href: "https://github.com/Jawafdehi/Jawafdehi/issues", Icon: Github, external: true },
 ] as const;
 

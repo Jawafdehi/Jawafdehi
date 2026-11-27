@@ -1,7 +1,7 @@
 import type { ComponentType } from "react";
 import { useTranslation } from "react-i18next";
 import { FileDown, Mail, ShieldAlert } from "@/components/icons";
-import { FaDiscord, FaFacebook, FaInstagram, FaLinkedin, FaWhatsapp, FaYoutube } from "react-icons/fa";
+import { FaFacebook, FaInstagram, FaLinkedin, FaWhatsapp, FaYoutube } from "react-icons/fa";
 import { FaTiktok, FaXTwitter } from "react-icons/fa6";
 import { SiLinktree } from "react-icons/si";
 
@@ -36,7 +36,6 @@ export default function ReportCase() {
     { label: t("footer.social.tiktok"), href: JAWAFDEHI_SOCIALS.tiktok, icon: FaTiktok },
     { label: t("footer.social.youtube"), href: JAWAFDEHI_SOCIALS.youtube, icon: FaYoutube },
     { label: t("footer.social.linkedin"), href: JAWAFDEHI_SOCIALS.linkedin, icon: FaLinkedin },
-    { label: t("footer.social.discord"), href: JAWAFDEHI_SOCIALS.discord, icon: FaDiscord },
     { label: t("footer.social.linktree"), href: JAWAFDEHI_SOCIALS.linktree, icon: SiLinktree },
   ];
 

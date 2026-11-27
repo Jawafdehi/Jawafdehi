@@ -1,4 +1,7 @@
+import { lazy, Suspense, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { readVerification } from "@/components/volunteer-apply/verification";
 import { Cta } from "@/components/home/cta";
 import { Seo } from "@/components/Seo";
 import { pageCard } from "@/utils/page-cards";
@@ -6,14 +9,7 @@ import { ShaderBackdrop } from "@/components/brand-shaders/shader-backdrop";
 import { ArrowLink } from "@/components/ui/arrow-link";
 import { LightHero } from "@/components/ui/light-hero";
 import { Panel } from "@/components/ui/panel";
-import {
-  BriefcaseBusiness,
-  GraduationCap,
-  Laptop,
-  Mail,
-  Scale,
-  type IconComponent,
-} from "@/components/icons";
+import { BriefcaseBusiness, GraduationCap, Laptop, Mail, Scale, type IconComponent } from "@/components/icons";
 import { SITE_URL } from "@/utils/seo";
 
 type VolunteerProfile = {
@@ -45,7 +41,26 @@ const getProfiles = (): VolunteerProfile[] => [
   },
 ];
 
+const VerifyPhoneDialog = lazy(() =>
+  import("@/components/volunteer-apply/phone-verify").then((m) => ({ default: m.VerifyPhoneDialog })),
+);
+
 const Volunteer = () => {
+  const navigate = useNavigate();
+  const [params, setParams] = useSearchParams();
+  const [verifying, setVerifying] = useState(() => params.get("apply") === "1" && !readVerification());
+
+  const startApplication = () => {
+    if (readVerification()) navigate("/volunteer/apply/");
+    else setVerifying(true);
+  };
+  const closeVerify = () => {
+    setVerifying(false);
+    if (params.has("apply")) {
+      params.delete("apply");
+      setParams(params, { replace: true });
+    }
+  };
   const { t } = useTranslation();
   const profiles = getProfiles();
   return (
@@ -71,9 +86,14 @@ const Volunteer = () => {
           description={t("volunteer.hero.description")}
           actions={
             <>
-              <ArrowLink href="https://github.com/Jawafdehi">
-                {t("volunteer.hero.github")}
-              </ArrowLink>
+              <button
+                type="button"
+                onClick={startApplication}
+                className="inline-flex h-12 items-center gap-2 rounded-full bg-primary-surface px-6 text-[15px] text-primary-foreground transition-[transform,background-color] duration-150 ease-out hover:bg-primary-surface/90 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:active:scale-100"
+              >
+                {t("volunteer.hero.apply")}
+              </button>
+              <ArrowLink href="https://github.com/Jawafdehi">{t("volunteer.hero.github")}</ArrowLink>
               <a
                 href="mailto:report@jawafdehi.org"
                 className="inline-flex h-12 items-center gap-2 rounded-full bg-muted px-5 text-[15px] text-primary transition-colors hover:bg-primary/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -91,7 +111,9 @@ const Volunteer = () => {
             <h2 id="who-we-need-title" className="font-home-section-title text-primary">
               {t("volunteer.whoCanJoin.title")}
             </h2>
-            <p className="mt-4 max-w-2xl text-lg leading-8 text-muted-foreground">{t("volunteer.whoCanJoin.description")}</p>
+            <p className="mt-4 max-w-2xl text-lg leading-8 text-muted-foreground">
+              {t("volunteer.whoCanJoin.description")}
+            </p>
             <ul className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {profiles.map(({ icon: Icon, titleKey, descKey }) => (
                 <li key={titleKey}>
@@ -112,10 +134,15 @@ const Volunteer = () => {
         <section aria-labelledby="global-community-title" className="pt-16 md:pt-24">
           <div className="layout-container">
             <div className="relative isolate overflow-hidden rounded-[28px] bg-primary-surface px-6 py-12 md:px-12 md:py-16">
-              <div aria-hidden="true" className="absolute inset-0 -z-10 [mask-image:linear-gradient(to_left,#000_20%,transparent_75%)]">
+              <div
+                aria-hidden="true"
+                className="absolute inset-0 -z-10 [mask-image:linear-gradient(to_left,#000_20%,transparent_75%)]"
+              >
                 <ShaderBackdrop design="lines" />
               </div>
-              <p className="font-eyebrow text-sm text-[hsl(var(--accent-on-dark))]">{t("volunteer.globalCommunity.eyebrow")}</p>
+              <p className="font-eyebrow text-sm text-[hsl(var(--accent-on-dark))]">
+                {t("volunteer.globalCommunity.eyebrow")}
+              </p>
               <h2
                 id="global-community-title"
                 className="font-home-display mt-4 max-w-2xl text-3xl leading-tight text-primary-foreground md:text-4xl"
@@ -131,6 +158,18 @@ const Volunteer = () => {
 
         <Cta />
       </main>
+      {verifying ? (
+        <Suspense fallback={null}>
+          <VerifyPhoneDialog
+            open
+            onOpenChange={(open) => (open ? undefined : closeVerify())}
+            onVerified={() => {
+              closeVerify();
+              navigate("/volunteer/apply/");
+            }}
+          />
+        </Suspense>
+      ) : null}
     </div>
   );
 };

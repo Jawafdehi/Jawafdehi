@@ -1,9 +1,8 @@
-import { Mail } from "@/components/icons";
+import { ArrowRight, Mail } from "@/components/icons";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { FaDiscord } from "react-icons/fa";
 
 import { ShaderBackdrop } from "@/components/brand-shaders/shader-backdrop";
-import { JAWAFDEHI_SOCIALS } from "@/config/constants";
 import { cn } from "@/lib/utils";
 
 type CtaProps = {
@@ -13,7 +12,7 @@ type CtaProps = {
 /**
  * The "come and help" close on /volunteer and /team: one light card on the
  * mist shader (white with a blush of crimson and a wash of blue, the likhit
- * OCR card's ground), a display title, one line, and two pills: Discord in
+ * OCR card's ground), a display title, one line, and two pills: Apply to volunteer in
  * navy, email in white on a hairline.
  */
 export function Cta({ className }: Readonly<CtaProps>) {
@@ -32,15 +31,13 @@ export function Cta({ className }: Readonly<CtaProps>) {
         </h2>
         <p className="mt-4 max-w-xl text-lg leading-8 text-muted-foreground">{t("cta.description")}</p>
         <div className="mt-8 flex flex-wrap items-center gap-3">
-          <a
-            href={JAWAFDEHI_SOCIALS.discord}
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            to="/volunteer/apply/"
             className="inline-flex h-12 items-center gap-2 rounded-full bg-primary-surface px-6 text-[15px] text-primary-foreground transition-[transform,background-color] duration-150 ease-out hover:bg-primary-surface/90 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:active:scale-100"
           >
-            <FaDiscord className="h-[18px] w-[18px]" aria-hidden="true" />
-            {t("cta.discord")}
-          </a>
+            {t("cta.apply")}
+            <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          </Link>
           <a
             href="mailto:report@jawafdehi.org"
             className="inline-flex h-12 items-center gap-2 rounded-full bg-surface/80 px-6 text-[15px] text-primary ring-1 ring-border/70 transition-[transform,background-color] duration-150 ease-out hover:bg-primary/[0.08] active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:active:scale-100"

@@ -175,6 +175,7 @@ export const SITE_ROUTES = [
     icon: "HeartHandshake",
     sitemapTitle: "Volunteer — Jawafdehi",
   },
+  { path: "/volunteer/apply", chrome: "app", noindex: true },
   {
     path: "/donate",
     chrome: "app",

@@ -121,6 +121,7 @@ describe('the admin panel is served but never indexed', () => {
       '/document-viewer': '/document-viewer',
       '/updates/preview': '/updates/preview',
       '/moderation': '/moderation',
+      '/volunteer/apply': '/volunteer/apply',
     };
     for (const pattern of marked) {
       const path = sample[pattern];

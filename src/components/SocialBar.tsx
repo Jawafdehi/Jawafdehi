@@ -5,7 +5,7 @@
 // elsewhere, so it never sits on the hero as a white band.
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
-import { FaFacebook, FaInstagram, FaYoutube, FaLinkedin, FaDiscord, FaWhatsapp } from "react-icons/fa";
+import { FaFacebook, FaInstagram, FaYoutube, FaLinkedin, FaWhatsapp } from "react-icons/fa";
 import { FaXTwitter, FaTiktok } from "react-icons/fa6";
 import { SiLinktree } from "react-icons/si";
 
@@ -24,7 +24,6 @@ export function SocialBar() {
     { label: t("footer.social.tiktok"), href: JAWAFDEHI_SOCIALS.tiktok, icon: FaTiktok },
     { label: t("footer.social.youtube"), href: JAWAFDEHI_SOCIALS.youtube, icon: FaYoutube },
     { label: t("footer.social.linkedin"), href: JAWAFDEHI_SOCIALS.linkedin, icon: FaLinkedin },
-    { label: t("footer.social.discord"), href: JAWAFDEHI_SOCIALS.discord, icon: FaDiscord },
     { label: t("footer.social.whatsapp"), href: JAWAFDEHI_SOCIALS.whatsapp, icon: FaWhatsapp },
     { label: t("footer.social.linktree"), href: JAWAFDEHI_SOCIALS.linktree, icon: SiLinktree },
   ];

@@ -232,7 +232,6 @@
       "tiktok": "TikTok",
       "youtube": "YouTube",
       "linkedin": "LinkedIn",
-      "discord": "Discord",
       "whatsapp": "WhatsApp",
       "linktree": "Linktree"
     },
@@ -453,9 +452,9 @@
   },
   "cta": {
     "title": "Volunteer with Jawafdehi",
-    "description": "Start by joining our Discord server or send us an email to introduce yourself and tell us which team interests you.",
-    "discord": "Discord",
-    "email": "Email us"
+    "description": "Sign up in one go: verify your WhatsApp number, tell us how you want to help, and sign the volunteer agreement. Or email us to introduce yourself.",
+    "email": "Email us",
+    "apply": "Apply to volunteer"
   },
   "volunteer": {
     "hero": {
@@ -465,7 +464,8 @@
       "description": "Jawafdehi runs entirely on volunteer effort. Whether you are a technology enthusiast, a working professional, a legal expert, or a student, if you believe corruption should not be forgotten, there is a place for you here.",
       "github": "Find us on GitHub",
       "email": "Email us",
-      "eyebrow": "Volunteer"
+      "eyebrow": "Volunteer",
+      "apply": "Apply to volunteer"
     },
     "whoCanJoin": {
       "eyebrow": "Who can join",
@@ -1232,9 +1232,9 @@
         "name": "Email",
         "line": "report@jawafdehi.org"
       },
-      "discord": {
-        "name": "Discord",
-        "line": "Talk to the team and volunteers"
+      "whatsapp": {
+        "name": "WhatsApp",
+        "line": "Message the team"
       },
       "github": {
         "name": "GitHub issues",

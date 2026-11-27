@@ -77,6 +77,7 @@ import EntityRecordProfile from "./pages/EntityRecordProfile";
 // Lazily imported pages. These routes are not pre-rendered, so client-side code
 // splitting costs nothing at SEO/first-paint time and shrinks the entry chunk.
 const DataQuality = lazy(() => import("./pages/DataQuality"));
+const VolunteerApply = lazy(() => import("./pages/VolunteerApply"));
 // /author/:slug is NOT pre-rendered (scripts/pre-render.ts emits the static
 // routes, the case browse pages and the update slugs — no author pages), so per
 // the split policy above it is safe and free to lazy-load. It was eager by
@@ -154,6 +155,7 @@ export const ROUTE_ELEMENTS: Record<RoutePath, ReactElement> = {
   "/our-process": <OurProcess />,
   "/team": <OurTeam />,
   "/volunteer": <Volunteer />,
+  "/volunteer/apply": <VolunteerApply />,
   "/donate": <Donate />,
   "/products": <OurProducts />,
   "/mcp": <Mcp />,
