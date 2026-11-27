@@ -25,6 +25,8 @@ describe("featuredCasesQuery", () => {
       type: "case",
       sort: "featured",
       page_size: FEATURED_CASE_COUNT,
+      // A case series fills one grid cell in place of its member cases.
+      collapse_series: true,
     });
   });
 
@@ -43,7 +45,7 @@ describe("featuredCasesQuery", () => {
     expect(featuredCasesQuery().queryKey).toEqual(featuredCasesQuery().queryKey);
     expect(featuredCasesQuery().queryKey).toEqual([
       "home-featured-cases",
-      { page_size: FEATURED_CASE_COUNT },
+      { page_size: FEATURED_CASE_COUNT, collapse_series: true },
     ]);
   });
 });

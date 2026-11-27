@@ -94,6 +94,11 @@ export interface ArchiveSearchParams {
   // `facets` and `extents` come back empty. Only `withHeldFacets` sets it, for a
   // later page of a result set whose facets it already holds.
   include_facets?: boolean;
+  // The listing collapse: on a case-only browse each public case series comes
+  // back as ONE `type: "series"` result in place of its member cases. The
+  // homepage grid and the /cases browse send it; nothing else does. An API
+  // that predates it ignores the param and returns plain cases.
+  collapse_series?: boolean;
 }
 
 export interface SearchFacetItem {
@@ -283,6 +288,12 @@ export interface ArchiveSearchResponse {
   extents?: Partial<Record<"bigo", SearchRangeExtent>>;
   results: ArchiveSearchResult[];
   next_cursor: string | null;
+  // Only on a request that sent `collapse_series`: whether the API applied it,
+  // and the number of CASES that matched. With the collapse on, `count` counts
+  // results (a series is one) and drives the pager; `case_count` is what a
+  // "N cases" label should say, so it does not shrink when cases collapse.
+  collapse_series?: boolean;
+  case_count?: number;
   // A single suggested spelling for the query, or null when there is nothing to
   // suggest. The backend offers one on either of two conditions: the search
   // returned nothing, OR it returned only fuzzy matches — meaning no result

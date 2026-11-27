@@ -8,7 +8,9 @@ import { CaseCard } from "@/components/CaseCard";
 import { CaseCardSkeleton } from "@/components/CaseCardSkeleton";
 import { CourtCaseCard } from "@/components/CourtCaseCard";
 import { MaterialCard } from "@/components/materials/MaterialCard";
+import { SeriesListCard } from "@/components/series/SeriesListCard";
 import { SeriesResultCard } from "@/components/series/SeriesResultCard";
+import { seriesListingCardOf } from "@/lib/case-series";
 import { Skeleton } from "@/components/ui/skeleton";
 import { seriesBySource } from "@/data/material-series";
 import { documentSourceLabel, documentSourcesQuery } from "@/lib/document-sources";
@@ -89,7 +91,12 @@ export function SearchResultCard({
   viewMode = "list",
 }: Readonly<{ result: ArchiveSearchResult; viewMode?: SearchViewMode }>) {
   if (result.type === "case") return <CaseResultCard result={result} viewMode={viewMode} />;
-  if (result.type === "series") return <SeriesResultCard result={result} />;
+  if (result.type === "series") {
+    // A collapsed-listing item (the /cases browse) is one cell of the case
+    // grid; a series search hit keeps its full-width search card.
+    const listing = seriesListingCardOf(result);
+    return listing ? <SeriesListCard card={listing} /> : <SeriesResultCard result={result} />;
+  }
   if (result.type === "courtcase") {
     return <CourtCaseResultCard result={result} viewMode={viewMode} />;
   }

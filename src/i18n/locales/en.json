@@ -3300,6 +3300,14 @@
       "memberCourtCases": "Court cases of the member cases",
       "placeholder": "Search case series",
       "bigoTotal": "Total embezzled amount (distinct claims) {{amount}}"
+    },
+    "listCard": {
+      "matched": "{{n}} match this filter",
+      "totalBigo": "Total embezzled amount (distinct claims)",
+      "largestBigo": "Largest embezzled amount",
+      "latest": "Latest case",
+      "view": "View series",
+      "thumbnailAlt": "{{title}}: series image"
     }
   }
 }
