@@ -84,7 +84,7 @@ function OriginChip({ origin }: Readonly<{ origin: EvidenceOrigin }>) {
     </>
   );
 
-  if (origin.href) {
+  if (origin.href && /^https?:\/\//i.test(origin.href)) {
     return (
       <a
         href={origin.href}

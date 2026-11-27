@@ -223,9 +223,13 @@ const NAME_HINTS: Array<[RegExp, string]> = [
 
 const OWN_HOST_RE = /(^|\.)jawafdehi\.org$/i;
 
+// Only http(s) URLs name a source: a "javascript://host/…" URL has a hostname
+// too, and these URLs end up in an href.
 const hostOf = (url: string): string | null => {
   try {
-    return new URL(url).hostname.toLowerCase().replace(/^(www|m)\./, "");
+    const parsed = new URL(url.trim());
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return null;
+    return parsed.hostname.toLowerCase().replace(/^(www|m)\./, "");
   } catch {
     return null;
   }
