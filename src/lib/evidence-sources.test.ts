@@ -236,6 +236,35 @@ describe("origin", () => {
     ).toMatchObject({ href: "https://en.wikipedia.org/wiki/Rabi_Lamichhane_(politician)" });
   });
 
+  it("never links a non-http source page", () => {
+    // A javascript: URL with an authority has a hostname, so a host check alone lets it through.
+    for (const link of [
+      "javascript://ekantipur.com/%0aalert(document.domain)",
+      "javascript://evil.example/%0aalert(1)",
+      "data://ekantipur.com/text/html,<script>alert(1)</script>",
+      "vbscript://example.com/x",
+    ]) {
+      const origin = evidenceOrigin({
+        group: "news",
+        materialIri: "",
+        title: "",
+        links: [{ link, role: "SOURCE_PAGE" }],
+      });
+      expect(origin?.href).toBeUndefined();
+    }
+  });
+
+  it("still links an http or https source page", () => {
+    expect(
+      evidenceOrigin({
+        group: "news",
+        materialIri: "",
+        title: "",
+        links: [{ link: "http://example.com/story", role: "SOURCE_PAGE" }],
+      }),
+    ).toMatchObject({ kind: "web", label: "example.com", href: "http://example.com/story" });
+  });
+
   it("names the platform and the account for social posts", () => {
     const origin = evidenceOrigin({
       group: "social",
