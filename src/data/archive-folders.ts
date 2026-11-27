@@ -96,7 +96,6 @@ const W = {
   annualReports: { ne: "वार्षिक प्रतिवेदन", en: "Annual reports" },
   pressReleases: { ne: "प्रेस विज्ञप्ति", en: "Press releases" },
   chargeSheets: { ne: "अभियोगपत्र", en: "Charge sheets" },
-  chargeSheetsUploads: { ne: "अभियोगपत्र (मुद्दासँग अपलोड गरिएका)", en: "Charge sheets (case uploads)" },
   reports: { ne: "प्रतिवेदन", en: "Reports" },
   enforcement: { ne: "कारबाही", en: "Enforcement actions" },
   publications: { ne: "प्रकाशन", en: "Publications" },
@@ -235,7 +234,6 @@ export const ARCHIVE_SHELVES: readonly ArchiveNode[] = [
   ]),
   branch("attorney-general", { ne: "महान्यायाधिवक्ताको कार्यालय", en: "Office of the Attorney General" }, 5, [
     curated("charge-sheets", W.chargeSheets),
-    leaf("charge-sheets-uploads", "charge_sheet", W.chargeSheetsUploads),
     leaf("attorney-general-annual-reports", "attorney_general_report", W.annualReports),
   ]),
   branch("auditor-general", { ne: "महालेखापरीक्षकको कार्यालय", en: "Office of the Auditor General" }, 3, [
