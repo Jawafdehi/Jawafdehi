@@ -91,7 +91,7 @@ describe("/new-cases", () => {
     const link = await screen.findByRole("link", { name: "English title 1" });
     expect(link.getAttribute("href")).toBe("/case/case-1/");
     expect(getCases).toHaveBeenCalledWith(
-      expect.objectContaining({ ordering: "-case_publish_date", published_after: "2026-10-02", page: 1 }),
+      expect.objectContaining({ ordering: "-case_publish_date", published_after: "2026-09-25", page: 1 }),
     );
 
     const thisWeek = screen.getByRole("region", { name: "20–26 Nov 2026" });
@@ -108,8 +108,27 @@ describe("/new-cases", () => {
     expect(within(lastWeek).getByText(/No new cases/)).toBeTruthy();
     expect(screen.getByRole("link", { name: "English title 2" })).toBeTruthy();
     expect(screen.queryByText("English title 3")).toBeNull();
-    // Eight weeks, the quiet ones included.
+    // Eight weeks, the quiet past ones included.
     expect(screen.getAllByRole("heading", { level: 2 })).toHaveLength(8);
+  });
+
+  it("hides an empty current week and opens on last week", async () => {
+    getCases.mockResolvedValue(page([makeCase(2, "2026-11-12"), makeCase(4, "2026-09-30")]));
+    wrap();
+
+    await screen.findByRole("link", { name: "English title 2" });
+    expect(screen.queryByRole("region", { name: "20–26 Nov 2026" })).toBeNull();
+    expect(screen.queryByText("This week")).toBeNull();
+    const headings = screen.getAllByRole("heading", { level: 2 });
+    // Still eight weeks: the spare older week fills the window.
+    expect(headings).toHaveLength(8);
+    expect(headings[0].textContent).toBe("13–19 Nov 2026");
+    expect(headings[7].textContent).toBe("25 Sep – 1 Oct 2026");
+    // Last week is a past week, so it still says it was quiet.
+    const lastWeek = screen.getByRole("region", { name: "13–19 Nov 2026" });
+    expect(within(lastWeek).getByText("Last week")).toBeTruthy();
+    expect(within(lastWeek).getByText(/No new cases/)).toBeTruthy();
+    expect(screen.getByRole("link", { name: "English title 4" })).toBeTruthy();
   });
 
   it("drops a tag that only repeats the offence", async () => {
@@ -141,7 +160,7 @@ describe("/new-cases", () => {
 
     fireEvent.click(await screen.findByRole("button", { name: "Show older weeks" }));
     await waitFor(() =>
-      expect(getCases).toHaveBeenCalledWith(expect.objectContaining({ published_after: "2026-08-07" })),
+      expect(getCases).toHaveBeenCalledWith(expect.objectContaining({ published_after: "2026-07-31" })),
     );
     await waitFor(() => expect(screen.getAllByRole("heading", { level: 2 })).toHaveLength(16));
   });
@@ -153,7 +172,7 @@ describe("/new-cases", () => {
     expect(screen.queryByRole("button", { name: "Show older weeks" })).toBeNull();
     // Every page sat inside the window, so it asked for one case from before it.
     expect(getCases).toHaveBeenCalledWith(
-      expect.objectContaining({ ordering: "-case_publish_date", published_before: "2026-10-01", page_size: 1 }),
+      expect.objectContaining({ ordering: "-case_publish_date", published_before: "2026-09-24", page_size: 1 }),
     );
   });
 

@@ -129,6 +129,56 @@ export function groupCasesByWeek<T extends Pick<Case, "id" | "case_publish_date"
   return groups;
 }
 
+/**
+ * Weeks the page fetches for `weeks` shown: one spare, because an empty current
+ * week is hidden and the oldest fetched week then takes its place.
+ */
+export function weeksToFetch(weeks: number): number {
+  return Math.max(1, weeks) + 1;
+}
+
+/** How many weeks before the current one `start` is: 0 this week, 1 last week. */
+export function weeksAgo(start: string, today: string): number {
+  const current = parseIso(weekStartOf(today));
+  const week = parseIso(weekStartOf(start));
+  if (!current || !week) throw new RangeError(`not an ISO date: ${start}`);
+  return Math.round((current.getTime() - week.getTime()) / (7 * 86_400_000));
+}
+
+export interface WeekView<T> {
+  /** Exactly `weeks` weeks, newest first. */
+  groups: WeekGroup<T>[];
+  /** Whether there is anything older than the oldest week shown. */
+  hasOlder: boolean;
+}
+
+/**
+ * The weeks the page shows, from the cases fetched for `weeksToFetch(weeks)`.
+ *
+ * The current week (the one holding today in Nepal) is still filling up, so
+ * while it has no cases it is left out altogether: no "no new cases" block at
+ * the top, and the page opens on last week. A past week with no cases is
+ * still shown, saying so. Either way the page shows `weeks` weeks: with the
+ * current week hidden, the spare older week fills the window.
+ */
+export function buildWeekView<T extends Pick<Case, "id" | "case_publish_date">>(
+  cases: readonly T[],
+  today: string,
+  weeks: number,
+  hasOlder: boolean,
+): WeekView<T> {
+  const count = Math.max(1, weeks);
+  const all = groupCasesByWeek(cases, today, weeksToFetch(count));
+  const currentEmpty = all[0].cases.length === 0;
+  const groups = currentEmpty ? all.slice(1, count + 1) : all.slice(0, count);
+  const oldestShown = groups[groups.length - 1].start;
+  const olderFetched = cases.some((item) => {
+    const day = publishDate(item.case_publish_date);
+    return day !== null && day < oldestShown;
+  });
+  return { groups, hasOlder: hasOlder || olderFetched };
+}
+
 // ---------------------------------------------------------------------------
 // Paging the case list in
 // ---------------------------------------------------------------------------

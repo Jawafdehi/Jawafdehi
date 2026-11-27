@@ -10,13 +10,15 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { LightHero } from "@/components/ui/light-hero";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
+  buildWeekView,
   cutoffFor,
   feedUrls,
   formatCount,
   formatWeekAD,
   formatWeekBS,
-  groupCasesByWeek,
   nepalToday,
+  weeksAgo,
+  weeksToFetch,
   WEEKS_PER_STEP,
   type WeekGroup,
 } from "@/lib/new-cases";
@@ -44,13 +46,14 @@ const NewCases = () => {
   // Pre-rendered at build time, but the list itself is fetched in the browser,
   // so "today" is the reader's today, not the build's.
   const today = nepalToday();
-  const cutoff = cutoffFor(today, weeks);
+  // One spare week, in case the current week is empty and hidden.
+  const cutoff = cutoffFor(today, weeksToFetch(weeks));
   const { data, isLoading, isError, isFetching } = useQuery({
     ...newCasesQuery(cutoff),
     placeholderData: (previous) => previous,
   });
 
-  const groups = data ? groupCasesByWeek(data.cases, today, weeks) : [];
+  const view = data ? buildWeekView(data.cases, today, weeks, data.hasOlder) : null;
   const feeds = feedUrls(lang);
 
   return (
@@ -105,16 +108,16 @@ const NewCases = () => {
             <div className="max-w-4xl">
               {isError && !data ? (
                 <EmptyState kind="couldNotLoad" title={t("newCases.errorTitle")} description={t("newCases.error")} />
-              ) : isLoading || !data ? (
+              ) : isLoading || !view ? (
                 <NewCasesSkeleton />
               ) : (
                 <>
                   <div className="space-y-12">
-                    {groups.map((group, index) => (
-                      <WeekSection key={group.start} group={group} index={index} lang={lang} />
+                    {view.groups.map((group) => (
+                      <WeekSection key={group.start} group={group} ago={weeksAgo(group.start, today)} lang={lang} />
                     ))}
                   </div>
-                  {data.hasOlder ? (
+                  {view.hasOlder ? (
                     <div className="mt-12 flex justify-center print:hidden">
                       <Button
                         variant="quiet"
@@ -136,7 +139,7 @@ const NewCases = () => {
   );
 };
 
-function WeekSection({ group, index, lang }: Readonly<{ group: WeekGroup<Case>; index: number; lang: "ne" | "en" }>) {
+function WeekSection({ group, ago, lang }: Readonly<{ group: WeekGroup<Case>; ago: number; lang: "ne" | "en" }>) {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const headingId = `week-${group.start}`;
@@ -144,7 +147,7 @@ function WeekSection({ group, index, lang }: Readonly<{ group: WeekGroup<Case>; 
   const ad = formatWeekAD(group);
   const count = group.cases.length;
   const hidden = Math.max(0, count - ROWS_BEFORE_COLLAPSE);
-  const relative = index === 0 ? t("newCases.week.thisWeek") : index === 1 ? t("newCases.week.lastWeek") : null;
+  const relative = ago === 0 ? t("newCases.week.thisWeek") : ago === 1 ? t("newCases.week.lastWeek") : null;
 
   return (
     <section aria-labelledby={headingId}>

@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import {
   addDays,
+  buildWeekView,
   caseTitleFor,
   courtChip,
   cutoffFor,
@@ -19,6 +20,8 @@ import {
   recentWeeks,
   sortByPublishDateDesc,
   weekStartOf,
+  weeksAgo,
+  weeksToFetch,
 } from "@/lib/new-cases";
 import type { Case, PaginatedCaseList } from "@/types/jds";
 
@@ -91,6 +94,60 @@ describe("groupCasesByWeek", () => {
       ["2026-11-13", [3]],
       ["2026-11-06", []],
     ]);
+  });
+});
+
+describe("buildWeekView: an empty current week is hidden", () => {
+  // Thursday 26 Nov 2026: the current week is 20–26 Nov.
+  const today = "2026-11-26";
+  const starts = (view: { groups: { start: string }[] }) => view.groups.map((g) => g.start);
+
+  it("fetches one spare week", () => {
+    expect(weeksToFetch(8)).toBe(9);
+    expect(weeksToFetch(0)).toBe(2);
+  });
+
+  it("hides the current week when it has no cases and opens on last week", () => {
+    const view = buildWeekView([item(1, "2026-11-19"), item(2, "2026-09-26")], today, 3, false);
+    expect(starts(view)).toEqual(["2026-11-13", "2026-11-06", "2026-10-30"]);
+    expect(view.groups[0].cases.map((c) => c.id)).toEqual([1]);
+    // A fetched case older than the window still offers "show older weeks".
+    expect(view.hasOlder).toBe(true);
+  });
+
+  it("hides it on Friday morning too, when the week has only just begun", () => {
+    const view = buildWeekView([item(1, "2026-11-26")], "2026-11-27", 2, false);
+    expect(starts(view)).toEqual(["2026-11-20", "2026-11-13"]);
+    expect(view.hasOlder).toBe(false);
+  });
+
+  it("shows the current week when it has cases", () => {
+    const view = buildWeekView([item(1, "2026-11-24"), item(2, "2026-11-12")], today, 3, false);
+    expect(starts(view)).toEqual(["2026-11-20", "2026-11-13", "2026-11-06"]);
+    expect(view.groups.map((g) => g.cases.map((c) => c.id))).toEqual([[1], [], [2]]);
+    expect(view.hasOlder).toBe(false);
+  });
+
+  it("counts a case in the unused spare week as older", () => {
+    const view = buildWeekView([item(1, "2026-11-24"), item(2, "2026-10-31")], today, 3, false);
+    expect(starts(view)).toEqual(["2026-11-20", "2026-11-13", "2026-11-06"]);
+    expect(view.hasOlder).toBe(true);
+  });
+
+  it("keeps an empty past week, unchanged", () => {
+    const view = buildWeekView([item(1, "2026-11-24"), item(2, "2026-11-06")], today, 3, false);
+    expect(view.groups[1]).toEqual({ start: "2026-11-13", end: "2026-11-19", cases: [] });
+    // With the current week hidden, an empty last week still opens the page.
+    const quiet = buildWeekView([item(2, "2026-11-06")], today, 3, true);
+    expect(starts(quiet)).toEqual(["2026-11-13", "2026-11-06", "2026-10-30"]);
+    expect(quiet.groups[0].cases).toEqual([]);
+    expect(quiet.hasOlder).toBe(true);
+  });
+
+  it("names a week by how long ago it was, not by its place on the page", () => {
+    expect(weeksAgo("2026-11-20", today)).toBe(0);
+    expect(weeksAgo("2026-11-13", today)).toBe(1);
+    expect(weeksAgo("2026-10-30", today)).toBe(3);
   });
 });
 
