@@ -108,12 +108,6 @@ export interface SeriesTotals {
   court_case_count: number;
   court_count: number;
   bigo_max: { amount: number; member_slug: string } | null;
-  /**
-   * The sum over members whose claim does not repeat another member's
-   * (JawafdehiAPI feat/series-bigo-total). Absent from an API that predates
-   * it: show `bigo_max` then.
-   */
-  bigo_total?: number | null;
   bigo_members_with_value?: number;
   /**
    * Sum of DISTINCT claims: every member's बिगो except members marked
