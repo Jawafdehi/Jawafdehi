@@ -177,14 +177,20 @@ export function SeriesMemberList({ members }: Readonly<{ members: readonly Serie
 
 /**
  * The muted "within case N's claim" chip on an overlapping member. Its reason
- * shows on hover and keyboard focus, a tap toggles it on touch, Escape closes
- * it, and it prints inline. The reason stays in the DOM (hidden until shown)
- * so the chip's `aria-describedby` always resolves.
+ * shows on hover and keyboard focus, a press (a tap on touch) toggles it,
+ * Escape closes it until the pointer or focus leaves, and it prints inline.
+ * Visibility is one piece of state, not CSS hover/focus, so a dismissal is
+ * never overridden by the chip still being hovered or focused. The reason
+ * stays in the DOM (hidden until shown) so `aria-describedby` always resolves.
  */
 function BigoOverlapChip({ member, members }: Readonly<{ member: SeriesMember; members: readonly SeriesMember[] }>) {
   const { t, i18n } = useTranslation();
   const language = i18n.language;
-  const [open, setOpen] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
+  // null: follow hover/focus; true/false: pinned open/closed by a press or Escape.
+  const [pinned, setPinned] = useState<boolean | null>(null);
+  const visible = pinned ?? (hovered || focused);
   const reasonId = useId();
   const target = bigoOverlapTargetOrdinal(member, members);
   const reason = pickSeriesText(member.bigo_overlaps?.reason, language);
@@ -197,15 +203,26 @@ function BigoOverlapChip({ member, members }: Readonly<{ member: SeriesMember; m
   return (
     // Anchored to the chip from `sm` up; on a phone to the whole chip row, so a
     // chip that wraps to the right edge can't push its reason off screen.
-    <span className="group inline-flex sm:relative print:flex-col print:items-start">
+    <span
+      className="inline-flex sm:relative print:flex-col print:items-start"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => {
+        setHovered(false);
+        if (!focused) setPinned(null);
+      }}
+    >
       <button
         aria-describedby={reasonId}
-        aria-expanded={open}
+        aria-expanded={visible}
         className={cn(chip, "cursor-help hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring")}
-        onBlur={() => setOpen(false)}
-        onClick={() => setOpen((value) => !value)}
+        onBlur={() => {
+          setFocused(false);
+          setPinned(null);
+        }}
+        onClick={() => setPinned(pinned !== true)}
+        onFocus={() => setFocused(true)}
         onKeyDown={(event) => {
-          if (event.key === "Escape") setOpen(false);
+          if (event.key === "Escape") setPinned(false);
         }}
         type="button"
       >
@@ -214,7 +231,7 @@ function BigoOverlapChip({ member, members }: Readonly<{ member: SeriesMember; m
       <span
         className={cn(
           "absolute left-0 right-0 top-full z-20 mt-1.5 rounded-lg sm:right-auto sm:w-max sm:max-w-[22rem] bg-primary-surface px-2.5 py-1.5 text-[13px] leading-5 text-primary-foreground",
-          open ? "block" : "hidden group-hover:block group-focus-within:block",
+          visible ? "block" : "hidden",
           "print:static print:mt-1 print:block print:max-w-none print:bg-transparent print:p-0 print:text-muted-foreground",
         )}
         id={reasonId}

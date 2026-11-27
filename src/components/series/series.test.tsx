@@ -104,12 +104,27 @@ describe("series page", () => {
     expect(tip.getAttribute("role")).toBe("tooltip");
     expect(tip.textContent).toContain(OVERLAP_REASONS["deepak-bhatta-banking-offence-patan-hc-082-cb-0048"]);
     expect(tip.className).toContain("print:block");
-    expect(banking.getAttribute("aria-expanded")).toBe("false");
-    fireEvent.click(banking);
-    expect(banking.getAttribute("aria-expanded")).toBe("true");
-    expect(tip.className.split(" ")).toContain("block");
+    const shown = () => !tip.className.split(" ").includes("hidden");
+    expect(shown()).toBe(false);
+    // Hover shows it; leaving hides it.
+    fireEvent.mouseEnter(banking.parentElement!);
+    expect(shown()).toBe(true);
+    fireEvent.mouseLeave(banking.parentElement!);
+    expect(shown()).toBe(false);
+    // Keyboard focus shows it; Escape hides it although focus stays.
+    fireEvent.focus(banking);
+    expect(shown()).toBe(true);
     fireEvent.keyDown(banking, { key: "Escape" });
+    expect(shown()).toBe(false);
     expect(banking.getAttribute("aria-expanded")).toBe("false");
+    fireEvent.blur(banking);
+    // A tap (focus + click) shows it; a second tap hides it while focus stays.
+    fireEvent.focus(banking);
+    fireEvent.click(banking);
+    expect(shown()).toBe(true);
+    expect(banking.getAttribute("aria-expanded")).toBe("true");
+    fireEvent.click(banking);
+    expect(shown()).toBe(false);
   });
 
   it("links each accused to the entity page with the number of cases naming them", async () => {
