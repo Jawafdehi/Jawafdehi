@@ -337,10 +337,10 @@ export const SITE_ROUTES = [
   { path: "/entity/*", chrome: "app" },
   { path: "/material/*", chrome: "app" },
   { path: "/courtcase/*", chrome: "app" },
-  // A case series: one affair's separate cases on one page. Client-rendered,
-  // like /author/:slug: it is not in the edge-render kinds (worker/edge-cache.ts)
-  // because the API's edge-purge consumer does not know series yet, and its
-  // sitemap entries come from the API's sitemap like the cases'.
+  // A case series: one affair's separate cases on one page. Rendered at the
+  // edge like /case/:id (the `series` kind in worker/edge-cache.ts, purged by
+  // the API on any series or member-case change), and listed in the sitemap
+  // from the API's `series` section like the cases.
   { path: "/series/:slug", chrome: "app" },
   // The materials landing page. It carried no page
   // metadata until 2026-08-11, so it was filtered out of

@@ -4,7 +4,7 @@
 // The API's discovery app owns the record list: a sitemap index at
 // api.jawafdehi.org/sitemap.xml with one child per record type, 50k URLs per
 // child file, listing only what is public (PUBLISHED cases, LISTED materials,
-// name-gated court cases, live entities), every <loc> already on jawafdehi.org.
+// name-gated court cases, live entities, public case series), every <loc> already on jawafdehi.org.
 // The Worker proxies it under the site's own host — crawlers only trust a
 // sitemap for URLs on the host that serves it — and adds one child the API does
 // not know about: /sitemap-site.xml, the site's own pages (home, about, the case
@@ -52,13 +52,17 @@ export function withSiteSitemap(indexXml: string): string {
 }
 
 // The API lists every record by its @id IRI, which has no trailing slash. The
-// site's canonical case and entity URLs DO end in a slash (CaseDetail and
-// EntityRecordProfile <Seo>, the legacy redirects in worker.ts): those pages
-// were pre-rendered to <path>/index.html, and the slashless form redirected.
-// A sitemap must name the canonical URL, not a redirect or a duplicate, so the
-// two families are slashed here. Materials and court cases are canonical
-// without the slash and pass through untouched.
-const SLASHED_LOC_RE = /<loc>(https:\/\/jawafdehi\.org\/(?:case|entity)\/[^<]*?[^/<])<\/loc>/g;
+// site's canonical case, entity and series URLs DO end in a slash (CaseDetail,
+// EntityRecordProfile and SeriesDetail <Seo>, the slash redirects in
+// worker.ts): the slashless form redirects. A sitemap must name the canonical
+// URL, not a redirect or a duplicate, so those families are slashed here.
+// Materials and court cases are canonical without the slash and pass through
+// untouched.
+//
+// Series appear once the API lists them (its `series` section,
+// /sitemap-series.xml). Until then the API index simply has no such child and
+// nothing here changes.
+const SLASHED_LOC_RE = /<loc>(https:\/\/jawafdehi\.org\/(?:case|entity|series)\/[^<]*?[^/<])<\/loc>/g;
 
 export function withCanonicalSlashes(xml: string): string {
   return xml.replace(SLASHED_LOC_RE, (_, loc: string) => `<loc>${loc}/</loc>`);

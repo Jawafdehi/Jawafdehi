@@ -994,8 +994,8 @@ async function handleAuthorMetaFallback(
 // --------------------------------------------------------------------------
 // Edge SSR: record pages rendered on request, cached by Workers Cache
 //
-// /case/*, /entity/*, /material/* and /courtcase/* are rendered here from the
-// API when no pre-rendered file exists, so a crawler and a first paint get the
+// /case/*, /entity/*, /material/*, /courtcase/* and /series/* are rendered
+// here from the API when no pre-rendered file exists, so a crawler and a first paint get the
 // whole page, not a shell. The rendering happens in the EdgePages entrypoint,
 // and ONLY there, because that entrypoint is the one wrangler.toml puts Workers
 // Cache in front of. This default entrypoint stays uncached on purpose (it

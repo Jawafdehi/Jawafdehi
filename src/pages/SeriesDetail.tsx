@@ -22,13 +22,18 @@ import { PageBreadcrumb } from "@/components/ui/page-breadcrumb";
 import { Skeleton } from "@/components/ui/skeleton";
 import { localDigits, pickSeriesText, seriesPath } from "@/lib/case-series";
 import { useSeries } from "@/queries/series";
-import { SITE_URL } from "@/utils/seo";
+import { API_BASE_URL } from "@/services/http";
+import { seriesJsonLd } from "@/utils/series-jsonld";
+import { SITE_URL, stripHtml, truncateMeta } from "@/utils/seo";
 import "@/styles/print.css";
 
 /**
  * `/series/:slug/`: one affair's separate cases on one page — the members in
  * order, their court cases on one time axis, the accused across them, and the
- * merged timeline and sources. Client-rendered (see site-routes.ts).
+ * merged timeline and sources. Rendered at the edge like a case page
+ * (worker/edge-cache.ts, the `series` kind): entry-server.tsx prefetches the
+ * series under the key useSeries reads, so the server HTML carries the whole
+ * page and its head.
  */
 const SeriesDetailPage = () => {
   const { slug = "" } = useParams<{ slug: string }>();
@@ -83,7 +88,14 @@ const SeriesDetailPage = () => {
 
   const title = pickSeriesText(series.title, language) || series.slug;
   const summary = pickSeriesText(series.summary, language);
+  // Slash-terminated, like the case page: the Worker 301s /series/x to /series/x/.
   const canonicalUrl = `${SITE_URL}${seriesPath(series.slug)}`;
+  // The meta description, cut as the case page's is (utils/seo truncateMeta).
+  const metaDescription = truncateMeta(stripHtml(summary)) || title;
+  // Escaped as on the case page: `</script>` in a title must not end the element.
+  const structuredData = JSON.stringify(
+    seriesJsonLd(series, { canonicalUrl, description: metaDescription }),
+  ).replace(/</g, "\\u003c");
   const memberCount = series.totals.member_count || series.members.length;
 
   const handleShare = async () => {
@@ -111,12 +123,20 @@ const SeriesDetailPage = () => {
     <div className="flex min-h-screen flex-col overflow-x-clip bg-background">
       <Seo
         canonicalUrl={canonicalUrl}
-        description={summary || title}
+        description={metaDescription}
         language={language}
         modifiedTime={series.updated_at}
         title={`${title} — ${t("series.kicker")}`}
         type="article"
-      />
+      >
+        <link
+          href={`${API_BASE_URL}/api/series/${encodeURIComponent(series.slug)}/`}
+          rel="alternate"
+          title="Case series data (JSON API)"
+          type="application/json"
+        />
+        <script type="application/ld+json">{structuredData}</script>
+      </Seo>
       <FloatingShareSidebar
         description={summary}
         onOpenChange={setIsShareOpen}

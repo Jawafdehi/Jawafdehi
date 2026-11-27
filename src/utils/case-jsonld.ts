@@ -10,7 +10,8 @@ type CaseJsonLdSource = Pick<
 
 // The schema.org type an entity bind names, without the registry's own
 // `jawafdehi:` subtypes: "AdministrativeArea,jawafdehi:District" → "AdministrativeArea".
-function schemaType(entityType: string | undefined): string {
+// Shared with the series page (utils/series-jsonld.ts).
+export function schemaType(entityType: string | undefined): string {
   const first = (entityType ?? "")
     .split(",")
     .map((s) => s.trim())

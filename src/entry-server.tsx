@@ -21,6 +21,7 @@ import { courtCaseIri, courtCaseRelatedCasesQuery, entityRelatedCasesQuery } fro
 import { getAllPages } from './services/datalake-api';
 import { http } from './services/http';
 import { documentSourcesQuery } from './lib/document-sources';
+import { seriesQuery } from './queries/series';
 import { reportPrefetch } from './lib/ssr-prefetch';
 import type { PrefetchReport } from './lib/ssr-prefetch';
 
@@ -239,6 +240,43 @@ async function prefetch(
     await queryClient.prefetchQuery({
       queryKey: ['case', slug],
       queryFn: () => getCaseById(slug),
+      ...transientRetry,
+    });
+    return;
+  }
+
+  // Case series page (/series/<slug>/), rendered at the edge like a case. The
+  // key is the page's own (seriesQuery: ['series', slug]) so SeriesDetail reads
+  // what this wrote; the data is the same API response getSeries returns.
+  //
+  // The fetch differs in one way: getSeries turns a 404 into `null` (the page's
+  // not-found state), which would leave a SUCCESSFUL query here and a page with
+  // no title — an edge error. Thrown instead, the 404 reaches reportPrefetch
+  // with its status, and the edge answers a real 404 (worker/edge-render.ts).
+  const seriesMatch = url.match(/^\/series\/([^/?#]+)/);
+  if (seriesMatch) {
+    const slug = decodeURIComponent(seriesMatch[1]);
+    await queryClient.prefetchQuery({
+      queryKey: seriesQuery(slug).queryKey,
+      queryFn: async () => {
+        try {
+          const res = await http.get(`/api/series/${encodeURIComponent(slug)}/`, { timeout: 10000 });
+          return res.data;
+        } catch (error) {
+          // The API's "no such series" is DRF's JSON 404. An API that predates
+          // the endpoint answers Django's HTML 404 for every slug instead: that
+          // is not an answer about this series, so it must not become a cached,
+          // noindexed 404. Rethrown without a status, it is an edge error and
+          // the Worker serves the client-rendered shell (never cached).
+          const response = (error as { response?: { status?: number; headers?: Record<string, unknown> } })
+            .response;
+          const contentType = String(response?.headers?.['content-type'] ?? '');
+          if (response?.status === 404 && !contentType.includes('json')) {
+            throw new Error('series endpoint missing on the API (non-JSON 404); client render');
+          }
+          throw error;
+        }
+      },
       ...transientRetry,
     });
     return;
