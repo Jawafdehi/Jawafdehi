@@ -15,6 +15,7 @@
 import { http, extractErrorMessage } from './http';
 import { courtRefCandidates } from '@/utils/courtCaseRef';
 import type { DocumentSourcesResponse } from '@/lib/document-sources';
+import { parseSourceDocStats, type SourceDocStats } from '@/lib/source-documents';
 import type {
   AuthorProfile,
   Case,
@@ -335,6 +336,24 @@ export async function getDocumentSources(): Promise<DocumentSourcesResponse> {
     return response.data;
   } catch (error) {
     handleApiError(error, '/document-sources/');
+  }
+}
+
+/**
+ * Source-document processing stats (redaction + readable text) for
+ * /data-quality, or null when the API cannot serve them: an API that predates
+ * the endpoint (404), no snapshot computed yet (503), a network failure or an
+ * unrecognised shape. The section is optional, so every one of those hides it
+ * instead of failing the page.
+ */
+export async function getSourceDocumentStats(): Promise<SourceDocStats | null> {
+  try {
+    const response = await http.get<unknown>('/api/statistics/source-documents/', {
+      timeout: 10000,
+    });
+    return parseSourceDocStats(response.data);
+  } catch {
+    return null;
   }
 }
 

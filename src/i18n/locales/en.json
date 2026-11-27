@@ -1873,7 +1873,101 @@
       }
     },
     "errorTitle": "The figures didn't load",
-    "eyebrow": "Open data"
+    "eyebrow": "Open data",
+    "sourceDocs": {
+      "heading": "Source documents: redaction and readable text",
+      "description": "Our documents can contain personal numbers such as citizenship, bank account and phone numbers. So instead of the original we publish a copy with those numbers covered, and we make each document's text searchable and readable. This shows how far that work has got.",
+      "asOf": "Figures as of {{date}}",
+      "scope": {
+        "label": "Which documents to count",
+        "published_cases": "Sources of published cases",
+        "archive": "The whole archive",
+        "publishedNote": "Documents attached as evidence to {{cases}} published cases"
+      },
+      "redaction": {
+        "heading": "Redaction of personal details",
+        "summary": "Of {{total}} documents, {{redacted}} are published as a redacted copy and {{withheld}} are withheld."
+      },
+      "pdf": {
+        "redacted": "Published as a redacted copy",
+        "withheld": "Withheld, original for staff only",
+        "not_yet_redacted": "Not redacted yet, original still public",
+        "publisher_hosted": "Publisher's own link only",
+        "no_file": "No file"
+      },
+      "redactedBy": {
+        "automatic": "Redacted automatically",
+        "converted": "Converted from Word, an image or a web page, then redacted",
+        "staff_hand_redacted": "Redacted by hand by staff",
+        "reviewed_no_redaction_needed": "Reviewed, nothing needed covering"
+      },
+      "withheldReason": {
+        "awaiting_redaction": "Waiting to be redacted",
+        "needs_hand_redaction": "Could not be redacted automatically, needs a person",
+        "unreadable": "File could not be opened or read",
+        "oversized": "File too large"
+      },
+      "transcript": {
+        "heading": "Text copy (transcript)",
+        "redacted": "Published redacted",
+        "withheld": "Withheld, staff only",
+        "none": "No text copy"
+      },
+      "text": {
+        "heading": "Readable text (OCR)",
+        "summary": "We hold the text of {{part}} of {{total}} documents.",
+        "barLabel": "Text available for {{pct}} of documents",
+        "byKind": "How the text was obtained",
+        "without": "{{n}} documents have no text yet."
+      },
+      "kind": {
+        "pdf_text_layer": "The PDF's own text layer",
+        "pdf_ocr": "Scanned PDF, read by OCR",
+        "word": "From a Word file",
+        "image": "From an image",
+        "web_page": "From a web page or text file",
+        "pdf_unrecorded": "PDF, method not recorded",
+        "other": "Other"
+      },
+      "groups": {
+        "heading": "Key documents",
+        "type": "Document",
+        "total": "Count",
+        "withText": "With text",
+        "redacted": "Redacted copy",
+        "withheld": "Withheld"
+      },
+      "group": {
+        "court_order": "Court orders and verdicts",
+        "charge_sheet": "Charge sheets",
+        "ciaa_press_release": "CIAA press releases",
+        "police_press_release": "Police press releases"
+      },
+      "explain": {
+        "heading": "What these mean",
+        "redacted": {
+          "term": "Redacted copy",
+          "body": "A copy of the original with personal numbers such as citizenship, bank account and phone numbers covered by black boxes. Facts such as names, posts, dates and amounts stay as they are."
+        },
+        "withheld": {
+          "term": "Withheld",
+          "body": "A document we could not yet redact reliably, or have not redacted yet. Only staff can open the original file. The file goes public once a redacted copy exists; until then its title and description are shown."
+        },
+        "notYet": {
+          "term": "Not redacted yet",
+          "body": "Our copy of the original is still public and no redacted copy exists yet. Bringing this number down is the work in progress."
+        },
+        "publisher": {
+          "term": "Publisher's own link",
+          "body": "A link to the file on the issuing body's own website, such as the CIAA or a court. That is their publication, so we do not withhold it."
+        },
+        "text": {
+          "term": "Readable text",
+          "body": "Text taken from the document, which makes searching and quoting possible. Text from scanned documents comes from OCR (machine character recognition) and can contain errors."
+        },
+        "why": "Why? If a file we publish contains someone's personal numbers, we are the ones spreading them. So until a document can be redacted, we hold the file back."
+      }
+    }
   },
   "admin": {
     "common": {
