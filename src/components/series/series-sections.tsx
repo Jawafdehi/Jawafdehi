@@ -148,7 +148,7 @@ export function SeriesMemberList({ members }: Readonly<{ members: readonly Serie
                   {member.case.title}
                 </Link>
                 {note ? <p className="mt-1 text-[15px] leading-6 text-muted-foreground">{note}</p> : null}
-                <div className="mt-2 flex flex-wrap items-center gap-2 text-[13px] text-muted-foreground">
+                <div className="relative mt-2 flex flex-wrap items-center gap-2 text-[13px] text-muted-foreground">
                   <span className={getCaseBadgeClassName("status", member.case.status, "shadow-none")}>
                     {t(caseStatusLabelKey(member.case.status))}
                   </span>
@@ -195,7 +195,9 @@ function BigoOverlapChip({ member, members }: Readonly<{ member: SeriesMember; m
   const chip = "inline-flex items-center rounded-full border border-dashed border-border bg-muted px-2.5 py-0.5 text-[12.5px] text-muted-foreground";
   if (!reason) return <span className={chip}>{label}</span>;
   return (
-    <span className="group relative inline-flex print:flex-col print:items-start">
+    // Anchored to the chip from `sm` up; on a phone to the whole chip row, so a
+    // chip that wraps to the right edge can't push its reason off screen.
+    <span className="group inline-flex sm:relative print:flex-col print:items-start">
       <button
         aria-describedby={reasonId}
         aria-expanded={open}
@@ -211,7 +213,7 @@ function BigoOverlapChip({ member, members }: Readonly<{ member: SeriesMember; m
       </button>
       <span
         className={cn(
-          "absolute left-0 top-full z-20 mt-1.5 w-max max-w-[min(22rem,80vw)] rounded-lg bg-primary-surface px-2.5 py-1.5 text-[13px] leading-5 text-primary-foreground",
+          "absolute left-0 right-0 top-full z-20 mt-1.5 rounded-lg sm:right-auto sm:w-max sm:max-w-[22rem] bg-primary-surface px-2.5 py-1.5 text-[13px] leading-5 text-primary-foreground",
           open ? "block" : "hidden group-hover:block group-focus-within:block",
           "print:static print:mt-1 print:block print:max-w-none print:bg-transparent print:p-0 print:text-muted-foreground",
         )}
