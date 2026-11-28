@@ -7,7 +7,12 @@
 // the guard that keeps it to the server is worth pinning.
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 
-import { getPrerenderToken, setPrerenderToken } from "@/services/prerender-auth";
+import {
+  getEdgeSecret,
+  getPrerenderToken,
+  setEdgeSecret,
+  setPrerenderToken,
+} from "@/services/prerender-auth";
 
 beforeEach(() => {
   setPrerenderToken(null);
@@ -79,5 +84,57 @@ describe("oidc-session getAccessToken", () => {
     const { getAccessToken } = await import("@/services/oidc-session");
 
     await expect(getAccessToken()).resolves.toBeNull();
+  });
+});
+
+describe("the edge SSR throttle secret", () => {
+  afterEach(() => {
+    setEdgeSecret(null);
+    vi.unstubAllGlobals();
+    vi.resetModules();
+  });
+
+  it("starts empty and treats blank as unset", () => {
+    expect(getEdgeSecret()).toBeNull();
+    setEdgeSecret("  ");
+    expect(getEdgeSecret()).toBeNull();
+  });
+
+  it("round-trips and trims", () => {
+    setEdgeSecret("edge-s3cret\n");
+    expect(getEdgeSecret()).toBe("edge-s3cret");
+  });
+
+  async function headersSent(secret: string | null): Promise<Record<string, unknown>> {
+    vi.resetModules();
+    const store = await import("@/services/prerender-auth");
+    store.setPrerenderToken(null);
+    store.setEdgeSecret(secret);
+    const { http } = await import("@/services/http");
+    let seen: Record<string, unknown> = {};
+    await http.get("/api/x", {
+      adapter: async (config) => {
+        seen = { ...(config.headers as Record<string, unknown>) };
+        return { data: {}, status: 200, statusText: "OK", headers: {}, config };
+      },
+    });
+    return seen;
+  }
+
+  it("is sent on server-side (no window) API calls", async () => {
+    vi.stubGlobal("window", undefined);
+    const headers = await headersSent("edge-s3cret");
+    expect(headers["X-Jawafdehi-Edge-Secret"]).toBe("edge-s3cret");
+  });
+
+  it("is NOT sent from a browser even if set", async () => {
+    const headers = await headersSent("edge-s3cret");
+    expect(headers["X-Jawafdehi-Edge-Secret"]).toBeUndefined();
+  });
+
+  it("is not sent when unset", async () => {
+    vi.stubGlobal("window", undefined);
+    const headers = await headersSent(null);
+    expect(headers["X-Jawafdehi-Edge-Secret"]).toBeUndefined();
   });
 });

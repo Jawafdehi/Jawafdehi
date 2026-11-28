@@ -33,6 +33,21 @@ function bundleWith(render: EdgeBundle['render']): EdgeBundle & {
 const CONFIG = { apiTimeoutMs: 4000, deadlineMs: 8000, token: 'tok' };
 
 describe('renderEdgePage', () => {
+  it('installs the edge throttle secret when configured, and clears it when not', async () => {
+    const setEdgeSecret = vi.fn();
+    const bundle = { ...bundleWith(vi.fn(async () => result())), setEdgeSecret };
+    await renderEdgePage(bundle, 'entity', 'person/x', '/entity/person/x', { ...CONFIG, edgeSecret: 'edge-s3cret' });
+    expect(setEdgeSecret).toHaveBeenLastCalledWith('edge-s3cret');
+    await renderEdgePage(bundle, 'entity', 'person/x', '/entity/person/x', CONFIG);
+    expect(setEdgeSecret).toHaveBeenLastCalledWith(null);
+  });
+
+  it('still renders with a bundle that has no setEdgeSecret export', async () => {
+    const bundle = bundleWith(vi.fn(async () => result()));
+    const outcome = await renderEdgePage(bundle, 'entity', 'person/x', '/entity/person/x', { ...CONFIG, edgeSecret: 'x' });
+    expect(outcome.kind).toBe('ok');
+  });
+
   it('renders into the template, in edge mode, with the timeout and token installed', async () => {
     const render = vi.fn(async () => result());
     const bundle = bundleWith(render);

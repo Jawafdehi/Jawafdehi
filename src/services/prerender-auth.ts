@@ -34,3 +34,22 @@ export function setPrerenderToken(value: string | null): void {
 export function getPrerenderToken(): string | null {
   return token;
 }
+
+// The edge SSR Worker's shared secret for the API's own throttle bucket
+// (JawafdehiAPI `edge` scope, header `X-Jawafdehi-Edge-Secret`). Every visitor
+// and crawler render reaches the API from Cloudflare's one Worker egress
+// address; without this the Worker shares a per-address cap with every other
+// Worker on Cloudflare. Set per render by worker/edge-render.ts from the
+// Worker's `EDGE_SSR_API_SECRET` secret, never in the client bundle (a browser
+// never calls the setter, and http.ts only sends it when there is no window).
+let edgeSecret: string | null = null;
+
+/** Install the SSR Worker's throttle secret. Called per render, before `render()`. */
+export function setEdgeSecret(value: string | null): void {
+  edgeSecret = value && value.trim() ? value.trim() : null;
+}
+
+/** The SSR Worker's throttle secret, or null (the build, a browser, dev). */
+export function getEdgeSecret(): string | null {
+  return edgeSecret;
+}

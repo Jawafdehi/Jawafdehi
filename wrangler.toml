@@ -53,6 +53,8 @@ EDGE_SSR_DEADLINE_MS = "8000"
 # Secrets, set with `wrangler secret put` (never committed):
 #   EDGE_API_CLIENT_ID, EDGE_API_CLIENT_SECRET  sa-prerender client credentials
 #                                               (optional; anonymous without)
+#   EDGE_SSR_API_SECRET  shared secret for the API's `edge` throttle bucket
+#                        (= EDGE_SSR_SECRET in the API env; optional)
 #   CACHE_PURGE_SECRET                          HMAC key shared with the API's
 #                                               edge-purge consumer (unset = the
 #                                               /_cache/purge route answers 503)

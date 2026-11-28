@@ -23,5 +23,6 @@ export const bundle: EdgeBundle = {
   render: ssrBundle.render,
   setApiTimeout: ssrBundle.setApiTimeout,
   setPrerenderToken: ssrBundle.setPrerenderToken,
+  setEdgeSecret: ssrBundle.setEdgeSecret,
   template: rawTemplate as string,
 };
