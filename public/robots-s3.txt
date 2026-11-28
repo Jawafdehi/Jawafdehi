@@ -1,0 +1,24 @@
+# Crawler policy for s3.jawafdehi.org, the public object store (case documents,
+# transcripts, images). Cloudflare answers s3.jawafdehi.org/robots.txt with a
+# 301 to this file (infra terraform/cloudflare/rulesets.tf); RFC 9309 crawlers
+# follow it and apply it to s3.jawafdehi.org.
+#
+# Nothing here is meant to be crawled: the archive pages on jawafdehi.org link
+# the documents a reader needs. In Nov 2026 a search crawler fetched ~3,000
+# documents straight from the bucket. Every response from this host also
+# carries `X-Robots-Tag: noindex` (response-headers.tf).
+#
+# ⚠️ NEVER disallow meta-externalagent or the link-preview fetchers: Facebook,
+# Instagram and X pull the images we publish from this host (see robots.txt).
+
+User-agent: meta-externalagent
+Allow: /
+
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
+User-agent: *
+Disallow: /
