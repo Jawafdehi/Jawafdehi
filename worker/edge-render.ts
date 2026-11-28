@@ -27,6 +27,8 @@ export interface EdgeBundle {
   >;
   setApiTimeout(ms: number): void;
   setPrerenderToken(token: string | null): void;
+  /** Optional so a bundle built before the export existed still renders. */
+  setEdgeSecret?(secret: string | null): void;
   template: string;
 }
 
@@ -36,6 +38,8 @@ export interface EdgeRenderConfig {
   /** For the whole page: a court case makes several calls in sequence. */
   deadlineMs: number;
   token: string | null;
+  /** The API's `edge` throttle secret (Worker secret EDGE_SSR_API_SECRET). */
+  edgeSecret?: string | null;
 }
 
 export type EdgeRenderOutcome =
@@ -93,6 +97,7 @@ async function renderChecked(
 ): Promise<{ kind: 'rendered'; result: RenderResult } | Exclude<EdgeRenderOutcome, { kind: 'ok' | 'moved' }>> {
   bundle.setApiTimeout(config.apiTimeoutMs);
   bundle.setPrerenderToken(config.token);
+  bundle.setEdgeSecret?.(config.edgeSecret ?? null);
 
   let timer: ReturnType<typeof setTimeout> | undefined;
   const deadline = new Promise<typeof DEADLINE>((resolve) => {

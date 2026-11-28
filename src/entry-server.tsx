@@ -30,7 +30,7 @@ import type { PrefetchReport } from './lib/ssr-prefetch';
 // which carries its own copy of the axios client — reaching for the TypeScript
 // source instead would configure a different module instance and silently leave
 // every outgoing request anonymous. See services/prerender-auth.ts.
-export { setPrerenderToken } from './services/prerender-auth';
+export { setEdgeSecret, setPrerenderToken } from './services/prerender-auth';
 
 // The legal texts are lazy on the client but must render synchronously here,
 // or /privacy and /terms would pre-render empty (src/pages/legal/bodies.ts).

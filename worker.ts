@@ -78,6 +78,12 @@ interface Env {
   EDGE_API_CLIENT_ID?: string;
   /** Secret, as above. */
   EDGE_API_CLIENT_SECRET?: string;
+  /**
+   * Secret: sent as X-Jawafdehi-Edge-Secret on render API calls so the API
+   * counts the Worker in its own `edge` throttle bucket (EDGE_SSR_SECRET there).
+   * Optional: unset = renders are counted by the Worker's egress address.
+   */
+  EDGE_SSR_API_SECRET?: string;
   /** Secret: HMAC key the API signs /_cache/purge requests with. Unset = purge route off. */
   CACHE_PURGE_SECRET?: string;
 }
@@ -1052,6 +1058,7 @@ async function handleListingRender(url: URL, env: Env, ctx?: WorkerContext): Pro
     apiTimeoutMs: positiveInt(env.EDGE_SSR_API_TIMEOUT_MS, DEFAULT_EDGE_API_TIMEOUT_MS),
     deadlineMs: positiveInt(env.EDGE_SSR_DEADLINE_MS, DEFAULT_EDGE_DEADLINE_MS),
     token: edgeApiTokenNoWait(env, ctx?.waitUntil ? (p) => ctx.waitUntil?.(p) : undefined),
+    edgeSecret: env.EDGE_SSR_API_SECRET?.trim() || null,
   });
   if (outcome.kind === 'ok') {
     return new Response(outcome.html, {
@@ -1102,6 +1109,7 @@ async function handleEdgePageRequest(request: Request, env: Env, ctx?: WorkerCon
     deadlineMs: positiveInt(env.EDGE_SSR_DEADLINE_MS, DEFAULT_EDGE_DEADLINE_MS),
     // Never wait on a token mint: see edgeApiTokenNoWait.
     token: edgeApiTokenNoWait(env, ctx?.waitUntil ? (p) => ctx.waitUntil?.(p) : undefined),
+    edgeSecret: env.EDGE_SSR_API_SECRET?.trim() || null,
   });
 
   switch (outcome.kind) {
