@@ -34,6 +34,17 @@ Allow: /
 User-agent: meta-externalagent
 Allow: /
 
+# --- SEO crawlers: allowed, slowed ------------------------------------------
+#
+# AhrefsBot was the largest outside load on the site in Nov 2026 (1.67M
+# requests / 114 GB in 30 days, each page rendered at the edge, which calls the
+# API). It honours Crawl-delay; Google and Bing ignore the directive, so it is
+# set only here.
+
+User-agent: AhrefsBot
+Crawl-delay: 10
+Allow: /
+
 # --- Answer engines: allowed on purpose --------------------------------------
 #
 # These fetch a page to answer a specific question, or index for a search
